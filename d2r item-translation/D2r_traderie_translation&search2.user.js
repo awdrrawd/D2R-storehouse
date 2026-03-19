@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         D2R Traderie網中文翻譯 + 中文搜尋
 // @namespace    https://github.com/awdrrawd/d2r-traderie-tw
-// @version      1.3
+// @version      1.6
 // @description  將 traderie 的 D2R 頁面翻譯為繁體中文，並支援中文搜尋輸入（iOS Safari 相容版）
 // @author       瀧月瀨
 // @match        https://traderie.com/diablo2resurrected*
@@ -17,14 +17,33 @@
 (async function () {
   'use strict';
 
-  // ── 動態載入外部資料 ──
-  // <script> 標籤注入後執行在頁面 window，
-  // 需用 unsafeWindow 才能讀到頁面層的全域變數
+  // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
   const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
+  function gmGet(key, def) {
+    try { return GM_getValue(key, def); } catch (_) {
+      try { const v = localStorage.getItem('d2r_' + key); return v !== null ? JSON.parse(v) : def; } catch (_) { return def; }
+    }
+  }
+  function gmSet(key, val) {
+    try { GM_setValue(key, val); } catch (_) {
+      try { localStorage.setItem('d2r_' + key, JSON.stringify(val)); } catch (_) {}
+    }
+  }
+  function gmStyle(css) {
+    try { GM_addStyle(css); } catch (_) {
+      const s = document.createElement('style');
+      s.textContent = css;
+      (document.head || document.documentElement).appendChild(s);
+    }
+  }
+
+  // ── 資料載入：fetch + new Function() ──
+  // fetch 在 iOS userscript 環境最穩定
+  // new Function(code)() 在當前 window 執行，不受 <script> CSP 限制
   const FILE_PATHS = [
-    'd2r%20item-translation/data/translations.js',
-    'd2r%20item-translation/data/affixes.js',
+    'd2r item-translation/data/translations.js',
+    'd2r item-translation/data/affixes.js',
   ];
   const REPO   = 'awdrrawd/D2R-storehouse';
   const BRANCH = 'main';
@@ -34,22 +53,29 @@
     `https://raw.githubusercontent.com/${REPO}/refs/heads/${BRANCH}/`,
   ];
 
-  function loadScript(url) {
-    return new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = url;
-      s.onload  = resolve;
-      s.onerror = () => reject(new Error(url));
-      (document.head || document.documentElement).appendChild(s);
-    });
+  async function fetchAndExec(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
+    const code = await res.text();
+    // new Function 在當前 window scope 執行，設定的變數會落在 PAGE 上
+    try {
+      new Function(code)();
+    } catch (_) {
+      // fallback：直接 eval（部分 iOS app 需要）
+      // eslint-disable-next-line no-eval
+      eval(code);
+    }
   }
 
   async function loadWithFallback(filePath) {
+    const encoded = encodeURIComponent(filePath);
     for (const base of CDN_BASES) {
       try {
-        await loadScript(base + filePath);
+        await fetchAndExec(base + encoded);
         return;
-      } catch (_) {}
+      } catch (e) {
+        console.warn('[D2R] CDN 失敗，嘗試備用：', e.message);
+      }
     }
     throw new Error('所有來源均無法載入：' + filePath);
   }
@@ -61,19 +87,24 @@
     return;
   }
 
-  // 從頁面 window 讀取資料（<script> 注入設定在頁面層，非沙盒層）
-  const ITEM_NAMES  = PAGE.D2R_ITEM_TRANSLATIONS || {};
-  const UI_NAMES    = PAGE.D2R_UI_TRANSLATIONS   || {};
-  const AFFIXES_RAW = PAGE.D2R_AFFIXES            || [];
+  // fetch + new Function 直接執行在當前 window，PAGE 即可讀到資料
+  const ITEM_NAMES  = PAGE.D2R_ITEM_TRANSLATIONS || window.D2R_ITEM_TRANSLATIONS || {};
+  const UI_NAMES    = PAGE.D2R_UI_TRANSLATIONS   || window.D2R_UI_TRANSLATIONS   || {};
+  const AFFIXES_RAW = PAGE.D2R_AFFIXES            || window.D2R_AFFIXES            || [];
 
-  // ── 設定（用 GM storage 持久化）──
+  if (!Object.keys(ITEM_NAMES).length) {
+    console.warn('[D2R] 資料讀取為空，翻譯停用（請確認資料檔格式）');
+    return;
+  }
+
+  // ── 設定（GM storage，fallback 到 localStorage）──
   const CONFIG = {
-    enabled:      GM_getValue('d2r_enabled',      true),
-    showOriginal: GM_getValue('d2r_showOriginal', true),
+    enabled:      gmGet('d2r_enabled',      true),
+    showOriginal: gmGet('d2r_showOriginal', true),
   };
   function saveConfig() {
-    GM_setValue('d2r_enabled',      CONFIG.enabled);
-    GM_setValue('d2r_showOriginal', CONFIG.showOriginal);
+    gmSet('d2r_enabled',      CONFIG.enabled);
+    gmSet('d2r_showOriginal', CONFIG.showOriginal);
   }
 
   // ── 預編譯 ──
@@ -248,8 +279,9 @@
     scheduleProcess();
   });
 
-  // ── 浮動控制球 & 中文搜尋 共用樣式 ──
-  GM_addStyle(`
+  // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
+  // （已在上方定義 gmStyle，此處呼叫）
+  gmStyle(`
     #d2r-fab {
       position:fixed;bottom:20px;left:20px;z-index:99999;
       width:48px;height:48px;border-radius:50%;
@@ -617,7 +649,7 @@
     const panel = document.createElement('div');
     panel.id = 'd2r-panel';
 
-    const scriptVersion = '1.4';
+    const scriptVersion = '1.6';
     panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
