@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         D2R Traderie網中文翻譯 + 中文搜尋
 // @namespace    https://github.com/awdrrawd/d2r-traderie-tw
-// @version      1.6
-// @description  將 traderie 的 D2R 頁面翻譯為繁體中文，並支援中文搜尋輸入（iOS Safari 相容版）
+// @version      1.3
+// @description  將 traderie 的 D2R 頁面翻譯為繁體中文，並支援 iOS Safari
 // @author       瀧月瀨
 // @match        https://traderie.com/diablo2resurrected*
 // @match        https://*.traderie.com/diablo2resurrected/*
