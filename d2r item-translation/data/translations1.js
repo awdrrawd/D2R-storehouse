@@ -1550,6 +1550,12 @@ window.D2R_ITEM_TRANSLATIONS = {
   "Consume":         "吞噬",
 
   // ── 其他道具 ──
+  // 以下物品名稱含易被誤翻的詞（Cold / Skull），需完整條目確保長度優先匹配
+  "Giant Skull":          "巨大顱骨",
+  "The Cold Rupture":     "冰寒裂縫",
+  "Latent Cold Rupture":  "潛伏冰寒裂縫",
+  "Renewed Cold Rupture": "新生冰寒裂縫",
+
   "3x3 Key Set":                   "一套鑰匙",
   "Random Minor Key":              "任意鑰匙",
   "Key of Destruction":            "毀滅之鑰",
@@ -1618,12 +1624,6 @@ window.D2R_ITEM_TRANSLATIONS = {
 // 網頁 UI 翻譯（永遠純中文，不加原文後綴）
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 window.D2R_UI_TRANSLATIONS = {
-
-  // ── 特殊道具（含原文供識別）──
-  "Giant Skull":           "巨大顱骨(Giant Skull)",
-  "The Cold Rupture":      "冰寒裂縫(The Cold Rupture)",
-  "Latent Cold Rupture":   "潛伏冰寒裂縫(Latent Cold Rupture)",
-  "Renewed Cold Rupture":  "新生冰寒裂縫(Renewed Cold Rupture)",
 
   // ── 導覽列 ──
   "All":        "全部",
