@@ -46,13 +46,13 @@ D2R-storehouse/
 |------|------|
 | Chrome / Edge | [Tampermonkey - Chrome Web Store](https://www.tampermonkey.net/) |
 | Firefox | [Tampermonkey - Firefox Add-ons](https://www.tampermonkey.net/) |
-| iOS Safari | [Userscripts App](https://apps.apple.com/app/userscripts/id1463298887) 或 Tampermonkey |
+| iOS Safari | [Userscripts App](https://apps.apple.com/app/userscripts/id1463298887) |
 
 ### 2. 安裝載入器
 
 點擊下方連結，在 Tampermonkey 確認安裝：
 
-**[⬇️ 安裝 D2R Traderie 中文翻譯](https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2R_Traderie_CN_Loader.user.js)**
+**[💻 安裝 D2R Traderie 中文翻譯](https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2R_Traderie_CN_Loader.user.js)**
 
 ---
 
@@ -82,30 +82,6 @@ D2R-storehouse/
 ### `d2r-translation/Platform/ui_traderie.js`
 - 全域變數：`window.D2R_UI_TRADERIC`
 - 內容：Traderie 網站介面文字，包含導覽列、交易介面、設定頁面、通知、篩選器等 430+ 條
-
----
-
-## 給其他平台開發者
-
-如需將本翻譯資料套用到其他 D2R 相關平台，可直接引用：
-
-```js
-// 道具字典
-https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation/item/items.js
-
-// 屬性詞綴
-https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation/item/affixes.js
-```
-
-載入後分別取用 `window.D2R_ITEMS`（物件）與 `window.D2R_AFFIXES`（陣列）。
-平台介面文字請自行建立對應的 `Platform/ui_xxx.js`。
-
----
-
-## 翻譯來源與致謝
-
-- 物品翻譯參考自 [d2r.world](https://d2r.world)（繁體中文版本）
-- 屬性詞綴對照由 d2r.world EN/ZH 頁面自動配對生成，經人工審核修正
 
 ---
 
