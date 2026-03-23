@@ -296,6 +296,11 @@ window.D2R_UI_TRADERIC = {
     "Review Standards": "評論規範",
     "Submit review":    "送出評論",
     "Remove Review":    "刪除評論",
+    "Reviewed On":      "評論於",
+    "Update Review":    "更新評論",
+    "Cancelled trade":  "取消交易",
+    "Verified trade":   "交易完成",
+    "Verified trade (Received)":"交易完成(已驗證)",
 
     // == support ==
     "Ask A Question":         "提問",
