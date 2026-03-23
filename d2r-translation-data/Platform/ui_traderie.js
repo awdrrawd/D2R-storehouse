@@ -308,7 +308,7 @@ window.D2R_UI_TRADERIC = {
     "Any additional comment?":"有其他補充嗎？",
     "I agree that I have checked the F.A.Q. and Safe Trading Guide before submitting a question.":"我確認已查閱常見問題與安全交易指南。",
     "Please check our F.A.Q. and Safe Trading Guide before submitting a question.":"提問前請先查閱常見問題與安全交易指南。",
-    "Your message will be recorded and someone will reach out to you via Traderie Chat.":"您的訊息將被記錄，並有人透過",
+    "Your message will be recorded and someone will reach out to you via":"您的訊息將被記錄，並有人透過",
     "Chat.":"聊天室聯繫您。",
     "Note this is NOT for reporting users. You will not get a response for messages related to reporting a specific user.":
     "請注意，此功能並非用於舉報用戶。您不會收到任何關於舉報特定用戶的訊息回覆。",
