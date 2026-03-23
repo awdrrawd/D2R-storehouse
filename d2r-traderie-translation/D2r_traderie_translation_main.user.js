@@ -18,7 +18,7 @@
 (async function () {
     'use strict';
 
-    // ── iOS 相容包裝
+    // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     function gmGet(key, def) {
@@ -43,12 +43,13 @@
     const FILE_PATHS = ['item/items.js','item/affixes.js','Platform/ui_traderie.js',];
 
     const CDN_BASES = [
-        `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/`,
         `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/`,
+        `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/`,
     ];
 
     async function fetchAndExec(url) {
-        const res = await fetch(url);
+        // cache: 'no-cache' 強制跳過瀏覽器快取，確保每次取得最新版本
+        const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-cache' });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
         const code = await res.text();
         try {
@@ -65,7 +66,7 @@
                 await fetchAndExec(base + filePath);
                 return;
             } catch (e) {
-                console.warn('[D2R-Data] 來源失敗，嘗試備用：', e.message);
+                console.warn('[D2R] 來源失敗，嘗試備用：', e.message);
             }
         }
         throw new Error('所有來源均無法載入：' + filePath);
@@ -74,18 +75,18 @@
     try {
         for (const path of FILE_PATHS) await loadWithFallback(path);
     } catch (e) {
-        console.warn('[D2R-Data] 資料載入失敗，翻譯功能停用：', e.message);
+        console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
         return;
     }
 
     // 從頁面 window 讀取三個字典
     // 翻譯順序：items(2) → affixes(1) → ui(3)
     const ITEM_NAMES  = PAGE.D2R_ITEMS   || window.D2R_ITEMS   || {};
-    const UI_NAMES    = PAGE.D2R_UI      || window.D2R_UI      || {};
+    const UI_NAMES    = PAGE.D2R_UI || window.D2R_UI || PAGE.D2R_UI_TRADERIC || window.D2R_UI_TRADERIC || {};
     const AFFIXES_RAW = PAGE.D2R_AFFIXES || window.D2R_AFFIXES || [];
 
     if (!Object.keys(ITEM_NAMES).length) {
-        console.warn('[D2R-Data] items.js 資料為空，翻譯停用');
+        console.warn('[D2R] items.js 資料為空，翻譯停用');
         return;
     }
 
