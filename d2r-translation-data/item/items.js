@@ -684,9 +684,9 @@ window.D2R_ITEMS = {
   "Northern Worldstone Shard":       "北方的世界之石碎片",
   "Southern Worldstone Shard":       "南方的世界之石碎片",
   "Western Worldstone Shard":        "西方的世界之石碎片",
-  "Rejuvenation Potion":"普通活力",
-  "Full Rejuvenation Potion":"全效活力",
-  "Gold":"金幣",
+  "Rejuvenation Potion":             "普通活力",
+  "Full Rejuvenation Potion":        "全效活力",
+  "Gold":                            "金幣",
 
   // ── 寶石 ──
   "Gem":"寶石", "Random Gems":"任意寶石",
