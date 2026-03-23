@@ -42,7 +42,7 @@ window.D2R_UI_TRADERIC = {
   "Rush fresh Character":  "快速通關(Rush fresh Character)",
   "Socket Quest":          "打洞任務(Socket Quest)",
   "Uber Ancient Service" : "幫打遠古人(Uber Ancient Service)",
-  "Uber Tristram Service": "幫打火炬(Uber Tristram Service)"
+  "Uber Tristram Service": "幫打火炬(Uber Tristram Service)",
   
   // == buttons ==
   "My Offers":       "我的商品",
