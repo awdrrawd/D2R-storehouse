@@ -51,7 +51,6 @@
     ];
 
     async function fetchAndExec(url) {
-        // cache: 'no-cache' 強制跳過瀏覽器快取，確保每次取得最新版本
         const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-cache' });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
         const code = await res.text();
@@ -83,8 +82,8 @@
     }
 
     // 從頁面 window 讀取三個字典
-    const ITEM_NAMES  = PAGE.D2R_ITEMS   || window.D2R_ITEMS   || {};
-    const AFFIXES_RAW = PAGE.D2R_AFFIXES || window.D2R_AFFIXES || [];
+    const ITEM_NAMES  = PAGE.D2R_ITEMS       || window.D2R_ITEMS       || {};
+    const AFFIXES_RAW = PAGE.D2R_AFFIXES     || window.D2R_AFFIXES     || [];
     const UI_NAMES    = PAGE.D2R_UI_TRADERIC || window.D2R_UI_TRADERIC || {};
 
     if (!Object.keys(ITEM_NAMES).length) {
@@ -101,26 +100,21 @@
     }
 
     // ── 預編譯 ──
-    // 合併兩個字典並依 key 長度降序排列，確保長字串永遠優先匹配
-    // 這樣「Javelin and Spear」(16字) 一定在「Javelin」(7字) 之前被替換
-    // showOrig 旗標：物品名稱附加原文，UI 詞彙不附加
     const ITEM_ENTRIES_RAW = Object.entries(ITEM_NAMES);
     const UI_ENTRIES_RAW   = Object.entries(UI_NAMES);
 
-    // 合併：[en, zh, showOrig]
     const ALL_ENTRIES = [
         ...ITEM_ENTRIES_RAW.map(([en, zh]) => [en, zh, true]),
         ...UI_ENTRIES_RAW.map(([en, zh])   => [en, zh, false]),
     ].sort((a, b) => b[0].length - a[0].length);
 
-    // 保留獨立的 ITEM_ENTRIES / UI_ENTRIES 供統計用
     const ITEM_ENTRIES = ITEM_ENTRIES_RAW.sort((a, b) => b[0].length - a[0].length);
     const UI_ENTRIES   = UI_ENTRIES_RAW.sort((a, b)   => b[0].length - a[0].length);
 
     const AFFIX_PAT = AFFIXES_RAW
-    .map(([src, tmpl]) => { try { return { re: new RegExp(src, 'gi'), tmpl }; } catch (_) { return null; } })
-    .filter(Boolean)
-    .sort((a, b) => b.re.source.length - a.re.source.length);
+        .map(([src, tmpl]) => { try { return { re: new RegExp(src, 'gi'), tmpl }; } catch (_) { return null; } })
+        .filter(Boolean)
+        .sort((a, b) => b.re.source.length - a.re.source.length);
 
     // ── 翻譯函式 ──
     function translateAffixes(text) {
@@ -165,7 +159,7 @@
         if (!p || SKIP.has(p.tagName)) return;
         const cur = node.textContent;
         if (!cur || !cur.trim()) return;
-        if (hasChinese(cur)) return;           // 已含中文 → 已翻譯，直接跳過
+        if (hasChinese(cur)) return;
         if (nodeCache.get(node) === cur) return;
         const result = translate(cur);
         nodeCache.set(node, result);
@@ -188,135 +182,7 @@
         nodes.forEach(processNode);
     }
 
-    // ── 頁碼選擇器 ──
-    // 從 Traderie 的 ul.pagination 讀取實際頁數，不依賴硬編碼
-
-    function getPaginationInfo() {
-        const ul = document.querySelector('ul.pagination');
-        if (!ul) return null;
-
-        // 當前頁：aria-current="page" 的 li，或 aria-label="Page X is your current page"
-        let curP = 1;
-        const activeLi = ul.querySelector('[aria-current="page"]');
-        if (activeLi) {
-            const m = (activeLi.getAttribute('aria-label') || activeLi.textContent).match(/\d+/);
-            if (m) curP = parseInt(m[0]);
-        }
-
-        // 最大頁：掃描所有 aria-label="Page X"，取最大值
-        let maxP = curP;
-        ul.querySelectorAll('li a[aria-label]').forEach(a => {
-            const m = a.getAttribute('aria-label').match(/Page (\d+)/);
-            if (m) maxP = Math.max(maxP, parseInt(m[1]));
-        });
-
-        // 上一頁 / 下一頁是否可用
-        const prevDisabled = ul.querySelector('li.previous')?.classList.contains('pagination__link--disabled') ?? true;
-        const nextDisabled = ul.querySelector('li.next a')?.getAttribute('aria-disabled') === 'true';
-
-        return { curP, maxP, prevDisabled, nextDisabled, ul };
-    }
-
-    function injectPageSelector() {
-        // 舊的選擇器清除
-        document.querySelectorAll('.d2r-page').forEach(el => el.remove());
-
-        const info = getPaginationInfo();
-        if (!info) return;
-        const { curP, maxP, ul } = info;
-
-        // 掛在 ul.pagination 的父元素
-        const container = ul.parentElement;
-        if (!container) return;
-
-        const wrap = document.createElement('div');
-        wrap.className = 'd2r-page';
-        wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;vertical-align:middle;';
-
-        const input = document.createElement('input');
-        input.type  = 'number'; input.min = '1'; input.max = String(maxP);
-        input.value = String(curP); input.title = `1–${maxP}，Enter 跳轉`;
-        input.style.cssText = 'width:50px;padding:3px 5px;font-size:13px;text-align:center;' +
-            'background:#111;color:#f0c060;border:1px solid #5a3a1a;border-radius:4px;' +
-            'appearance:textfield;-moz-appearance:textfield;';
-        input.setAttribute('data-d2r-page', '1');
-
-        const sep = document.createElement('span');
-        sep.textContent = `/ ${maxP}`;
-        sep.style.cssText = 'font-size:13px;color:#aaa;white-space:nowrap;';
-
-        wrap.appendChild(input);
-        wrap.appendChild(sep);
-        container.appendChild(wrap);
-
-        function jump() {
-            const v = parseInt(input.value);
-            if (isNaN(v)) return;
-            const p = Math.max(1, Math.min(v, maxP));
-            input.value = String(p);
-            const u = new URL(location.href);
-            u.searchParams.set('page', p - 1);  // Traderie page param 是 0-based
-            location.href = u.toString();
-        }
-        input.addEventListener('keydown', e => {
-            if (e.key === 'Enter')     { e.preventDefault(); jump(); }
-            if (e.key === 'ArrowUp')   { e.preventDefault(); input.value = String(Math.min(+input.value + 1, maxP)); }
-            if (e.key === 'ArrowDown') { e.preventDefault(); input.value = String(Math.max(+input.value - 1, 1)); }
-        });
-        input.addEventListener('focus', () => input.select());
-        input.addEventListener('change', jump);
-    }
-
-    // ── SPA 路由偵測 ──
-    let lastPath = location.pathname + location.search;
-    function onRouteChange() {
-        const cur = location.pathname + location.search;
-        if (cur === lastPath) return;
-        lastPath = cur;
-        document.querySelectorAll('.d2r-page').forEach(el => el.remove());
-        setTimeout(injectPageSelector, 300);
-        setTimeout(injectPageSelector, 800);
-    }
-    ['pushState','replaceState'].forEach(m => {
-        const orig = history[m];
-        history[m] = function(...args) { orig.apply(this, args); onRouteChange(); };
-    });
-    window.addEventListener('popstate', onRouteChange);
-
-    // ── MutationObserver ──
-    const pending = new Set();
-    let rafId = null;
-    function scheduleProcess() {
-        if (rafId) return;
-        rafId = requestAnimationFrame(() => {
-            rafId = null;
-            const batch = [...pending]; pending.clear();
-            for (const node of batch) {
-                if (node.nodeType === 1) {
-                    processTree(node);
-                    if (node.querySelector?.('.page-bar') || node.classList?.contains('page-bar') ||
-                        node.querySelector?.('ul.pagination') || node.classList?.contains('pagination') ||
-                        node.tagName === 'UL' && node.classList?.contains('pagination'))
-                        setTimeout(injectPageSelector, 100);
-                } else if (node.nodeType === 3) processNode(node);
-            }
-        });
-    }
-    const observer = new MutationObserver(muts => {
-        if (!CONFIG.enabled) return;
-        for (const m of muts) {
-            if (m.type === 'characterData') {
-                if (writingSet.has(m.target)) continue;
-                nodeCache.delete(m.target);
-                pending.add(m.target);
-            }
-            for (const node of m.addedNodes) pending.add(node);
-        }
-        scheduleProcess();
-    });
-
-    // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
-    // （已在上方定義 gmStyle，此處呼叫）
+    // ── CSS ──
     gmStyle(`
     #d2r-fab {
       position:fixed;bottom:20px;left:20px;z-index:99999;
@@ -424,37 +290,25 @@
 
     // ── 中文搜尋模組 ──
 
-    // 判斷是否含中文
     function hasChinese(str) {
         return /[\u4e00-\u9fa5]/.test(str);
     }
 
-    // 正規表達式 → 可讀英文（用於顯示）
-    // 策略：迭代移除群組 → 移除字元類 → 反跳脫特殊字元 → 移除量詞
     function regexToReadable(src) {
         let r = src;
-        // 迭代移除所有括號群組（含巢狀），替換為 X
         let prev;
         do { prev = r; r = r.replace(/\((?:[^()])*\)/g, 'X'); } while (r !== prev);
-        // 移除字元類 [...]
         r = r.replace(/\[[^\]]*\]/g, 'X');
-        // 反跳脫常見特殊字元
         r = r.replace(/\\([ +\-.()[\]{}|^$\\])/g, '$1');
         r = r.replace(/\\s/g, ' ').replace(/\\d/g, 'X').replace(/\\w/g, 'X');
-        r = r.replace(/\\/g, ''); // 移除剩餘反斜線
-        // 移除量詞（+, *, ?）但保留 + 號在英文語境中
-        r = r.replace(/(\w|X)[*+?]+/g, '$1'); // 詞後量詞
-        r = r.replace(/(?<![a-zA-Z0-9X])[*?]/g, ''); // 獨立量詞
-        // 合併連續 X 和多餘空格
+        r = r.replace(/\\/g, '');
+        r = r.replace(/(\w|X)[*+?]+/g, '$1');
+        r = r.replace(/(?<![a-zA-Z0-9X])[*?]/g, '');
         r = r.replace(/X+/g, 'X').replace(/\s{2,}/g, ' ').trim();
         return r;
     }
 
-    // ── 建立兩組搜尋字典（道具 / 屬性）──
-
-    // 道具字典（包含符文，符文專區直接搜英文即可）
-    const ITEM_ZH_TO_EN = {};
-    // 詞綴字典（屬性，用於 Search options 欄位）
+    const ITEM_ZH_TO_EN  = {};
     const AFFIX_ZH_TO_EN = {};
 
     for (const [en, zh] of Object.entries(ITEM_NAMES)) {
@@ -467,21 +321,16 @@
             const enReadable = regexToReadable(src);
             if (!enReadable || enReadable.length < 2) continue;
 
-            // 完整模板（$1 → X）
             const zhFull    = tmpl.replace(/\$\d+/g, 'X').replace(/\s+/g, ' ').trim();
-            // 關鍵字（去除數字、符號）
             const zhKeyword = tmpl.replace(/\$\d+/g, '').replace(/[+\-%X\s（）]/g, '').trim();
 
             if (zhFull.length >= 2 && hasChinese(zhFull) && !AFFIX_ZH_TO_EN[zhFull])
                 AFFIX_ZH_TO_EN[zhFull] = enReadable;
             if (zhKeyword.length >= 2 && hasChinese(zhKeyword) && !AFFIX_ZH_TO_EN[zhKeyword])
                 AFFIX_ZH_TO_EN[zhKeyword] = enReadable;
-            // 固定字串（無數字佔位符）直接加入
             if (!tmpl.includes('$') && hasChinese(tmpl) && !AFFIX_ZH_TO_EN[tmpl])
                 AFFIX_ZH_TO_EN[tmpl] = enReadable;
 
-            // 額外：對多詞中文模板做子詞索引（含 X 的）
-            // 例如 "+X% 傷害強化" → 索引 "傷害強化"、"+X% 傷害強化"
             if (zhFull.includes('X') && hasChinese(zhFull)) {
                 const subKw = zhFull.replace(/[\+\-]?X[\-X]*%?\s*/g, '').trim();
                 if (subKw.length >= 2 && hasChinese(subKw) && !AFFIX_ZH_TO_EN[subKw])
@@ -490,7 +339,6 @@
         } catch (_) {}
     }
 
-    // 搜尋函式：mode = 'item' | 'affix'
     function searchZh(query, mode = 'item') {
         if (!query || !query.trim()) return [];
         const q = query.trim();
@@ -504,28 +352,20 @@
             if (exact.length + startsWith.length + contains.length >= 100) break;
         }
 
-        // 去重：affix 模式以 en（英文模板）為 key；item 模式以 en 為 key
         const seen = new Map();
         for (const r of [...exact, ...startsWith, ...contains]) {
-            const key = mode === 'affix' ? r.en : r.en;
-            if (!seen.has(key)) seen.set(key, r);
+            if (!seen.has(r.en)) seen.set(r.en, r);
         }
         return [...seen.values()].slice(0, 20);
     }
 
-    // 從欄位上下文判斷搜尋模式
-    // React Select 的 input 沒有 placeholder 屬性，
-    // placeholder 文字放在 aria-describedby 指向的元素裡
     function getFieldText(el) {
-        // 1. 直接 placeholder 屬性（普通 input）
         if (el.placeholder) return el.placeholder;
-        // 2. React Select：aria-describedby → placeholder div
         const descId = el.getAttribute('aria-describedby');
         if (descId) {
             const descEl = document.getElementById(descId);
             if (descEl) return descEl.textContent || '';
         }
-        // 3. 向上找最近的 label 或 Select container 的 placeholder div
         let p = el.parentElement;
         for (let i = 0; i < 6 && p; i++, p = p.parentElement) {
             const ph = p.querySelector('[class*="placeholder"]');
@@ -543,15 +383,13 @@
 
     function getSearchMode(el) {
         const ph = (el.dataset.d2rPhOrig || getFieldText(el) || '').toLowerCase();
-        // 屬性欄：Search options / Search Stats / More Filters → affix 字典
-        // 注意：Select... 是平台/模式/版本選單，不走 affix
         if (ph.includes('option') || ph.includes('stats') ||
             ph === 'more filters' || ph === '更多篩選' ||
             ph.includes('選項') || ph.includes('屬性')) return 'affix';
         return 'item';
     }
 
-    // 建立下拉清單 DOM
+    // ── 下拉清單 DOM ──
     const zhDropdown = document.createElement('div');
     zhDropdown.id = 'd2r-zh-dropdown';
     zhDropdown.style.display = 'none';
@@ -568,10 +406,9 @@
         const dropH = Math.min(320, currentResults.length * 40 + 60);
 
         if (spaceBelow < dropH && spaceAbove > dropH) {
-            // 往上開
-            zhDropdown.style.top  = `${rect.top + window.scrollY - dropH - 4}px`;
+            zhDropdown.style.top = `${rect.top + window.scrollY - dropH - 4}px`;
         } else {
-            zhDropdown.style.top  = `${rect.bottom + window.scrollY + 4}px`;
+            zhDropdown.style.top = `${rect.bottom + window.scrollY + 4}px`;
         }
         zhDropdown.style.left  = `${rect.left + window.scrollX}px`;
         zhDropdown.style.width = `${Math.max(rect.width, 260)}px`;
@@ -589,7 +426,6 @@
 
         zhDropdown.innerHTML = '';
 
-        // 標題列：顯示搜尋模式
         const modeLabel = mode === 'affix' ? '屬性' : '道具';
         const header = document.createElement('div');
         header.className = 'd2r-zh-header';
@@ -617,7 +453,6 @@
     }
 
     function applySelection(en, inputEl) {
-        // 相容 React 受控元件
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
             window.HTMLInputElement.prototype, 'value'
         ).set;
@@ -639,15 +474,12 @@
         activeIndex = idx;
     }
 
-    // Fix 3 & 4: iOS 中文輸入法不一定觸發 input，需同時監聽 compositionend / keyup
     function handleZhInput(e) {
         if (!CONFIG.enabled) return;
         const el = e.target;
         if (el.tagName !== 'INPUT') return;
         if (el.type === 'hidden' || el.type === 'number') return;
-        if (el.dataset.d2rPage) return;
 
-        // 快取翻譯前的 placeholder（首次觸發時還未被翻譯）
         cacheOriginalPlaceholder(el);
 
         const val = el.value;
@@ -664,7 +496,6 @@
     document.addEventListener('compositionend', handleZhInput, true);
     document.addEventListener('keyup',          handleZhInput, true);
 
-    // 鍵盤操作（Enter 在下拉顯示時攔截，避免直接提交）
     document.addEventListener('keydown', e => {
         if (zhDropdown.style.display === 'none') return;
 
@@ -679,13 +510,10 @@
                 e.preventDefault();
                 e.stopPropagation();
                 applySelection(currentResults[activeIndex].en, currentInput);
-            } else {
-                // 沒有選中任何項目時，取第一筆自動填入
-                if (currentResults.length > 0) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    applySelection(currentResults[0].en, currentInput);
-                }
+            } else if (currentResults.length > 0) {
+                e.preventDefault();
+                e.stopPropagation();
+                applySelection(currentResults[0].en, currentInput);
             }
         } else if (e.key === 'Escape') {
             zhDropdown.style.display = 'none';
@@ -693,14 +521,12 @@
         }
     }, true);
 
-    // 點擊其他地方關閉
     document.addEventListener('click', e => {
         if (!zhDropdown.contains(e.target) && e.target !== currentInput) {
             zhDropdown.style.display = 'none';
         }
     });
 
-    // 滾動/縮放時重新定位
     window.addEventListener('scroll', () => {
         if (zhDropdown.style.display === 'none' || !currentInput) return;
         positionDropdown(currentInput);
@@ -722,7 +548,7 @@
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
 
-        const scriptVersion = '2.5';
+        const scriptVersion = '2.1';
         panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
@@ -758,6 +584,46 @@
         });
     }
 
+    // ── SPA 路由偵測 ──
+    let lastPath = location.pathname + location.search;
+    function onRouteChange() {
+        const cur = location.pathname + location.search;
+        if (cur === lastPath) return;
+        lastPath = cur;
+    }
+    ['pushState','replaceState'].forEach(m => {
+        const orig = history[m];
+        history[m] = function(...args) { orig.apply(this, args); onRouteChange(); };
+    });
+    window.addEventListener('popstate', onRouteChange);
+
+    // ── MutationObserver ──
+    const pending = new Set();
+    let rafId = null;
+    function scheduleProcess() {
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+            rafId = null;
+            const batch = [...pending]; pending.clear();
+            for (const node of batch) {
+                if (node.nodeType === 1)      processTree(node);
+                else if (node.nodeType === 3) processNode(node);
+            }
+        });
+    }
+    const observer = new MutationObserver(muts => {
+        if (!CONFIG.enabled) return;
+        for (const m of muts) {
+            if (m.type === 'characterData') {
+                if (writingSet.has(m.target)) continue;
+                nodeCache.delete(m.target);
+                pending.add(m.target);
+            }
+            for (const node of m.addedNodes) pending.add(node);
+        }
+        scheduleProcess();
+    });
+
     // ── 初始化 ──
     function init() {
         createFAB();
@@ -765,22 +631,12 @@
         processTree(document.body);
         document.title = translate(document.title);
         observer.observe(document.body, { childList:true, subtree:true, characterData:true });
-        injectPageSelector();
-        setTimeout(injectPageSelector, 600);
 
-        // Fix 2: iOS Safari MutationObserver 常漏觸發，加輪詢保命符
+        // iOS Safari MutationObserver 常漏觸發，加輪詢保命符
         setInterval(() => {
-            if (CONFIG.enabled) {
-                processTree(document.body);
-                // 若頁碼列已出現但選擇器尚未注入，補注入
-                if (document.querySelector('ul.pagination') && !document.querySelector('.d2r-page'))
-                    injectPageSelector();
-            }
+            if (CONFIG.enabled) processTree(document.body);
         }, 1500);
-
-        //console.log(`[D2R] 物品${ITEM_ENTRIES.length} UI${UI_ENTRIES.length} 屬性${AFFIX_PAT.length} 搜尋：道具${Object.keys(ITEM_ZH_TO_EN).length}/屬性${Object.keys(AFFIX_ZH_TO_EN).length}`);
     }
 
-    // 資料已在頁面載入後才注入，DOM 必定 ready，直接呼叫
     init();
 })();
