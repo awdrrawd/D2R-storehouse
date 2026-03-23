@@ -1,4 +1,4 @@
-// affixes.js — D2R 翻譯插件
+// affixes.js — D2R 屬性字典
 // 格式：[英文 regex, 中文模板]  $1 $2... 對應捕獲群組數字
 
 window.D2R_AFFIXES = [
