@@ -87,5 +87,5 @@ D2R-storehouse/
 
 ## 問題回報
 
-遇到翻譯錯誤、缺漏或功能問題，請至 [Issues](https://github.com/awdrrawd/D2R-storehouse/issues) 回報。
-
+遇使用BUG請至 [Issues](https://github.com/awdrrawd/D2R-storehouse/issues) 回報。
+由於文本量過大，翻譯問題原則上短時間不修
