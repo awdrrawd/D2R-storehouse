@@ -78,7 +78,7 @@ window.D2R_UI_TRADERIC = {
     "Make an Offer":     "提出報價",
     "Submit Offer":      "送出報價",
     "Make Offers":       "提出報價",
-    "Add Listing":       "新增列表",
+    "Add Listing":       "新增項目",
     "Save to Catalog":   "儲存至目錄",
     "Add to wishlist":   "加入願望清單",
     "Message":           "發送信息",
@@ -88,7 +88,7 @@ window.D2R_UI_TRADERIC = {
     "Submit":            "提交",
     "Reason":            "原因",
     "Cancel":            "取消",
-    "Create Listing":    "建立報價",
+    "Create Listing":    "建立項目",
     "Value Calculator":  "物價器算機",
     "Highest Values":    "按最高排列",
     "Lowest Values":     "按最低排列",
@@ -378,6 +378,7 @@ window.D2R_UI_TRADERIC = {
     "You need Akrew Pro to do this!":"您需要使用 Akrew Pro 才能執行此操作！",
     "Relist All is a Pro feature available in membership level Champion or above, but you can still relist individual items after 20 hours!":
     "「全部重新上架」是專業版功能，僅限冠軍級或以上會員等級使用，但您仍然可以在 20 小時後重新上架單一商品！",
+    "Search Items and Users":"搜尋道具和用戶",
 
     // == cancel reasons ==
     "Why are you cancelling this offer?":              "為甚麼要取消這場交易?",
