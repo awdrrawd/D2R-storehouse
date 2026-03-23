@@ -517,9 +517,26 @@ window.D2R_UI_TRADERIC = {
   "Top Traders":             "頂尖交易者",
   "My Rank":                 "我的排名",
   "is now on Traderie!":    "已經登入Traderie!",
+  "Browse by Category": "按類別瀏覽",
+  "Diablo II: Resurrected Trading FAQ": "《暗黑破壞神 II：獄火重生》交易常見問題",
+  "In Diablo II: Resurrected, you can trade by listing the items you have or browsing offers from other players. Traderie provides a safe marketplace to help you trade quickly and securely.":
+    "在《暗黑破壞神 II：獄火重生》中，你可以透過刊登自己擁有的物品，或瀏覽其他玩家的交易來進行交易。Traderie 提供一個安全的交易平台，讓你可以快速且安心地完成交易。",
+  "Where can I trade items in Diablo II: Resurrected?":"在哪裡可以交易物品？",
+  "You can trade items on Traderie's Diablo II: Resurrected hub. Use the trading pages to browse current listings, filter by category, and start trading instantly with other players.":
+    "你可以在 Traderie 的 D2R 專區進行交易。使用交易頁面可以瀏覽目前的物品列表，依分類篩選，並立即與其他玩家開始交易。",
+  "Is trading items safe on Traderie?":"在 Traderie 上交易安全嗎？",
+  "Yes. Traderie uses ratings, trade history, and anti-scam systems to keep trading in Diablo II: Resurrected safe and reliable. Follow in-app guidance and only complete trades with trusted players.":
+     "是的。Traderie 透過評價系統、交易紀錄以及防詐騙機制，確保《暗黑破壞神 II：獄火重生》的交易安全可靠。建議遵循平台指引，並只與可信任的玩家完成交易。",
+  "Can I trade rare or limited items in Diablo II: Resurrected?":"",
+  "Yes. Traderie supports trading rare, limited, and high-value items in Diablo II: Resurrected. You can browse offers, negotiate with players, and complete safe trades.":
+    "可以。Traderie 支援稀有、限定以及高價值物品的交易。你可以瀏覽其他玩家的出價、進行協商，並安全地完成交易。",
+  "How do I list my items on Traderie?":"可以交易稀有或限定物品嗎？",
+  "Go to the Diablo II: Resurrected trading section, select the item you want to list, set your offer or request, and publish. Your listing will appear for other players to discover.":
+    "前往《暗黑破壞神 II：獄火重生》的交易頁面，選擇你要刊登的物品，設定你的出售或需求條件，然後發佈。你的物品就會出現在列表中，供其他玩家查看與交易。",
+  "How do you trade in Diablo II: Resurrected?": "在《暗黑破壞神 II：獄火重生》中如何交易？",
   "Suggest a game that you would like to see on Traderie!":    "推薦你想在 Traderie 上看到的遊戲！",
   "Want to help? Apply to our Traderie expert team!":    "想貢獻力量？申請加入 Traderie 專家團隊！",
-  "Trade Diablo II: Resurrected Items Instantly and Safely": "立即開始再《Diablo II: Resurrected》上安全交易",
+  "Trade Diablo II: Resurrected Items Instantly and Safely": "立即開始再《暗黑破壞神 II：獄火重生》上安全交易",
   "Discover and join the #1 moderated Diablo II: Resurrected trading community. Search trade ads to find uniques, runes, and rare items from other players. Post your own trade ad or browse real-time offers in a safe, trusted environment.":
-   "加入排名第一的《Diablo II: Resurrected》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
+   "加入排名第一的《暗黑破壞神 II：獄火重生》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
 };
