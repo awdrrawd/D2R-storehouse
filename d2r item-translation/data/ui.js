@@ -270,9 +270,10 @@ window.D2R_UI = {
   "Stock Listing":    "庫存列表",
   "Standing Listing": "長期列表",
   "Listing":          "列表",
-  "Caster":           "施法者",
-  "Hit Power":        "強力打擊",
-  "Safety":           "安全防護",
+  "Blood":            "血腥系",
+  "Caster":           "施法系",
+  "Hit Power":        "重擊系",
+  "Safety":           "防護系",
 
   // ━━ 個人頁面 ━━
   "Listings":    "列表",    "Offers":      "報價",
