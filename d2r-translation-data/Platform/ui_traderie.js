@@ -401,4 +401,120 @@ window.D2R_UI_TRADERIC = {
   "Remove \u5168\u90e8": "移除全部",
   "Community Value": "社群價格",
   "This value is updated by our expert team.": "此數值由我們的專家團隊更新。",
+
+  // ━━ 設定頁導覽 ━━
+  "Settings":                "設定",
+  "About You":               "關於你",
+  "Profile Picture":         "個人頭像",
+  "Featured Badges":         "特色徽章",
+  "Account and Security":    "帳號與安全",
+  "Preferences":             "偏好設定",
+  "Akrew Points Shop":       "Akrew 積分商店",
+  "Account Settings":        "帳號設定",
+  "Language":                "語言",
+  "Choose your language":    "選擇語言",
+  "Enable Dark Mode":        "啟用深色模式",
+  "Enable Light Mode":       "啟用淺色模式",
+
+  // ━━ 關於你 ━━
+  "Username Color":          "用戶名顏色",
+  "Timezone":                "時區",
+  "Languages You Speak":     "使用語言",
+  "Bio":                     "個人簡介",
+  "Socials":                 "社交媒體",
+  "Add BNet Tag":            "新增 BNet 標籤",
+  "Add Nintendo Switch Friend Code": "新增 Switch 好友碼",
+  "Add PSN Online ID":       "新增 PSN 帳號",
+  "Add XBOX Gamertag":       "新增 XBOX Gamertag",
+  "Add Pronouns":            "新增代詞",
+  "Link":                    "連結",
+  "Link Roblox":             "連結 Roblox",
+
+  // ━━ 個人頭像 ━━
+  "Current Profile Picture": "目前頭像",
+  "Edit Avatar":             "編輯頭像",
+  "Upload Profile Picture":  "上傳頭像",
+  "Click to upload an original profile picture": "點擊上傳自定義頭像",
+  "Select An Icon":          "選擇圖示",
+  "Search Icons...":         "搜尋圖示...",
+  "Select Frame":            "選擇框架",
+
+  // ━━ 特色徽章 ━━
+  "Select Badge":            "選擇徽章",
+  "Search Badges...":        "搜尋徽章...",
+  "Save":                    "儲存",
+
+  // ━━ 帳號與安全 ━━
+  "CHANGE USERNAME":         "更改用戶名",
+  "Requirements: Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":
+    "需求：最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
+  "Note: You may only change your username every 30 days":
+    "注意：每 30 天只能更改一次用戶名",
+  "UPDATE EMAIL":            "更新電子郵件",
+  "CHANGE PASSWORD":         "更改密碼",
+  "Change Password":         "更改密碼",
+  "MULTI-FACTOR AUTHENTICATION": "多重身份驗證",
+  "Multi factor authentication is a good way to add an extra layer of security to your account to make sure that only you have the ability to log in.":
+    "多重身份驗證可為帳號增加一層安全保護，確保只有你能登入。",
+  "Set Up Multi-Factor":     "設定多重驗證",
+  "AKREW PRO":               "AKREW PRO",
+  "Click here to sign up, manage, or cancel your Akrew Pro subscription.":
+    "點擊此處註冊、管理或取消 Akrew Pro 訂閱。",
+  "LOG OUT":                 "登出",
+  "Log Out":                 "登出",
+  "LOGOUT USERS FROM ALL DEVICES": "從所有裝置登出",
+  "This will sign out all users logged into this account from every device.":
+    "這將從所有裝置登出此帳號的所有登入。",
+  "Logout all users":        "登出所有裝置",
+  "DELETE YOUR ACCOUNT":     "刪除帳號",
+  "Delete Your Account":     "刪除帳號",
+
+  // ━━ 通知設定 ━━
+  "BROWSER PUSH NOTIFICATIONS": "瀏覽器推播通知",
+  "This option enables notifications. To remove notifications, you will have to block them within your device settings. DISCLAIMER: Browser push notifications do not work on iOS (iPhone)":
+    "此選項啟用通知。若要移除，請在裝置設定中封鎖。注意：iOS（iPhone）不支援瀏覽器推播通知。",
+  "NOTIFICATION SETTINGS":   "通知設定",
+  "Follower Notifications":  "追蹤者通知",
+  "Chat Notifications Sound":"聊天通知音效",
+  "DISCORD NOTIFICATIONS":   "Discord 通知",
+  "This option toggles discord notifications.": "此選項切換 Discord 通知。",
+  "Enable Notifications":    "啟用通知",
+  "ITEM NOTIFICATIONS":      "物品通知",
+  "View the list of items that you are currently getting new listing notifications for":
+    "查看您目前訂閱新商品通知的物品清單",
+  "See Items Subscribed To": "查看已訂閱的物品",
+
+  // ━━ 偏好設定 ━━
+  "Account Preferences":     "帳號偏好設定",
+  "AUTOMATICALLY GO ONLINE": "自動上線",
+  "Automatically set your status to online when you visit the site":
+    "造訪網站時自動將狀態設為上線",
+  "RELIST ITEMS PREFERENCE": "重新上架偏好",
+  "When relisting items, they will automatically go to the top of the profile":
+    "重新上架物品時，將自動置頂於個人頁面",
+  "HIDE CONTACT INFORMATION":"隱藏聯絡資訊",
+  "This will keep your external account linked but hide it to other users.":
+    "這將保留外部帳號連結，但對其他用戶隱藏。",
+  "Contacts":                "聯絡方式",
+  "BLOCKED USERS":           "已封鎖的用戶",
+  "See Blocked Users":       "查看已封鎖的用戶",
+  "DIRECT MESSAGE REQUESTS": "私訊請求",
+  "When this is enabled, other logged in users will be able to send you a direct message request (through the chat icon on your profile). DISCLAIMER: This is turned on by default.":
+    "啟用後，其他登入用戶可透過您個人頁面的聊天圖示發送私訊請求。注意：預設為開啟。",
+  "AUTO ACCEPT DIRECT MESSAGES": "自動接受私訊",
+  "When this is enabled, all direct message requests will be automatically accepted.":
+    "啟用後，所有私訊請求將自動接受。",
+  "LEADERBOARD OPT IN":      "加入排行榜",
+  "When this is enabled, your trades and reviews will be counted for the achievement system and leaderboard. DISCLAIMER: This is turned off by default.":
+    "啟用後，您的交易與評價將計入成就系統與排行榜。注意：預設為關閉。",
+  "EMAIL MARKETING OPT IN":  "訂閱行銷郵件",
+  "When this is enabled, you will receive updates and news straight to your inbox.":
+    "啟用後，您將收到最新動態與消息至您的信箱。",
+
+  // ━━ 首頁 / 排行榜 ━━
+  "Top Traders":             "頂尖交易者",
+  "My Rank":                 "我的排名",
+  "is now on Traderie!":    "已經登入Traderie!",
+  "Suggest a game that you would like to see on Traderie!":    "推薦你想在 Traderie 上看到的遊戲！",
+  "Want to help? Apply to our Traderie expert team!":    "想貢獻力量？申請加入 Traderie 專家團隊！",
 };
