@@ -1,8 +1,6 @@
-// ui.js - D2R Traderie platform dictionary
+// ui_traderie.js - D2R Traderie 平台字典
 // window.D2R_UI_TRADERIC
-
 window.D2R_UI_TRADERIC = {
-
     // == search placeholders ==
     "Search Base Items...":     "搜尋基礎裝備...",
     "Search options...":        "搜尋屬性...",
@@ -120,12 +118,9 @@ window.D2R_UI_TRADERIC = {
     "Skills":          "技能",
     "Platform":        "平台",
     "Region":          "地區",
-    "Base Item Rarity":             "基礎物品稀有度",
-    "Is Unmade (Roll It Yourself)": "純符文（自己鑲嵌）",
+    "Base Item Rarity":               "基礎物品稀有度",
+    "Is Unmade (Roll It Yourself)":   "純符文（自己鑲嵌）",
     "Includes Hel Rune for Rerolling":"附帶海爾(重置用)",
-    "Amulet Variant":"護身符變體",
-    "Jewel Variant": "珠寶變體",
-    "Ring Variant":  "戒指變體",
 
     // == sort ==
     "Posted: Newest":"發布：最新",
@@ -278,39 +273,35 @@ window.D2R_UI_TRADERIC = {
     "Safety":           "防護系",
 
     // == profile ==
-    "Listings":    "列表",
-    "Offers":      "報價",
-    "Wishlists":   "願望清單",
-    "Catalog":     "目錄",
-    "Reviews":     "評價",
-    "Collectibles":"收藏品",
-    "Followers":   "追蹤者",
-    "Following":   "追蹤中",
-    "Online":      "線上",
-    "Overall Rating":    "整體評分",
-    "Write Your Review": "撰寫評論",
-    "Review Standards":  "評論規範",
-    "Submit review":     "送出評論",
-    "Remove Review":     "刪除評論",
+    "Listings":         "列表",
+    "Offers":           "報價",
+    "Wishlists":        "願望清單",
+    "Catalog":          "目錄",
+    "Reviews":          "評價",
+    "Collectibles":     "收藏品",
+    "Followers":        "追蹤者",
+    "Following":        "追蹤中",
+    "Online":           "線上",
+    "Overall Rating":   "整體評分",
+    "Write Your Review":"撰寫評論",
+    "Review Standards": "評論規範",
+    "Submit review":    "送出評論",
+    "Remove Review":    "刪除評論",
 
     // == support ==
-    "Ask A Question":   "提問",
-    "How Do I...?":     "如何操作？",
+    "Ask A Question":         "提問",
+    "How Do I...?":           "如何操作？",
+    "Roblox Verification":    "Roblox 認證",
+    "Website Bugs":           "網站錯誤",
+    "Suggestions":            "建議",
+    "Usage Help":             "使用說明",
+    "Other":                  "其他",
     "Any additional comment?":"有其他補充嗎？",
-    "I agree that I have checked the F.A.Q. and Safe Trading Guide before submitting a question.":
-    "我確認已查閱常見問題與安全交易指南。",
-    "Please check our F.A.Q. and Safe Trading Guide before submitting a question.":
-    "提問前請先查閱常見問題與安全交易指南。",
+    "I agree that I have checked the F.A.Q. and Safe Trading Guide before submitting a question.":"我確認已查閱常見問題與安全交易指南。",
+    "Please check our F.A.Q. and Safe Trading Guide before submitting a question.":"提問前請先查閱常見問題與安全交易指南。",
+    "Your message will be recorded and someone will reach out to you via Traderie Chat.":"您的訊息將被記錄，並有人透過 Traderie 聊天室聯繫您。",
     "You already have an unanswered question. Please wait patiently until we can get to your question for any follow-ups or extra questions. Thank you!":
     "您已有一個待回覆的問題，請耐心等候勿重複提問。",
-    "Your message will be recorded and someone will reach out to you via Traderie Chat.":
-    "您的訊息將被記錄，並有人透過 Traderie 聊天室聯繫您。",
-    "Roblox Verification":"Roblox 認證",
-    "Akrew Pro":     "Akrew Pro",
-    "Website Bugs":  "網站錯誤",
-    "Suggestions":   "建議",
-    "Usage Help":    "使用說明",
-    "Other":         "其他",
 
     // == notifications ==
     "Notifications":                    "通知",
@@ -412,121 +403,116 @@ window.D2R_UI_TRADERIC = {
     "Earned 10 pts":          "獲得 10 點積分",
 
     // == misc ==
-    "Hide \u5168\u90e8":   "隱藏全部",
-    "Hide \u5217\u8868":   "隱藏列表",
-    "Relist \u5168\u90e8": "重新上架全部",
-    "Remove \u5168\u90e8": "移除全部",
-    "Community Value": "社群價格",
+    "Hide \u5168\u90e8":      "隱藏全部",
+    "Hide \u5217\u8868":      "隱藏列表",
+    "Relist \u5168\u90e8":    "重新上架全部",
+    "Remove \u5168\u90e8":    "移除全部",
+    "Community Value":        "社群價格",
     "This value is updated by our expert team.": "此數值由我們的專家團隊更新。",
 
     // == settings nav ==
-    "Settings":                "設定",
-    "About You":               "關於你",
-    "Profile Picture":         "個人頭像",
-    "Featured Badges":         "特色徽章",
-    "Account and Security":    "帳號與安全",
-    "Preferences":             "偏好設定",
-    "Akrew Points Shop":       "Akrew 積分商店",
-    "Account Settings":        "帳號設定",
-    "Language":                "語言",
-    "Choose your language":    "選擇語言",
-    "Enable Dark Mode":        "啟用深色模式",
-    "Enable Light Mode":       "啟用淺色模式",
+    "Settings":               "設定",
+    "About You":              "關於你",
+    "Profile Picture":        "個人頭像",
+    "Featured Badges":        "特色徽章",
+    "Account and Security":   "帳號與安全",
+    "Preferences":            "偏好設定",
+    "Akrew Points Shop":      "Akrew 積分商店",
+    "Account Settings":       "帳號設定",
+    "Language":               "語言",
+    "Choose your language":   "選擇語言",
+    "Enable Dark Mode":       "啟用深色模式",
+    "Enable Light Mode":      "啟用淺色模式",
 
     // == about you ==
-    "Username Color":          "用戶名顏色",
-    "Timezone":                "時區",
-    "Languages You Speak":     "使用語言",
-    "Bio":                     "個人簡介",
-    "Socials":                 "社交媒體",
-    "Add BNet Tag":            "新增 BNet 標籤",
+    "Username Color":         "用戶名顏色",
+    "Timezone":               "時區",
+    "Languages You Speak":    "使用語言",
+    "Bio":                    "個人簡介",
+    "Socials":                "社交媒體",
+    "Add BNet Tag":           "新增 BNet 標籤",
+    "Add PSN Online ID":      "新增 PSN 帳號",
+    "Add XBOX Gamertag":      "新增 XBOX Gamertag",
+    "Add Pronouns":           "新增代詞",
+    "Link":                   "連結",
+    "Link Roblox":            "連結 Roblox",
     "Add Nintendo Switch Friend Code": "新增 Switch 好友碼",
-    "Add PSN Online ID":       "新增 PSN 帳號",
-    "Add XBOX Gamertag":       "新增 XBOX Gamertag",
-    "Add Pronouns":            "新增代詞",
-    "Link":                    "連結",
-    "Link Roblox":             "連結 Roblox",
 
     // == profile picture ==
-    "Current Profile Picture": "目前頭像",
-    "Edit Avatar":             "編輯頭像",
-    "Upload Profile Picture":  "上傳頭像",
+    "Current Profile Picture":"目前頭像",
+    "Edit Avatar":            "編輯頭像",
+    "Upload Profile Picture": "上傳頭像",
+    "Select An Icon":         "選擇圖示",
+    "Search Icons...":        "搜尋圖示...",
+    "Select Frame":           "選擇框架",
     "Click to upload an original profile picture": "點擊上傳自定義頭像",
-    "Select An Icon":          "選擇圖示",
-    "Search Icons...":         "搜尋圖示...",
-    "Select Frame":            "選擇框架",
 
     // == badges ==
-    "Select Badge":            "選擇徽章",
-    "Search Badges...":        "搜尋徽章...",
-    "Save":                    "儲存",
+    "Select Badge":           "選擇徽章",
+    "Search Badges...":       "搜尋徽章...",
+    "Save":                   "儲存",
 
     // == account & security ==
-    "CHANGE USERNAME":         "更改用戶名",
-    "Requirements: Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":
-    "需求：最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
-    "Note: You may only change your username every 30 days":
-    "注意：每 30 天只能更改一次用戶名",
+
+
+
     "UPDATE EMAIL":            "更新電子郵件",
     "CHANGE PASSWORD":         "更改密碼",
     "Change Password":         "更改密碼",
-    "MULTI-FACTOR AUTHENTICATION": "多重身份驗證",
-    "Multi factor authentication is a good way to add an extra layer of security to your account to make sure that only you have the ability to log in.":
-    "多重身份驗證可為帳號增加一層安全保護，確保只有你能登入。",
     "Set Up Multi-Factor":     "設定多重驗證",
     "AKREW PRO":               "AKREW PRO",
-    "Click here to sign up, manage, or cancel your Akrew Pro subscription.":
-    "點擊此處註冊、管理或取消 Akrew Pro 訂閱。",
     "LOG OUT":                 "登出",
     "Log Out":                 "登出",
-    "LOGOUT USERS FROM ALL DEVICES": "從所有裝置登出",
-    "This will sign out all users logged into this account from every device.":
-    "這將從所有裝置登出此帳號的所有登入。",
     "Logout all users":        "登出所有裝置",
     "DELETE YOUR ACCOUNT":     "刪除帳號",
     "Delete Your Account":     "刪除帳號",
+    "CHANGE USERNAME":         "更改用戶名",
+    "MULTI-FACTOR AUTHENTICATION": "多重身份驗證",
+    "LOGOUT USERS FROM ALL DEVICES": "從所有裝置登出",
+    "Note: You may only change your username every 30 days":"注意：每 30 天只能更改一次用戶名",
+    "Click here to sign up, manage, or cancel your Akrew Pro subscription.":"點擊此處註冊、管理或取消 Akrew Pro 訂閱。",
+    "This will sign out all users logged into this account from every device.":"這將從所有裝置登出此帳號的所有登入。",
+    "Multi factor authentication is a good way to add an extra layer of security to your account to make sure that only you have the ability to log in.":
+      "多重身份驗證可為帳號增加一層安全保護，確保只有你能登入。",
+    "Requirements: Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":
+      "需求：最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
 
     // == notification settings ==
     "BROWSER PUSH NOTIFICATIONS": "瀏覽器推播通知",
+    "NOTIFICATION SETTINGS":      "通知設定",
+    "Follower Notifications":     "追蹤者通知",
+    "Chat Notifications Sound":   "聊天通知音效",
+    "DISCORD NOTIFICATIONS":      "Discord 通知",
+    "Enable Notifications":       "啟用通知",
+    "ITEM NOTIFICATIONS":         "物品通知",
+    "See Items Subscribed To":    "查看已訂閱的物品",
+    "This option toggles discord notifications.": "此選項切換 Discord 通知。",
     "This option enables notifications. To remove notifications, you will have to block them within your device settings. DISCLAIMER: Browser push notifications do not work on iOS (iPhone)":
     "此選項啟用通知。若要移除，請在裝置設定中封鎖。注意：iOS（iPhone）不支援瀏覽器推播通知。",
-    "NOTIFICATION SETTINGS":   "通知設定",
-    "Follower Notifications":  "追蹤者通知",
-    "Chat Notifications Sound":"聊天通知音效",
-    "DISCORD NOTIFICATIONS":   "Discord 通知",
-    "This option toggles discord notifications.": "此選項切換 Discord 通知。",
-    "Enable Notifications":    "啟用通知",
-    "ITEM NOTIFICATIONS":      "物品通知",
     "View the list of items that you are currently getting new listing notifications for":
     "查看您目前訂閱新商品通知的物品清單",
-    "See Items Subscribed To": "查看已訂閱的物品",
 
     // == preferences ==
-    "Account Preferences":     "帳號偏好設定",
-    "AUTOMATICALLY GO ONLINE": "自動上線",
-    "Automatically set your status to online when you visit the site":
-    "造訪網站時自動將狀態設為上線",
-    "RELIST ITEMS PREFERENCE": "重新上架偏好",
-    "When relisting items, they will automatically go to the top of the profile":
-    "重新上架物品時，將自動置頂於個人頁面",
-    "HIDE CONTACT INFORMATION":"隱藏聯絡資訊",
-    "This will keep your external account linked but hide it to other users.":
-    "這將保留外部帳號連結，但對其他用戶隱藏。",
-    "Contacts":                "聯絡方式",
-    "BLOCKED USERS":           "已封鎖的用戶",
-    "See Blocked Users":       "查看已封鎖的用戶",
-    "DIRECT MESSAGE REQUESTS": "私訊請求",
-    "When this is enabled, other logged in users will be able to send you a direct message request (through the chat icon on your profile). DISCLAIMER: This is turned on by default.":
-    "啟用後，其他登入用戶可透過您個人頁面的聊天圖示發送私訊請求。注意：預設為開啟。",
-    "AUTO ACCEPT DIRECT MESSAGES": "自動接受私訊",
-    "When this is enabled, all direct message requests will be automatically accepted.":
-    "啟用後，所有私訊請求將自動接受。",
-    "LEADERBOARD OPT IN":      "加入排行榜",
+    "Account Preferences":        "帳號偏好設定",
+    "AUTOMATICALLY GO ONLINE":    "自動上線",
+    "RELIST ITEMS PREFERENCE":    "重新上架偏好",
+    "HIDE CONTACT INFORMATION":   "隱藏聯絡資訊",
+    "Contacts":                   "聯絡方式",
+    "BLOCKED USERS":              "已封鎖的用戶",
+    "See Blocked Users":          "查看已封鎖的用戶",
+    "DIRECT MESSAGE REQUESTS":    "私訊請求",
+    "AUTO ACCEPT DIRECT MESSAGES":"自動接受私訊",
+    "LEADERBOARD OPT IN":         "加入排行榜",
+    "EMAIL MARKETING OPT IN":     "訂閱行銷郵件",
+    "Automatically set your status to online when you visit the site":"造訪網站時自動將狀態設為上線",
+    "When relisting items, they will automatically go to the top of the profile":"重新上架物品時，將自動置頂於個人頁面",
+    "This will keep your external account linked but hide it to other users.":"這將保留外部帳號連結，但對其他用戶隱藏。",
+    "When this is enabled, all direct message requests will be automatically accepted.":"啟用後，所有私訊請求將自動接受。",
+    "When this is enabled, you will receive updates and news straight to your inbox.":"啟用後，您將收到最新動態與消息至您的信箱。",
     "When this is enabled, your trades and reviews will be counted for the achievement system and leaderboard. DISCLAIMER: This is turned off by default.":
     "啟用後，您的交易與評價將計入成就系統與排行榜。注意：預設為關閉。",
-    "EMAIL MARKETING OPT IN":  "訂閱行銷郵件",
-    "When this is enabled, you will receive updates and news straight to your inbox.":
-    "啟用後，您將收到最新動態與消息至您的信箱。",
+    "When this is enabled, other logged in users will be able to send you a direct message request (through the chat icon on your profile). DISCLAIMER: This is turned on by default.":
+    "啟用後，其他登入用戶可透過您個人頁面的聊天圖示發送私訊請求。注意：預設為開啟。",
 
     // == home / leaderboard ==
     "Top Traders":             "頂尖交易者",
@@ -542,23 +528,24 @@ window.D2R_UI_TRADERIC = {
     "Asia":                    "亞州(Asia)",
 
     // ==Bottom Information==
-    "HELP": "幫助",
-    "Getting Started": "入門指南",
-    "Submit Feedback": "提交回饋",
-    "Suggest A New Game": "建議新增遊戲",
-    "Report Users": "檢舉使用者",
-    "ABOUT": "關於",
-    "Contact Us": "聯絡我們",
-    "Advertise with Traderie": "在 Traderie 投放廣告",
-    "Our Moderators": "我們的管理員",
-    "Shop": "商店",
-    "Become a Content Creator": "成為內容創作者",
-    "Discord Values Bot": "Discord 價值機器人",
-    "LEGAL": "法律",
-    "Terms of Service": "服務條款",
-    "Privacy Policy": "隱私政策",
-    "Community Guidelines": "社群守則",
-    "Traderie is a fan-made website and is in no way affiliated with Diablo II: Resurrected or any other game on the website.": "Traderie 為玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
+    "HELP":                      "幫助",
+    "Getting Started":           "入門指南",
+    "Submit Feedback":           "提交回饋",
+    "Suggest A New Game":        "建議新增遊戲",
+    "Report Users":              "檢舉使用者",
+    "ABOUT":                     "關於",
+    "Contact Us":                "聯絡我們",
+    "Advertise with Traderie":   "在 Traderie 投放廣告",
+    "Our Moderators":            "我們的管理員",
+    "Shop":                      "商店",
+    "Become a Content Creator":  "成為內容創作者",
+    "Discord Values Bot":        "Discord 價值機器人",
+    "LEGAL":                     "法律",
+    "Terms of Service":          "服務條款",
+    "Privacy Policy":            "隱私政策",
+    "Community Guidelines":      "社群守則",
+    "Traderie is a fan-made website and is in no way affiliated with Diablo II: Resurrected or any other game on the website.":
+      "Traderie 為玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
 
     // == 特殊翻譯 ==
     "Diablo II: Resurrected": " ",
@@ -586,5 +573,4 @@ window.D2R_UI_TRADERIC = {
     "Trade Diablo II: Resurrected Items Instantly and Safely": "立即在《暗黑破壞神 II：獄火重生》上安全交易",
     "Discover and join the #1 moderated Diablo II: Resurrected trading community. Search trade ads to find uniques, runes, and rare items from other players. Post your own trade ad or browse real-time offers in a safe, trusted environment.":
     "加入排名第一的《暗黑破壞神 II：獄火重生》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
-
 };
