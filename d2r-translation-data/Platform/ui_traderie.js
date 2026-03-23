@@ -326,15 +326,12 @@ window.D2R_UI_TRADERIC = {
     "Messages":                         "訊息",
     "Requests":                         "請求",
     "Archived":                         "已封存",
-    "made an  offer for":               "已出價，對於",
-    "made an offer for":                "已出價，對於",
+    "made an  offer for":               "已出價，對於", //一半有效
     "cancelled their offer for":        "取消出價，對於",
     "completed their offer for your":   "完成交易，於你的",
     "You got a new message from":       "你收到了一則信息，來自",
-    "completed your offer for":         "已跟您完成關於",
-    " completed your offer for ":       "已跟您完成關於",
-    "Leave them a review":              "的交易，給他一個評價",
-    " Leave them a review":             "的交易，給他一個評價",
+    "completed your offer for":         "已跟您完成關於", //無效
+    "Leave them a review":              "的交易，給他一個評價", //無效
     "You just got a":                   "你在剛才收到了",
     "star review from":                 "⭐評分，來自",
     "Review Ratings":                   "評分與評論",
