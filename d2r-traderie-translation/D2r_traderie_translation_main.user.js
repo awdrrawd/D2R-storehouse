@@ -1,9 +1,10 @@
 // ==UserScript==
-// @name         D2R Traderie Translate
-// @name:zh      D2R Traderie中文翻譯
-// @namespace    https://github.com/awdrrawd/d2r-traderie-tw
+// @name         Traderie D2R Chinese Translator (Supports cn search)
+// @name:zh-TW   D2R Traderie 繁體中文翻譯 (支援中文搜尋)
+// @name:zh-CN   D2R Traderie 繁体中文翻译（支援中文搜尋）
+// @namespace    https://github.com/awdrrawd/D2R-storehouse
 // @version      2.0
-// @description  traderie 的 D2R 頁面翻譯為繁體中文，並支援中文搜尋輸入
+// @description  Traderie 的 D2R 繁體中文化，並支援中文搜尋（僅載入翻譯資料）
 // @author       瀧月瀨
 // @match        https://traderie.com/diablo2resurrected*
 // @match        https://*.traderie.com/diablo2resurrected/*
@@ -12,6 +13,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
+// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
+// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
 // @run-at       document-idle
 // ==/UserScript==
 
