@@ -12,8 +12,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
-// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2R_Traderie_CN_Loader.user.js
-// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2R_Traderie_CN_Loader.user.js
+// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r%20item-translation/D2R_Traderie_CN_Loader.user.js
+// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r%20item-translation/D2R_Traderie_CN_Loader.user.js
 // @supportURL   https://github.com/awdrrawd/D2R-storehouse/issues
 // @run-at       document-idle
 // ==/UserScript==
@@ -30,15 +30,15 @@
             const res = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-cache' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             code = await res.text();
-            //console.log('[D2R Loader] ✅ 主體載入：', url);
+            //console.log('[D2R-TTL] ✅ 主體載入：', url);
             break;
         } catch (e) {
-            console.warn('[D2R Loader] ⚠️ 來源失敗，嘗試備用：', e.message);
+            console.warn('[D2R-TTL] ⚠️ 來源失敗，嘗試備用：', e.message);
         }
     }
 
     if (!code) {
-        console.error('[D2R Loader] ❌ 所有來源均失敗，請確認網路連線');
+        console.error('[D2R-TTL] ❌ 所有來源均失敗，請確認網路連線');
         return;
     }
 
@@ -46,13 +46,13 @@
 
     try {
         new Function(code)();
-        //console.log('[D2R Loader] ✅ 主體執行完成');
+        console.log('[D2R-TTL] ✅ 主體執行完成');
     } catch (_) {
         try {
             eval(code);
-            //console.log('[D2R Loader] ✅ 主體執行完成（eval fallback）');
+            console.log('[D2R-TTL] ✅ 主體執行完成（eval fallback）');
         } catch (e) {
-            console.error('[D2R Loader] ❌ 主體執行失敗：', e.message);
+            console.error('[D2R-TTL] ❌ 主體執行失敗：', e.message);
         }
     }
 })();
