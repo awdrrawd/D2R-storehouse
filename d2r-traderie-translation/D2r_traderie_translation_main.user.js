@@ -548,7 +548,7 @@
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
 
-        const scriptVersion = '2.1';
+        const scriptVersion = '2.0';
         panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
