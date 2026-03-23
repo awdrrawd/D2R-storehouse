@@ -8,7 +8,7 @@
 // 3. 不定義過短的通用詞（this / Or 等），避免誤觸道具名
 // window.D2R_UI（供腳本讀取）
 
-window.D2R_UI = {
+window.D2R_UI_TRADERIC = {
 
   // ━━ 複合搜尋 placeholder（整串優先）━━
   // React Select 的 placeholder 需整串才能正確識別搜尋模式
