@@ -6,6 +6,171 @@
 window.D2R_AFFIXES = [
 
 
+
+  // ━━ 屬性標籤（純文字，無數值）━━
+  // Better Chance of Getting Magic Items
+  ["Better\ Chance\ of\ Getting\ Magic\ Items", "尋獲魔法物品機率提高"],
+  // Physical Damage Received Reduced by
+  ["Physical\ Damage\ Received\ Reduced\ by", "受到的物理傷害降低"],
+  // Attacker Takes Lightning Damage
+  ["Attacker\ Takes\ Lightning\ Damage", "攻擊者受到電擊傷害"],
+  // Attack Rating against Undead
+  ["Attack\ Rating\ against\ Undead", "對不死怪物的準確率"],
+  // Attack Rating against Demons
+  ["Attack\ Rating\ against\ Demons", "對惡魔的準確率"],
+  // Increased Chance of Blocking
+  ["Increased\ Chance\ of\ Blocking", "格擋機率提高"],
+  // to Lightning Skill Damage
+  ["to\ Lightning\ Skill\ Damage", "閃電技能傷害"],
+  // Damage Taken Goes To Mana
+  ["Damage\ Taken\ Goes\ To\ Mana", "受到傷害轉為魔力"],
+  // Maximum Lightning Resist
+  ["Maximum\ Lightning\ Resist", "電擊抗性上限"],
+  // Extra Gold from Monsters
+  ["Extra\ Gold\ from\ Monsters", "怪物金幣掉落量提高"],
+  // Magic Damage Reduced by
+  ["Magic\ Damage\ Reduced\ by", "魔法傷害降低"],
+  // Chance of Crushing Blow
+  ["Chance\ of\ Crushing\ Blow", "粉碎打擊機率"],
+  // Increased Attack Speed
+  ["Increased\ Attack\ Speed", "攻擊速度"],
+  // to Poison Skill Damage
+  ["to\ Poison\ Skill\ Damage", "毒素技能傷害"],
+  // Reanimate as: Returned
+  ["Reanimate\ as:\ Returned", "機率將目標復生為：返世亡靈"],
+  // Bonus to Attack Rating
+  ["Bonus\ to\ Attack\ Rating", "準確率加成"],
+  // Maximum Poison Resist
+  ["Maximum\ Poison\ Resist", "毒素抗性上限"],
+  // to Magic Skill Damage
+  ["to\ Magic\ Skill\ Damage", "魔法技能傷害"],
+  // Attacker Takes Damage
+  ["Attacker\ Takes\ Damage", "攻擊者反傷"],
+  // Poison Length Reduced
+  ["Poison\ Length\ Reduced", "中毒時效縮短"],
+  // Chance of Open Wounds
+  ["Chance\ of\ Open\ Wounds", "開放傷口機率"],
+  // to Fire Skill Damage
+  ["to\ Fire\ Skill\ Damage", "火焰技能傷害"],
+  // to Cold Skill Damage
+  ["to\ Cold\ Skill\ Damage", "冰寒技能傷害"],
+  // Mana after each Kill
+  ["Mana\ after\ each\ Kill", "擊殺後回復魔力"],
+  // Life after each Kill
+  ["Life\ after\ each\ Kill", "擊殺後回復生命"],
+  // Slower Stamina Drain
+  ["Slower\ Stamina\ Drain", "精力消耗減緩"],
+  // Reduce Vendor Prices
+  ["Reduce\ Vendor\ Prices", "商人價格降低"],
+  // Faster Hit Recovery
+  ["Faster\ Hit\ Recovery", "打擊恢復"],
+  // Maximum Cold Resist
+  ["Maximum\ Cold\ Resist", "冰寒抗性上限"],
+  // Maximum Fire Resist
+  ["Maximum\ Fire\ Resist", "火焰抗性上限"],
+  // Defense vs. Missile
+  ["Defense\ vs\.\ Missile", "對遠程防禦"],
+  // Life stolen per hit
+  ["Life\ stolen\ per\ hit", "每次命中竊取生命"],
+  // Mana stolen per hit
+  ["Mana\ stolen\ per\ hit", "每次命中竊取魔力"],
+  // Chance of Blocking
+  ["Chance\ of\ Blocking", "格擋機率"],
+  // Faster Block Rate
+  ["Faster\ Block\ Rate", "格擋速度"],
+  // Damage Reduced by
+  ["Damage\ Reduced\ by", "傷害降低"],
+  // Experience Gained
+  ["Experience\ Gained", "獲得的經驗值"],
+  // Defense vs. Melee
+  ["Defense\ vs\.\ Melee", "對近戰防禦"],
+  // Faster Cast Rate
+  ["Faster\ Cast\ Rate", "施法速度"],
+  // Enhanced Defense
+  ["Enhanced\ Defense", "防禦強化"],
+  // Damage to Undead
+  ["Damage\ to\ Undead", "對不死怪物的傷害"],
+  // Damage to Demons
+  ["Damage\ to\ Demons", "對惡魔的傷害"],
+  // Lightning Resist
+  ["Lightning\ Resist", "電擊抗性"],
+  // Lightning Absorb
+  ["Lightning\ Absorb", "電擊吸收"],
+  // All Skill Levels
+  ["All\ Skill\ Levels", "所有技能等級"],
+  // Faster Run/Walk
+  ["Faster\ Run/Walk", "跑步/行走速度"],
+  // to Light Radius
+  ["to\ Light\ Radius", "照亮範圍"],
+  // Enhanced Damage
+  ["Enhanced\ Damage", "傷害強化"],
+  // Piercing Attack
+  ["Piercing\ Attack", "穿透攻擊"],
+  // Regenerate Mana
+  ["Regenerate\ Mana", "法力恢復"],
+  // All Resistances
+  ["All\ Resistances", "所有抗性"],
+  // Maximum Stamina
+  ["Maximum\ Stamina", "精力上限"],
+  // Minimum Damage
+  ["Minimum\ Damage", "最小傷害"],
+  // Maximum Damage
+  ["Maximum\ Damage", "最大傷害"],
+  // Replenish Life
+  ["Replenish\ Life", "生命回復"],
+  // All Attributes
+  ["All\ Attributes", "所有屬性"],
+  // Target Defense
+  ["Target\ Defense", "目標防禦"],
+  // Attack Rating
+  ["Attack\ Rating", "準確率"],
+  // Deadly Strike
+  ["Deadly\ Strike", "致命打擊"],
+  // Crushing Blow
+  ["Crushing\ Blow", "粉碎打擊"],
+  // Poison Resist
+  ["Poison\ Resist", "毒素抗性"],
+  // Magic Resist
+  ["Magic\ Resist", "魔法抗性"],
+  // Requirements
+  ["Requirements", "需求"],
+  // Slows Target
+  ["Slows\ Target", "使目標減慢"],
+  // Light Radius
+  ["Light\ Radius", "照亮範圍"],
+  // Open Wounds
+  ["Open\ Wounds", "開放傷口"],
+  // Cold Resist
+  ["Cold\ Resist", "冰寒抗性"],
+  // Fire Resist
+  ["Fire\ Resist", "火焰抗性"],
+  // Cold Absorb
+  ["Cold\ Absorb", "冰寒吸收"],
+  // Fire Absorb
+  ["Fire\ Absorb", "火焰吸收"],
+  // Fire Skills
+  ["Fire\ Skills", "火焰技能"],
+  // Min Damage
+  ["Min\ Damage", "最小傷害"],
+  // Max Damage
+  ["Max\ Damage", "最大傷害"],
+  // All Skills
+  ["All\ Skills", "所有技能"],
+  // Dexterity
+  ["Dexterity", "敏捷"],
+  // Vitality
+  ["Vitality", "體能"],
+  // Strength
+  ["Strength", "力量"],
+  // Stamina
+  ["Stamina", "精力"],
+  // Energy
+  ["Energy", "能量"],
+  // Life
+  ["Life", "生命"],
+  // Mana
+  ["Mana", "法力"],
+
   // ━━ 固定屬性（無數值）━━
   ["Cannot Be Frozen", "無法凍結"],
   ["Half Freeze Duration", "被凍結的時效減半"],
@@ -942,6 +1107,8 @@ window.D2R_AFFIXES = [
   ["Damage\ \+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)", "傷害 +$1-$2"],
   // +X to Hydra -> +X 至多頭蛇
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ to\ Hydra", "+$1 至多頭蛇"],
+  // Knockback -> 基礎：那伽斧
+  ["Knockback", "基礎：那伽斧"],
   // Range: X -> 範圍: X
   ["Range:\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)", "範圍: $1"],
 ];
