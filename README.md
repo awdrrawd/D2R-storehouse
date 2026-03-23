@@ -52,7 +52,7 @@ D2R-storehouse/
 
 點擊下方連結，在 Tampermonkey 確認安裝：
 
-**[💻 安裝 D2R Traderie 中文翻譯](https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2R_Traderie_CN_Loader.user.js)**
+**[💻 安裝 D2R Traderie 中文翻譯](https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js)**
 
 ---
 
