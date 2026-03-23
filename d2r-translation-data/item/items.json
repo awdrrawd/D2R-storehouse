@@ -1,4 +1,4 @@
-** items.json - D2R 物品字典
+
 {
   "El Rune":   "艾爾",   "Eld Rune":  "艾德",   "Tir Rune":  "特爾",
   "Nef Rune":  "那夫",   "Eth Rune":  "愛斯",   "Ith Rune":  "伊司",
@@ -12,7 +12,6 @@
   "Lo Rune":   "羅",     "Sur Rune":  "瑟",     "Ber Rune":  "貝",
   "Jah Rune":  "喬",     "Cham Rune": "查姆",   "Zod Rune":  "薩德",
 
-  ** ── 符文之語 ──
   "Ancients' Pledge": "先祖之契",  "Authority":     "權威",
   "Beast":            "野獸",      "Black":          "黑錘",
   "Bone":             "骸骨",      "Bramble":        "刺藤",
@@ -62,7 +61,6 @@
   "Wind":             "輕風",      "Wisdom":         "智慧",
   "Wrath":            "憤怒",      "Zephyr":         "和風",
 
-  ** ── 咒符 ──
   "Grand Charm": "大型咒符",  "Large Charm":    "中型咒符",
   "Small Charm": "小型咒符",  "Charm":          "咒符",
   "Annihilus":   "滅絕",      "Hellfire Torch": "地獄火炬",
