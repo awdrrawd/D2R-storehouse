@@ -1,15 +1,9 @@
-// ui.js - D2R Traderie 平台字典
-
-// ── 設計原則 ──
-// 1. 複合詞優先：「Search Stats」整串優先於「Search」+「Stats」個別翻譯
-// 2. 屬性標籤（Damage / Defense 等）僅在此處定義，不放入道具字典
-// 3. 不定義過短的通用詞（this / Or 等），避免誤觸道具名
-// window.D2R_UI（供腳本讀取）
+// ui.js - D2R Traderie platform dictionary
+// window.D2R_UI_TRADERIC
 
 window.D2R_UI_TRADERIC = {
 
-  // ━━ 複合搜尋 placeholder（整串優先）━━
-  // React Select 的 placeholder 需整串才能正確識別搜尋模式
+  // == search placeholders ==
   "Search options...":        "搜尋屬性...",
   "Search Stats...":          "搜尋屬性...",
   "Search Skills...":         "搜尋技能...",
@@ -21,7 +15,7 @@ window.D2R_UI_TRADERIC = {
   "Search Runes":             "搜尋符文",
   "Search Items":             "搜尋道具",
 
-  // ━━ 導覽列 ━━
+  // == nav ==
   "All":        "全部",
   "Sets":       "套裝",
   "Uniques":    "獨特",
@@ -43,7 +37,7 @@ window.D2R_UI_TRADERIC = {
   "Follow":     "追蹤",
   "Unfollow":   "取消追蹤",
 
-  // ━━ 頁籤 / 通用按鈕 ━━
+  // == buttons ==
   "My Offers":       "我的商品",
   "Create Wishlist": "創建願望清單",
   "Value List":      "物價清單",
@@ -96,29 +90,29 @@ window.D2R_UI_TRADERIC = {
   "Cancel":          "取消",
   "Get Akrew Pro":   "升級 Akrew Pro",
 
-  // ━━ 篩選器標籤 ━━
-  "Default Filters":"預設篩選",
-  "Free":           "免費",
-  "Amount":         "數量",
-  "User Rating":    "用戶評分",
-  "Unidentified":   "未鑑定",
-  "Game version":   "遊戲版本",
-  "Game Version":   "遊戲版本",
-  "Tradable Only":  "僅可交易",
-  "Tradeable Only": "僅可交易",
-  "Not In Catalog": "不在目錄中",
-  "Filters":        "篩選器",
-  "Categories":     "分類",
-  "Body Location":  "裝備部位",
-  "Item Type":      "物品類型",
-  "Weapon Type":    "武器類型",
-  "Craft Type":     "手工藝類型",
-  "Gem Type":       "寶石類型",
-  "Tier":           "等級層",
-  "Stats":          "屬性",
-  "Skills":         "技能",
-  "Platform":       "平台",
-  "Region":         "地區",
+  // == filters ==
+  "Default Filters": "預設篩選",
+  "Free":            "免費",
+  "Amount":          "數量",
+  "User Rating":     "用戶評分",
+  "Unidentified":    "未鑑定",
+  "Game version":    "遊戲版本",
+  "Game Version":    "遊戲版本",
+  "Tradable Only":   "僅可交易",
+  "Tradeable Only":  "僅可交易",
+  "Not In Catalog":  "不在目錄中",
+  "Filters":         "篩選器",
+  "Categories":      "分類",
+  "Body Location":   "裝備部位",
+  "Item Type":       "物品類型",
+  "Weapon Type":     "武器類型",
+  "Craft Type":      "手工藝類型",
+  "Gem Type":        "寶石類型",
+  "Tier":            "等級層",
+  "Stats":           "屬性",
+  "Skills":          "技能",
+  "Platform":        "平台",
+  "Region":          "地區",
   "Base Item Rarity":             "基礎物品稀有度",
   "Is Unmade (Roll It Yourself)": "純符文（自己鑲嵌）",
   "Includes Hel Rune for Rerolling":"附帶海爾(重置用)",
@@ -126,14 +120,14 @@ window.D2R_UI_TRADERIC = {
   "Jewel Variant": "珠寶變體",
   "Ring Variant":  "戒指變體",
 
-  // ━━ 排序 ━━
+  // == sort ==
   "Posted: Newest":"發布：最新",
   "Posted: Oldest":"發布：最舊",
   "Best Match":    "最佳匹配",
   "Lowest Price":  "最低價格",
   "Highest Price": "最高價格",
 
-  // ━━ 遊戲版本 ━━
+  // == game version ==
   "classic":             "經典",
   "Classic":             "經典",
   "lord of destruction": "毀滅王座",
@@ -142,7 +136,7 @@ window.D2R_UI_TRADERIC = {
   "Reign Of The Warlock":"術士軍臨",
   "Reign of the Warlock":"術士軍臨",
 
-  // ━━ 模式 / 天梯 ━━
+  // == mode / ladder ==
   "Mode":       "模式",
   "softcore":   "一般模式",
   "Softcore":   "一般模式",
@@ -154,7 +148,7 @@ window.D2R_UI_TRADERIC = {
   "non-ladder": "非天梯",
   "non ladder": "非天梯",
 
-  // ━━ 物品分類標籤 ━━
+  // == item type labels ==
   "Arm":         "武器盾牌",
   "Feet":        "鞋子",
   "Finger":      "戒指",
@@ -191,7 +185,7 @@ window.D2R_UI_TRADERIC = {
   "1 Handed":    "單手武器",
   "2 Handed":    "雙手武器",
 
-  // ━━ 職業 ━━
+  // == class ==
   "Amazon":      "亞馬遜",
   "Assassin":    "刺客",
   "Barbarian":   "野蠻人",
@@ -209,7 +203,7 @@ window.D2R_UI_TRADERIC = {
   "Sorceress Only":  "僅魔法使",
   "Warlock Only":    "僅術士",
 
-  // ━━ 職業裝備 ━━
+  // == class gear ==
   "Paladin Shield":    "聖騎士盾",
   "Necromancer Shield":"死靈法師盾",
   "Auric Shields":     "光環盾",
@@ -220,7 +214,7 @@ window.D2R_UI_TRADERIC = {
   "Barbarian Helm":    "野蠻人頭盔",
   "Druid Helm":        "德魯伊頭盔",
 
-  // ━━ 技能樹頁籤（複合詞，防止個別詞誤翻）━━
+  // == skill trees ==
   "Bow and Crossbow Skills":  "弓與弩技能",
   "Javelin and Spear Skills": "標槍與長矛技能",
   "Passive and Magic Skills": "被動與魔法技能",
@@ -246,7 +240,7 @@ window.D2R_UI_TRADERIC = {
   "Demon Skills":             "惡魔技能",
   "Eldritch Skills":          "邪異技能",
 
-  // ━━ 物品屬性標籤（僅標籤，帶數值版本由 affixes.js 正則處理）━━
+  // == stat labels ==
   "Damage":            "傷害",
   "Defense":           "防禦",
   "Durability":        "耐久度",
@@ -266,7 +260,7 @@ window.D2R_UI_TRADERIC = {
   "Ethereal":          "無形的",
   "Max sockets":       "最大插槽",
 
-  // ━━ 列表選項 ━━
+  // == listing options ==
   "Listing Options":  "列表選項",
   "Stock Listing":    "庫存列表",
   "Standing Listing": "長期列表",
@@ -276,11 +270,15 @@ window.D2R_UI_TRADERIC = {
   "Hit Power":        "重擊系",
   "Safety":           "防護系",
 
-  // ━━ 個人頁面 ━━
-  "Listings":    "列表",    "Offers":      "報價",
-  "Wishlists":   "願望清單","Catalog":     "目錄",
-  "Reviews":     "評價",    "Collectibles":"收藏品",
-  "Followers":   "追蹤者",  "Following":   "追蹤中",
+  // == profile ==
+  "Listings":    "列表",
+  "Offers":      "報價",
+  "Wishlists":   "願望清單",
+  "Catalog":     "目錄",
+  "Reviews":     "評價",
+  "Collectibles":"收藏品",
+  "Followers":   "追蹤者",
+  "Following":   "追蹤中",
   "Online":      "線上",
   "Overall Rating":    "整體評分",
   "Write Your Review": "撰寫評論",
@@ -288,7 +286,7 @@ window.D2R_UI_TRADERIC = {
   "Submit review":     "送出評論",
   "Remove Review":     "刪除評論",
 
-  // ━━ 提問 / 支援 ━━
+  // == support ==
   "Ask A Question":   "提問",
   "How Do I...?":     "如何操作？",
   "Any additional comment?":"有其他補充嗎？",
@@ -307,7 +305,7 @@ window.D2R_UI_TRADERIC = {
   "Usage Help":    "使用說明",
   "Other":         "其他",
 
-  // ━━ 通知 / 訊息 ━━
+  // == notifications ==
   "Notifications":     "通知",
   "No New Notifications":"沒有新通知",
   "Messages":          "訊息",
@@ -321,7 +319,7 @@ window.D2R_UI_TRADERIC = {
   "Looks like this conversation has closed. Check your archived chats.":
     "此對話已關閉，請查看封存聊天室。",
 
-  // ━━ 交易 ━━
+  // == trading ==
   "Price":          "價格",
   "Trading":        "出售",
   "Looking For":    "尋找",
@@ -355,7 +353,7 @@ window.D2R_UI_TRADERIC = {
   "Active":         "進行中",
   "History":        "歷史",
 
-  // ━━ 取消原因 ━━
+  // == cancel reasons ==
   "Why are you cancelling this offer?":              "為甚麼要取消這場交易?",
   "because the item is no longer needed":            "因為不需要該物品了",
   "Buyer was unresponsive":                          "買家未回覆",
@@ -382,21 +380,21 @@ window.D2R_UI_TRADERIC = {
   "because the seller was unresponsive":             "因為賣家沒有回應",
   "because an offer was accepted by another seller": "因為找到其他賣家",
 
-  // ━━ 完成交易 ━━
+  // == complete trade ==
   "Complete":          "完成",
   "Complete & Review": "完成並評分",
   "Are you sure you want to Complete this offer?": "確定要完成此交易嗎？",
   "Completing this offer will move it to your history and close any chats you have open with it.":
     "完成後此交易將移入歷史紀錄，相關聊天室亦會關閉。",
 
-  // ━━ 成就 / 每日 ━━
+  // == daily / achievements ==
   "Congratulations!":       "恭喜！",
   "Daily Login":            "每日登入",
   "You logged in today!":   "今天已登入！",
   "You earned some points!":"你獲得了積分！",
   "Earned 10 pts":          "獲得 10 點積分",
 
-  // ━━ 其他 ━━
+  // == misc ==
   "Hide \u5168\u90e8":   "隱藏全部",
   "Hide \u5217\u8868":   "隱藏列表",
   "Relist \u5168\u90e8": "重新上架全部",
@@ -404,7 +402,7 @@ window.D2R_UI_TRADERIC = {
   "Community Value": "社群價格",
   "This value is updated by our expert team.": "此數值由我們的專家團隊更新。",
 
-  // ━━ 設定頁導覽 ━━
+  // == settings nav ==
   "Settings":                "設定",
   "About You":               "關於你",
   "Profile Picture":         "個人頭像",
@@ -418,7 +416,7 @@ window.D2R_UI_TRADERIC = {
   "Enable Dark Mode":        "啟用深色模式",
   "Enable Light Mode":       "啟用淺色模式",
 
-  // ━━ 關於你 ━━
+  // == about you ==
   "Username Color":          "用戶名顏色",
   "Timezone":                "時區",
   "Languages You Speak":     "使用語言",
@@ -432,7 +430,7 @@ window.D2R_UI_TRADERIC = {
   "Link":                    "連結",
   "Link Roblox":             "連結 Roblox",
 
-  // ━━ 個人頭像 ━━
+  // == profile picture ==
   "Current Profile Picture": "目前頭像",
   "Edit Avatar":             "編輯頭像",
   "Upload Profile Picture":  "上傳頭像",
@@ -441,12 +439,12 @@ window.D2R_UI_TRADERIC = {
   "Search Icons...":         "搜尋圖示...",
   "Select Frame":            "選擇框架",
 
-  // ━━ 特色徽章 ━━
+  // == badges ==
   "Select Badge":            "選擇徽章",
   "Search Badges...":        "搜尋徽章...",
   "Save":                    "儲存",
 
-  // ━━ 帳號與安全 ━━
+  // == account & security ==
   "CHANGE USERNAME":         "更改用戶名",
   "Requirements: Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":
     "需求：最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
@@ -471,7 +469,7 @@ window.D2R_UI_TRADERIC = {
   "DELETE YOUR ACCOUNT":     "刪除帳號",
   "Delete Your Account":     "刪除帳號",
 
-  // ━━ 通知設定 ━━
+  // == notification settings ==
   "BROWSER PUSH NOTIFICATIONS": "瀏覽器推播通知",
   "This option enables notifications. To remove notifications, you will have to block them within your device settings. DISCLAIMER: Browser push notifications do not work on iOS (iPhone)":
     "此選項啟用通知。若要移除，請在裝置設定中封鎖。注意：iOS（iPhone）不支援瀏覽器推播通知。",
@@ -486,7 +484,7 @@ window.D2R_UI_TRADERIC = {
     "查看您目前訂閱新商品通知的物品清單",
   "See Items Subscribed To": "查看已訂閱的物品",
 
-  // ━━ 偏好設定 ━━
+  // == preferences ==
   "Account Preferences":     "帳號偏好設定",
   "AUTOMATICALLY GO ONLINE": "自動上線",
   "Automatically set your status to online when you visit the site":
@@ -513,30 +511,30 @@ window.D2R_UI_TRADERIC = {
   "When this is enabled, you will receive updates and news straight to your inbox.":
     "啟用後，您將收到最新動態與消息至您的信箱。",
 
-  // ━━ 首頁 / 排行榜 ━━
+  // == home / leaderboard ==
   "Top Traders":             "頂尖交易者",
   "My Rank":                 "我的排名",
-  "is now on Traderie!":     "已經登入Traderie!",
-  "Browse by Category": "按類別瀏覽",
+  "is now on Traderie!":     "已上線 Traderie！",
+  "Browse by Category":      "按類別瀏覽",
   "Diablo II: Resurrected Trading FAQ": "《暗黑破壞神 II：獄火重生》交易常見問題",
   "In Diablo II: Resurrected, you can trade by listing the items you have or browsing offers from other players. Traderie provides a safe marketplace to help you trade quickly and securely.":
     "在《暗黑破壞神 II：獄火重生》中，你可以透過刊登自己擁有的物品，或瀏覽其他玩家的交易來進行交易。Traderie 提供一個安全的交易平台，讓你可以快速且安心地完成交易。",
-  "Where can I trade items in Diablo II: Resurrected?":"在哪裡可以交易物品？",
+  "Where can I trade items in Diablo II: Resurrected?": "在哪裡可以交易物品？",
   "You can trade items on Traderie's Diablo II: Resurrected hub. Use the trading pages to browse current listings, filter by category, and start trading instantly with other players.":
     "你可以在 Traderie 的 D2R 專區進行交易。使用交易頁面可以瀏覽目前的物品列表，依分類篩選，並立即與其他玩家開始交易。",
-  "Is trading items safe on Traderie?":"在 Traderie 上交易安全嗎？",
+  "Is trading items safe on Traderie?": "在 Traderie 上交易安全嗎？",
   "Yes. Traderie uses ratings, trade history, and anti-scam systems to keep trading in Diablo II: Resurrected safe and reliable. Follow in-app guidance and only complete trades with trusted players.":
-     "是的。Traderie 透過評價系統、交易紀錄以及防詐騙機制，確保《暗黑破壞神 II：獄火重生》的交易安全可靠。建議遵循平台指引，並只與可信任的玩家完成交易。",
-  "Can I trade rare or limited items in Diablo II: Resurrected?":"可以交易稀有或限定物品嗎？",
+    "是的。Traderie 透過評價系統、交易紀錄以及防詐騙機制，確保《暗黑破壞神 II：獄火重生》的交易安全可靠。建議遵循平台指引，並只與可信任的玩家完成交易。",
+  "Can I trade rare or limited items in Diablo II: Resurrected?": "可以交易稀有或限定物品嗎？",
   "Yes. Traderie supports trading rare, limited, and high-value items in Diablo II: Resurrected. You can browse offers, negotiate with players, and complete safe trades.":
     "可以。Traderie 支援稀有、限定以及高價值物品的交易。你可以瀏覽其他玩家的出價、進行協商，並安全地完成交易。",
-  "How do I list my items on Traderie?":"如何在 Traderie 上刊登物品？",
+  "How do I list my items on Traderie?": "如何在 Traderie 上刊登物品？",
   "Go to the Diablo II: Resurrected trading section, select the item you want to list, set your offer or request, and publish. Your listing will appear for other players to discover.":
     "前往《暗黑破壞神 II：獄火重生》的交易頁面，選擇你要刊登的物品，設定你的出售或需求條件，然後發佈。你的物品就會出現在列表中，供其他玩家查看與交易。",
   "How do you trade in Diablo II: Resurrected?": "在《暗黑破壞神 II：獄火重生》中如何交易？",
-  "Suggest a game that you would like to see on Traderie!":    "推薦你想在 Traderie 上看到的遊戲！",
-  "Want to help? Apply to our Traderie expert team!":    "想貢獻力量？申請加入 Traderie 專家團隊！",
-  "Trade Diablo II: Resurrected Items Instantly and Safely": "立即開始再《暗黑破壞神 II：獄火重生》上安全交易",
+  "Suggest a game that you would like to see on Traderie!": "推薦你想在 Traderie 上看到的遊戲！",
+  "Want to help? Apply to our Traderie expert team!": "想貢獻力量？申請加入 Traderie 專家團隊！",
+  "Trade Diablo II: Resurrected Items Instantly and Safely": "立即在《暗黑破壞神 II：獄火重生》上安全交易",
   "Discover and join the #1 moderated Diablo II: Resurrected trading community. Search trade ads to find uniques, runes, and rare items from other players. Post your own trade ad or browse real-time offers in a safe, trusted environment.":
-   "加入排名第一的《暗黑破壞神 II：獄火重生》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
+    "加入排名第一的《暗黑破壞神 II：獄火重生》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
 };
