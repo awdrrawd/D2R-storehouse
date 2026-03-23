@@ -262,6 +262,7 @@ window.D2R_UI = {
   "1H Damage":         "單手傷害",
   "2H Damage":         "雙手傷害",
   "Upgraded":          "已升級",
+  "Ethereal":          "無形的",
 
   // ━━ 列表選項 ━━
   "Listing Options":  "列表選項",
