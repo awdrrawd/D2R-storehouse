@@ -18,7 +18,7 @@
 (async function () {
     'use strict';
 
-    // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
+    // ── iOS 相容包裝
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     function gmGet(key, def) {
@@ -39,39 +39,36 @@
         }
     }
 
-    const FILE_PATHS = ['items.js','affixes.js','ui.js'];
-    const REPO   = 'awdrrawd/D2R-storehouse';
-    const BRANCH = 'main';
-    const DATA_BASE = 'd2r%20item-translation/data/';  // GitHub 路徑前綴
+    // ── 資料載入
+    const FILE_PATHS = ['item/items.js','item/affixes.js','Platform/ui_traderie.js',];
+    const REPO      = 'awdrrawd/D2R-storehouse';
+    const BRANCH    = 'main';
+    const DATA_BASE = 'd2r-translation/';
 
-    const CDN_BASES =
-          [
-              `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${DATA_BASE}`,
-              `https://raw.githubusercontent.com/${REPO}/refs/heads/${BRANCH}/${DATA_BASE}`,
-          ];
+    const CDN_BASES = [
+        `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${DATA_BASE}`,
+        `https://raw.githubusercontent.com/${REPO}/refs/heads/${BRANCH}/${DATA_BASE}`,
+    ];
 
     async function fetchAndExec(url) {
         const res = await fetch(url);
         if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
         const code = await res.text();
-        // new Function 在當前 window scope 執行，設定的變數會落在 PAGE 上
         try {
             new Function(code)();
         } catch (_) {
-            // fallback：直接 eval（部分 iOS app 需要）
             // eslint-disable-next-line no-eval
             eval(code);
         }
     }
 
     async function loadWithFallback(filePath) {
-        const encoded = encodeURIComponent(filePath);
         for (const base of CDN_BASES) {
             try {
-                await fetchAndExec(base + encoded);
+                await fetchAndExec(base + filePath);
                 return;
             } catch (e) {
-                console.warn('[D2R] CDN 失敗，嘗試備用：', e.message);
+                console.warn('[D2R-Data] 來源失敗，嘗試備用：', e.message);
             }
         }
         throw new Error('所有來源均無法載入：' + filePath);
@@ -80,18 +77,18 @@
     try {
         for (const path of FILE_PATHS) await loadWithFallback(path);
     } catch (e) {
-        console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
+        console.warn('[D2R-Data] 資料載入失敗，翻譯功能停用：', e.message);
         return;
     }
 
     // 從頁面 window 讀取三個字典
+    // 翻譯順序：items(2) → affixes(1) → ui(3)
     const ITEM_NAMES  = PAGE.D2R_ITEMS   || window.D2R_ITEMS   || {};
-    const AFFIXES_RAW = PAGE.D2R_AFFIXES || window.D2R_AFFIXES || [];
     const UI_NAMES    = PAGE.D2R_UI      || window.D2R_UI      || {};
-
+    const AFFIXES_RAW = PAGE.D2R_AFFIXES || window.D2R_AFFIXES || [];
 
     if (!Object.keys(ITEM_NAMES).length) {
-        console.warn('[D2R] items.js 資料為空，翻譯停用');
+        console.warn('[D2R-Data] items.js 資料為空，翻譯停用');
         return;
     }
 
@@ -696,7 +693,7 @@
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
 
-        const scriptVersion = '2.0';
+        const scriptVersion = '2.4';
         panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
@@ -746,10 +743,8 @@
         setInterval(() => {
             if (CONFIG.enabled) processTree(document.body);
         }, 1500);
-
-        console.log(`[D2R] 物品${ITEM_ENTRIES.length} UI${UI_ENTRIES.length} 屬性${AFFIX_PAT.length} 搜尋：道具${Object.keys(ITEM_ZH_TO_EN).length}/屬性${Object.keys(AFFIX_ZH_TO_EN).length}`);
+        //console.log(`[D2R] 物品${ITEM_ENTRIES.length} UI${UI_ENTRIES.length} 屬性${AFFIX_PAT.length} 搜尋：道具${Object.keys(ITEM_ZH_TO_EN).length}/屬性${Object.keys(AFFIX_ZH_TO_EN).length}`);
     }
-
     // 資料已在頁面載入後才注入，DOM 必定 ready，直接呼叫
     init();
 })();
