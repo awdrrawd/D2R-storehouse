@@ -1,4 +1,4 @@
-// items.json - D2R 物品字典
+** items.json - D2R 物品字典
 {
   "El Rune":   "艾爾",   "Eld Rune":  "艾德",   "Tir Rune":  "特爾",
   "Nef Rune":  "那夫",   "Eth Rune":  "愛斯",   "Ith Rune":  "伊司",
@@ -12,7 +12,7 @@
   "Lo Rune":   "羅",     "Sur Rune":  "瑟",     "Ber Rune":  "貝",
   "Jah Rune":  "喬",     "Cham Rune": "查姆",   "Zod Rune":  "薩德",
 
-  // ── 符文之語 ──
+  ** ── 符文之語 ──
   "Ancients' Pledge": "先祖之契",  "Authority":     "權威",
   "Beast":            "野獸",      "Black":          "黑錘",
   "Bone":             "骸骨",      "Bramble":        "刺藤",
@@ -62,7 +62,7 @@
   "Wind":             "輕風",      "Wisdom":         "智慧",
   "Wrath":            "憤怒",      "Zephyr":         "和風",
 
-  // ── 咒符 ──
+  ** ── 咒符 ──
   "Grand Charm": "大型咒符",  "Large Charm":    "中型咒符",
   "Small Charm": "小型咒符",  "Charm":          "咒符",
   "Annihilus":   "滅絕",      "Hellfire Torch": "地獄火炬",
@@ -86,7 +86,7 @@
   "Renewed Flame Rift":           "新生火焰裂隙",
   "Renewed Rotting Fissure":      "新生腐敗裂痕",
 
-  // ── 獨特裝備 ──
+  ** ── 獨特裝備 ──
   "Alma Negra":         "黑魂",
   "Andariel's Visage":  "安達莉爾的面貌",
   "Arachnid Mesh":      "蜘蛛之網",
@@ -302,7 +302,7 @@
   "Wormskull":          "蠕蟲頭骨",    "Wraith Flight": "死靈夜翔",
   "Wraithstep":         "怨靈步伐",    "Zakarum's Hand":"撒卡蘭姆之手",
 
-  // ── 套裝 ──
+  ** ── 套裝 ──
   "Aldur's Watchtower":         "艾爾多的守衛-全套",
   "Aldur's Advance":            "艾爾多的進擊",      "Aldur's Rhythm":    "艾爾多的律動",
   "Aldur's Deception":          "艾爾多的欺暪",      "Aldur's Stony Gaze":"艾爾多的冷酷凝視",
@@ -400,7 +400,7 @@
   "Warlord's Lust":             "戰爭領主的慾望",    "Warlord's Authority":"戰爭領主的權威", "Warlord's Conquest":"戰爭領主的征服",
   "Warlord's Mantle":           "戰爭領主的斗篷",    "Warlord's Crushers": "戰爭領主的粉碎者",
 
-  // ── 基礎裝備（Base Items）──
+  ** ── 基礎裝備（Base Items）──
   "Aegis":"禦塔盾","Aerin Shield":"艾文之盾","Akaran Rondache":"阿卡拉輕圓盾",
   "Akaran Targe":"阿卡拉圓盾","Alpha Helm":"猛狼頭盔","Ancient Armor":"上古鎧甲",
   "Ancient Axe":"上古斧","Ancient Shield":"上古盾","Ancient Sword":"上古劍",
@@ -572,8 +572,8 @@
   "Yari":"三尖槍","Yew Wand":"紫杉魔杖","Zakarum Shield":"撒卡蘭姆盾",
   "Zombie Head":"殭屍頭顱","Zweihander":"日耳曼大劍",
 
-  // ── 技能 ──
-  // 亞馬遜
+  ** ── 技能 ──
+  ** 亞馬遜
   "Cold Arrow":"冷霜箭","Exploding Arrow":"爆裂箭","Fire Arrow":"火焰箭",
   "Freezing Arrow":"冰凍箭","Guided Arrow":"導引箭","Ice Arrow":"寒冰箭",
   "Immolation Arrow":"熾炎箭","Magic Arrow":"魔法箭","Multiple Shot":"多重箭","Strafe":"掃射",
@@ -583,7 +583,7 @@
   "Avoid":"閃身","Critical Strike":"致命攻勢","Decoy":"替身","Dodge":"閃躲",
   "Evade":"閃避","Inner Sight":"心靈視野","Penetrate":"精準攻勢","Pierce":"貫穿攻勢",
   "Slow Missiles":"緩箭術","Valkyrie":"女武神",
-  // 刺客
+  ** 刺客
   "Blades of Ice":"寒冰刃","Claws of Thunder":"雷電爪","Cobra Strike":"靈蛇擊",
   "Dragon Claw":"雙龍爪","Dragon Flight":"翔龍腳","Dragon Tail":"龍擺尾",
   "Dragon Talon":"龍爪踢","Fists of Fire":"烈火拳","Phoenix Strike":"鳳凰擊","Tiger Strike":"猛虎擊",
@@ -593,7 +593,7 @@
   "Blade Fury":"狂怒旋刃","Blade Sentinel":"戒衛旋刃","Blade Shield":"利刃之盾",
   "Charged Bolt Sentry":"電能衛哨","Death Sentry":"死亡衛哨","Fire Blast":"火焰轟擊",
   "Lightning Sentry":"雷光衛哨","Shock Web":"雷電網","Wake of Fire":"焰痕衛哨","Wake of Inferno":"獄火衛哨",
-  // 野蠻人
+  ** 野蠻人
   "Axe Mastery":"斧術專精","Blade Mastery":"利刃專精","Increased Speed":"提高速度",
   "Increased Stamina":"提高精力","Iron Skin":"鋼鐵之膚","Mace Mastery":"釘鎚專精",
   "Natural Resistance":"自然抵抗","Polearm Mastery":"長武專精","Spear Mastery":"長矛專精",
@@ -604,7 +604,7 @@
   "Battle Command":"戰鬥指揮","Battle Cry":"戰鬥怒吼","Battle Orders":"戰鬥命令",
   "Find Item":"尋找物品","Find Potion":"尋找藥水","Grim Ward":"恐怖圖騰",
   "Howl":"狂嗥","Shout":"大吼","Taunt":"嘲諷","War Cry":"戰爭狂嘯",
-  // 德魯伊
+  ** 德魯伊
   "Arctic Blast":"極地寒風","Armageddon":"毀天滅地","Cyclone Armor":"氣旋護甲",
   "Firestorm":"火焰風暴","Fissure":"地之火","Hurricane":"颶風術",
   "Molten Boulder":"熔火巨石","Tornado":"龍捲風","Twister":"旋風術","Volcano":"火山噴發",
@@ -615,7 +615,7 @@
   "Poison Creeper":"劇毒藤蔓","Raven":"掠鴉","Solar Creeper":"太陽藤蔓",
   "Spirit of Barbs":"荊棘之靈","Summon Dire Wolf":"召喚恐狼",
   "Summon Grizzly":"召喚灰熊","Summon Spirit Wolf":"召喚幽靈狼",
-  // 死靈法師
+  ** 死靈法師
   "Amplify Damage":"傷害加深","Attract":"致命吸引","Confuse":"混亂",
   "Decrepify":"衰老","Dim Vision":"昏暗視野","Iron Maiden":"攻擊反噬",
   "Life Tap":"偷取生命","Lower Resist":"降低抗性","Terror":"恐懼","Weaken":"削弱",
@@ -625,7 +625,7 @@
   "Blood Golem":"鮮血魔像","Clay Golem":"黏土魔像","Fire Golem":"火焰魔像",
   "Golem Mastery":"魔像專精","Iron Golem":"鋼鐵魔像","Raise Skeletal Mage":"復生骷髏法師",
   "Raise Skeleton":"復生骷髏","Revive":"重生","Skeleton Mastery":"骷髏專精","Summon Resist":"召喚物抗性",
-  // 聖騎士
+  ** 聖騎士
   "Blessed Hammer":"祝福之鎚","Charge":"衝鋒打擊","Conversion":"招降打擊",
   "Fist of the Heavens":"天堂之拳","Holy Bolt":"聖光彈","Holy Shield":"神聖之盾",
   "Sacrifice":"犧牲打擊","Smite":"盾牌重擊","Vengeance":"復仇打擊","Zeal":"熱忱打擊",
@@ -635,7 +635,7 @@
   "Blessed Aim":"精準祝福","Concentration":"專注","Conviction":"信念",
   "Fanaticism":"狂熱","Holy Fire":"神聖火焰","Holy Freeze":"神聖冰凍",
   "Holy Shock":"神聖電擊","Might":"力量靈氣","Thorns":"荊棘",
-  // 魔法使
+  ** 魔法使
   "Cold Mastery":"冰寒專精","Blizzard":"暴風雪","Chilling Armor":"寒冰甲",
   "Frost Nova":"冰霜新星","Frozen Armor":"冰封甲","Frozen Orb":"冰封球",
   "Glacial Spike":"冰川之槍","Ice Blast":"寒冰球","Ice Bolt":"寒冰彈","Shiver Armor":"碎冰甲",
@@ -645,7 +645,7 @@
   "Lightning Mastery":"閃電專精","Chain Lightning":"連鎖閃電","Charged Bolt":"電能彈",
   "Energy Shield":"能量護盾","Lightning":"閃電","Nova":"閃電新星",
   "Static Field":"靜電力場","Telekinesis":"心靈傳動","Teleport":"傳送術","Thunder Storm":"雷電風暴",
-  // 術士
+  ** 術士
   "Miasma Bolt":"瘴氣彈","Miasma Chain":"瘴氣鎖鏈","Enhanced Entropy":"增強混亂",
   "Abyss":"深淵裂口","Sigil: Lethargy":"咒印：昏沉","Sigil: Rancor":"咒印：冤仇",
   "Sigil: Death":"咒印：死亡","Apocalypse":"天啟末日","Ring of Fire":"火焰之環","Flame Wave":"烈焰湧浪",
@@ -656,7 +656,7 @@
   "Bind Demon":"束縛惡魔","Death Mark":"死亡印記","Blood Boil":"沸血術",
   "Engorge":"吞食","Demonic Mastery":"惡魔專精","Blood Oath":"血誓","Consume":"吞噬",
 
-  // ── 其他道具 ──
+  ** ── 其他道具 ──
   "3x3 Key Set":                     "一套鑰匙",
   "Random Minor Key":                "任意鑰匙",
   "Key of Destruction":              "毀滅之鑰",
@@ -682,7 +682,7 @@
   "Western Worldstone Shard":        "西方的世界之石碎片",
   "Gold":"金幣",
 
-  // ── 寶石 ──
+  ** ── 寶石 ──
   "Gem":"寶石", "Random Gems":"任意寶石",
   "Ruby":"紅寶石",
   "Chipped Ruby":"碎裂紅寶石","Flawed Ruby":"瑕疵紅寶石",
