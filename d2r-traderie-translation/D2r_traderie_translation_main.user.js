@@ -186,52 +186,79 @@
     }
 
     // ── 頁碼選擇器 ──
-    const MAX_PAGES = { uniques:17, runes:1, runewords:4, sets:7, base:21, crafted:1, gems:1, misc:3 };
+    // 從 Traderie 的 ul.pagination 讀取實際頁數，不依賴硬編碼
+
+    function getPaginationInfo() {
+        const ul = document.querySelector('ul.pagination');
+        if (!ul) return null;
+
+        // 當前頁：aria-current="page" 的 li，或 aria-label="Page X is your current page"
+        let curP = 1;
+        const activeLi = ul.querySelector('[aria-current="page"]');
+        if (activeLi) {
+            const m = (activeLi.getAttribute('aria-label') || activeLi.textContent).match(/\d+/);
+            if (m) curP = parseInt(m[0]);
+        }
+
+        // 最大頁：掃描所有 aria-label="Page X"，取最大值
+        let maxP = curP;
+        ul.querySelectorAll('li a[aria-label]').forEach(a => {
+            const m = a.getAttribute('aria-label').match(/Page (\d+)/);
+            if (m) maxP = Math.max(maxP, parseInt(m[1]));
+        });
+
+        // 上一頁 / 下一頁是否可用
+        const prevDisabled = ul.querySelector('li.previous')?.classList.contains('pagination__link--disabled') ?? true;
+        const nextDisabled = ul.querySelector('li.next a')?.getAttribute('aria-disabled') === 'true';
+
+        return { curP, maxP, prevDisabled, nextDisabled, ul };
+    }
 
     function injectPageSelector() {
-        const pagebar = document.querySelector('.page-bar');
-        if (!pagebar) return;
-        pagebar.querySelectorAll('.d2r-page').forEach(el => el.remove());
-        const mid = Array.from(pagebar.children).find(el => el.tagName === 'DIV' && !el.querySelector('a'));
-        if (!mid) return;
-        const pathMatch = location.pathname.match(/\/products\/([^/?#]+)/);
-        const cat  = pathMatch ? pathMatch[1] : null;
-        if (!cat) return;
-        const maxP = MAX_PAGES[cat] ?? 99;
-        const curP = parseInt(new URLSearchParams(location.search).get('page') ?? '0');
-        const total = maxP + 1;
+        // 舊的選擇器清除
+        document.querySelectorAll('.d2r-page').forEach(el => el.remove());
+
+        const info = getPaginationInfo();
+        if (!info) return;
+        const { curP, maxP, ul } = info;
+
+        // 掛在 ul.pagination 的父元素
+        const container = ul.parentElement;
+        if (!container) return;
 
         const wrap = document.createElement('div');
         wrap.className = 'd2r-page';
-        wrap.style.cssText = 'display:flex;align-items:center;gap:6px;justify-content:center;';
+        wrap.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin-left:10px;vertical-align:middle;';
 
         const input = document.createElement('input');
-        input.type  = 'number'; input.min = '1'; input.max = String(total);
-        input.value = String(curP + 1); input.title = `1–${total}，Enter 跳轉`;
-        input.style.cssText = 'width:46px;padding:3px 5px;font-size:14px;text-align:center;background:#111;color:#f0c060;border:1px solid #5a3a1a;border-radius:4px;appearance:textfield;-moz-appearance:textfield;';
-        input.setAttribute('data-d2r-page', '1'); // 標記，避免中文搜尋攔截此輸入框
+        input.type  = 'number'; input.min = '1'; input.max = String(maxP);
+        input.value = String(curP); input.title = `1–${maxP}，Enter 跳轉`;
+        input.style.cssText = 'width:50px;padding:3px 5px;font-size:13px;text-align:center;' +
+            'background:#111;color:#f0c060;border:1px solid #5a3a1a;border-radius:4px;' +
+            'appearance:textfield;-moz-appearance:textfield;';
+        input.setAttribute('data-d2r-page', '1');
 
         const sep = document.createElement('span');
-        sep.textContent = `/ ${total}`;
-        sep.style.cssText = 'font-size:13px;color:#888;white-space:nowrap;';
+        sep.textContent = `/ ${maxP}`;
+        sep.style.cssText = 'font-size:13px;color:#aaa;white-space:nowrap;';
 
-        wrap.appendChild(input); wrap.appendChild(sep);
-        mid.appendChild(wrap);
-        mid.style.cssText = 'display:flex;align-items:center;justify-content:center;min-width:100px;';
+        wrap.appendChild(input);
+        wrap.appendChild(sep);
+        container.appendChild(wrap);
 
         function jump() {
             const v = parseInt(input.value);
             if (isNaN(v)) return;
-            const p = Math.max(0, Math.min(v-1, maxP));
-            input.value = String(p+1);
+            const p = Math.max(1, Math.min(v, maxP));
+            input.value = String(p);
             const u = new URL(location.href);
-            u.searchParams.set('page', p);
+            u.searchParams.set('page', p - 1);  // Traderie page param 是 0-based
             location.href = u.toString();
         }
         input.addEventListener('keydown', e => {
             if (e.key === 'Enter')     { e.preventDefault(); jump(); }
-            if (e.key === 'ArrowUp')   { e.preventDefault(); input.value = String(Math.min(+input.value+1, total)); }
-            if (e.key === 'ArrowDown') { e.preventDefault(); input.value = String(Math.max(+input.value-1, 1)); }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); input.value = String(Math.min(+input.value + 1, maxP)); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); input.value = String(Math.max(+input.value - 1, 1)); }
         });
         input.addEventListener('focus', () => input.select());
         input.addEventListener('change', jump);
@@ -264,8 +291,10 @@
             for (const node of batch) {
                 if (node.nodeType === 1) {
                     processTree(node);
-                    if (node.querySelector?.('.page-bar') || node.classList?.contains('page-bar'))
-                        injectPageSelector();
+                    if (node.querySelector?.('.page-bar') || node.classList?.contains('page-bar') ||
+                        node.querySelector?.('ul.pagination') || node.classList?.contains('pagination') ||
+                        node.tagName === 'UL' && node.classList?.contains('pagination'))
+                        setTimeout(injectPageSelector, 100);
                 } else if (node.nodeType === 3) processNode(node);
             }
         });
@@ -690,7 +719,7 @@
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
 
-        const scriptVersion = '2.4';
+        const scriptVersion = '2.5';
         panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
@@ -738,10 +767,17 @@
 
         // Fix 2: iOS Safari MutationObserver 常漏觸發，加輪詢保命符
         setInterval(() => {
-            if (CONFIG.enabled) processTree(document.body);
+            if (CONFIG.enabled) {
+                processTree(document.body);
+                // 若頁碼列已出現但選擇器尚未注入，補注入
+                if (document.querySelector('ul.pagination') && !document.querySelector('.d2r-page'))
+                    injectPageSelector();
+            }
         }, 1500);
+
         //console.log(`[D2R] 物品${ITEM_ENTRIES.length} UI${UI_ENTRIES.length} 屬性${AFFIX_PAT.length} 搜尋：道具${Object.keys(ITEM_ZH_TO_EN).length}/屬性${Object.keys(AFFIX_ZH_TO_EN).length}`);
     }
+
     // 資料已在頁面載入後才注入，DOM 必定 ready，直接呼叫
     init();
 })();
