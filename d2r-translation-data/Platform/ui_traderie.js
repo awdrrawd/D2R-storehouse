@@ -262,6 +262,7 @@ window.D2R_UI_TRADERIC = {
   "Two-Hand Damage":   "雙手傷害",
   "Upgraded":          "已升級",
   "Ethereal":          "無形的",
+  "Max sockets":       "最大插槽",
 
   // ━━ 列表選項 ━━
   "Listing Options":  "列表選項",
