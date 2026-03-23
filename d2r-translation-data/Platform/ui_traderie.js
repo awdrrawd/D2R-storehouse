@@ -97,7 +97,7 @@ window.D2R_UI_TRADERIC = {
   "Get Akrew Pro":   "升級 Akrew Pro",
 
   // ━━ 篩選器標籤 ━━
-  "Default Filters":"預設篩選"
+  "Default Filters":"預設篩選",
   "Free":           "免費",
   "Amount":         "數量",
   "User Rating":    "用戶評分",
