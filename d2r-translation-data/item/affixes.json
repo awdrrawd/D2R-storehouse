@@ -1,45 +1,23 @@
-** affixes.json - 屬性字典
-** 格式：[英文 regex, 中文模板]  $1 $2... 對應捕獲群組數字
-** 排序：長 pattern 優先（避免短 pattern 提早匹配）
+
 [
-  ** == 屬性標籤（純文字，無數值）==
-  ** Better Chance of Getting Magic Items
   ["Better\ Chance\ of\ Getting\ Magic\ Items", "尋獲魔法物品機率提高"],
-  ** Physical Damage Received Reduced by
   ["Physical\ Damage\ Received\ Reduced\ by", "受到的物理傷害降低"],
-  ** Attacker Takes Lightning Damage
   ["Attacker\ Takes\ Lightning\ Damage", "攻擊者受到電擊傷害"],
-  ** Attack Rating against Undead
   ["Attack\ Rating\ against\ Undead", "對不死怪物的準確率"],
-  ** Attack Rating against Demons
   ["Attack\ Rating\ against\ Demons", "對惡魔的準確率"],
-  ** Increased Chance of Blocking
   ["Increased\ Chance\ of\ Blocking", "格擋機率提高"],
-  ** to Lightning Skill Damage
   ["to\ Lightning\ Skill\ Damage", "閃電技能傷害"],
-  ** Damage Taken Goes To Mana
   ["Damage\ Taken\ Goes\ To\ Mana", "受到傷害轉為魔力"],
-  ** Maximum Lightning Resist
   ["Maximum\ Lightning\ Resist", "電擊抗性上限"],
-  ** Extra Gold from Monsters
   ["Extra\ Gold\ from\ Monsters", "怪物金幣掉落量提高"],
-  ** Magic Damage Reduced by
   ["Magic\ Damage\ Reduced\ by", "魔法傷害降低"],
-  ** Chance of Crushing Blow
   ["Chance\ of\ Crushing\ Blow", "粉碎打擊機率"],
-  ** Increased Attack Speed
   ["Increased\ Attack\ Speed", "攻擊速度"],
-  ** to Poison Skill Damage
   ["to\ Poison\ Skill\ Damage", "毒素技能傷害"],
-  ** Reanimate as: Returned
   ["Reanimate\ as:\ Returned", "機率將目標復生為：返世亡靈"],
-  ** Bonus to Attack Rating
   ["Bonus\ to\ Attack\ Rating", "準確率加成"],
-  ** Maximum Poison Resist
   ["Maximum\ Poison\ Resist", "毒素抗性上限"],
-  ** to Magic Skill Damage
   ["to\ Magic\ Skill\ Damage", "魔法技能傷害"],
-  ** Attacker Takes Damage
   ["Attacker\ Takes\ Damage", "攻擊者反傷"],
   ** Poison Length Reduced
   ["Poison\ Length\ Reduced", "中毒時效縮短"],
