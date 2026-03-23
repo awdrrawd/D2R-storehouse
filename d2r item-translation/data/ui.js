@@ -261,6 +261,7 @@ window.D2R_UI = {
   "Treasure Class":    "寶藏等級",
   "1H Damage":         "單手傷害",
   "2H Damage":         "雙手傷害",
+  "Two-Hand Damage":   "雙手傷害",
   "Upgraded":          "已升級",
   "Ethereal":          "無形的",
 
