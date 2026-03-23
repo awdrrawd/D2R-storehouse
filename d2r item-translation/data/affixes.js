@@ -5,6 +5,30 @@
 
 window.D2R_AFFIXES = [
 
+
+  // ━━ 固定屬性（無數值）━━
+  ["Cannot Be Frozen", "無法凍結"],
+  ["Half Freeze Duration", "被凍結的時效減半"],
+  ["Prevent Monster Heal", "防止怪物自療"],
+  ["Slain Monsters Rest in Peace", "殺死的怪物就此安息"],
+  ["Hit Blinds Target", "擊中使目標目盲"],
+  ["Freezes target", "凍結目標"],
+  ["Ethereal \(Cannot be Repaired\)", "無形（無法修復）"],
+  ["Socketed \(([0-9]+)\)", "鑲孔（$1）"],
+  ["Socketed \(([0-9]+)-([0-9]+)\)", "鑲孔（$1-$2）"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Fire\ Skill\ Damage", "+$1% 火焰技能傷害"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Cold\ Skill\ Damage", "+$1% 冰寒技能傷害"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Lightning\ Skill\ Damage", "+$1% 閃電技能傷害"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Poison\ Skill\ Damage", "+$1% 毒素技能傷害"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Magic\ Skill\ Damage", "+$1% 魔法技能傷害"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)\ Life\ after\ each\ Kill", "+$1 每次擊殺後回復生命"],
+  ["\+([\+\-]?\d+(?:[.,]\d+)?)\ Life\ after\ each\ Demon\ Kill", "+$1 每次擊殺惡魔後回復生命"],
+  ["Physical\ Damage\ Received\ Reduced\ by\ ([\+\-]?\d+(?:[.,]\d+)?)%", "受到的物理傷害降低 $1%"],
+  ["Physical\ Damage\ Received\ Increased\ by\ ([\+\-]?\d+(?:[.,]\d+)?)%", "受到的物理傷害提高 $1%"],
+  ["Magic\ Resist\ -([\+\-]?\d+(?:[.,]\d+)?)%", "魔法抗性 -$1%"],
+  ["Magic\ Resist\ \+([\+\-]?\d+(?:[.,]\d+)?)%", "魔法抗性 +$1%"],
+  ["Upgradeable\ via\ Cube\ Recipe", "可透過方塊配方升級"],
+
   // ━━ 施法觸發 ━━
   // X% Chance to cast level X Fist of the Heavens when struck -> 被擊中時有 X% 機率施展等級 X 天堂之拳
   ["([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)%\ Chance\ to\ cast\ level\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Fist\ of\ the\ Heavens\ when\ struck", "被擊中時有 $1% 機率施展等級 $2 天堂之拳"],
