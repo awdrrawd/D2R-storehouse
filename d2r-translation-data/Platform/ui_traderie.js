@@ -1,4 +1,4 @@
-// ui.js — D2R Traderie 平台字典
+// ui.js - D2R Traderie 平台字典
 
 // ── 設計原則 ──
 // 1. 複合詞優先：「Search Stats」整串優先於「Search」+「Stats」個別翻譯
