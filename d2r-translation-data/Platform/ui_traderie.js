@@ -375,6 +375,9 @@ window.D2R_UI_TRADERIC = {
     "Allows you to sell an item multiple times without the listing being taken down":"允許您多次出售同一件商品，而無需下架該商品資訊。",
     "Set the total number of items you wish to sell and as you accept offers the available amount will decrease. Once no more items are available, the listing will automatically complete.":
     "設定您要出售的商品總數，隨著您接受報價，可售商品數量將會減少。當所有商品售罄後，商品清單將自動結束。",
+    "You need Akrew Pro to do this!":"您需要使用 Akrew Pro 才能執行此操作！",
+    "Relist All is a Pro feature available in membership level Champion or above, but you can still relist individual items after 20 hours!":
+    "「全部重新上架」是專業版功能，僅限冠軍級或以上會員等級使用，但您仍然可以在 20 小時後重新上架單一商品！",
 
     // == cancel reasons ==
     "Why are you cancelling this offer?":              "為甚麼要取消這場交易?",
@@ -407,8 +410,7 @@ window.D2R_UI_TRADERIC = {
     "Complete":          "完成",
     "Complete & Review": "完成並評分",
     "Are you sure you want to Complete this offer?": "確定要完成此交易嗎？",
-    "Completing this offer will move it to your history and close any chats you have open with it.":
-    "完成後此交易將移入歷史紀錄，相關聊天室亦會關閉。",
+    "Completing this offer will move it to your history and close any chats you have open with it.":"完成後此交易將移入歷史紀錄，相關聊天室亦會關閉。",
 
     // == daily / achievements ==
     "Congratulations!":       "恭喜！",
