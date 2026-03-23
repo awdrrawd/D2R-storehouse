@@ -83,10 +83,9 @@
     }
 
     // 從頁面 window 讀取三個字典
-    // 翻譯順序：items(2) → affixes(1) → ui(3)
     const ITEM_NAMES  = PAGE.D2R_ITEMS   || window.D2R_ITEMS   || {};
-    const UI_NAMES    = PAGE.D2R_UI || window.D2R_UI || PAGE.D2R_UI_TRADERIC || window.D2R_UI_TRADERIC || {};
     const AFFIXES_RAW = PAGE.D2R_AFFIXES || window.D2R_AFFIXES || [];
+    const UI_NAMES    = PAGE.D2R_UI_TRADERIC || window.D2R_UI_TRADERIC || {};
 
     if (!Object.keys(ITEM_NAMES).length) {
         console.warn('[D2R] items.js 資料為空，翻譯停用');
