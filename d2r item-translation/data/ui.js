@@ -121,7 +121,7 @@ window.D2R_UI = {
   "Platform":      "平台",
   "Base Item Rarity":             "基礎物品稀有度",
   "Is Unmade (Roll It Yourself)": "純符文（自己鑲嵌）",
-  "Includes Hel Rune for Rerolling":"附帶海爾",
+  "Includes Hel Rune for Rerolling":"附帶海爾(重置用)",
   "Amulet Variant":"護身符變體",
   "Jewel Variant": "珠寶變體",
   "Ring Variant":  "戒指變體",
