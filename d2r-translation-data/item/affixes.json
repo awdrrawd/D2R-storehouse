@@ -1126,5 +1126,5 @@
   ["to Attack Rating against Undead \(Based on Character Level\)", "對不死怪物的準確率 （依角色等級而定）"],
   ["to Attack Rating against Demons \(Based on Character Level\)", "對惡魔的準確率 （依角色等級而定）"],
   ["to Attack Rating \(Based on Character Level\)", "準確率 （依角色等級而定）"],
-  ["Lightning Resist \+[\+\-]?\d+\-[\+\-]?\d+% \(Based on Character Level\)", "電擊抗性 +X-X% （依角色等級而定）"],
+  ["Lightning Resist \+[\+\-]?\d+\-[\+\-]?\d+% \(Based on Character Level\)", "電擊抗性 +X-X% （依角色等級而定）"]
 ];
