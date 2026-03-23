@@ -38,7 +38,7 @@ window.D2R_UI_TRADERIC = {
   "Unfollow":   "取消追蹤",
 
   // == Service ==
-  "Ladder Team Finder":    "天梯組隊招募",
+  "Ladder Team Finder":    "天梯組隊招募(Ladder Team Finder)",
   "Rush fresh Character":  "快速通關(Rush fresh Character)",
   "Socket Quest":          "打洞任務(Socket Quest)",
   "Uber Ancient Service" : "幫打遠古人(Uber Ancient Service)",
