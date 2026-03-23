@@ -934,6 +934,7 @@ window.D2R_AFFIXES = [
   // Replenishes quantity X in X sec. -> 回復數量 X in X sec.
   ["Replenishes\ quantity\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ in\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ sec\.", "回復數量 $1 in $2 sec."],
   // Increase Maximum Durability X-X% -> 耐久度上限提高 X-X%
+  ["Increase Maximum Durability"", "耐久度上限提高"],
   ["Increase\ Maximum\ Durability\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)%", "耐久度上限提高 $1-$2%"],
   // +X poison damage over X seconds -> +X 毒素傷害，時效 X 秒
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ poison\ damage\ over\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ seconds", "+$1 毒素傷害，時效 $2 秒"],
