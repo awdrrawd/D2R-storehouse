@@ -399,4 +399,6 @@ window.D2R_UI = {
   "Hide \u5217\u8868":   "隱藏列表",
   "Relist \u5168\u90e8": "重新上架全部",
   "Remove \u5168\u90e8": "移除全部",
+  "Community Value": "社群價格",
+  "This value is updated by our expert team.": "此數值由我們的專家團隊更新。",
 };
