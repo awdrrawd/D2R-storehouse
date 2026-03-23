@@ -136,7 +136,7 @@ window.D2R_UI_TRADERIC = {
     "Highest Price": "最高價格",
     "Last Active":   "最後活躍時間",
     "Item: A to Z":  "物品名:A>Z",
-    "Item: A to Z":  "物品名:Z>A",
+    "Item: Z to A":  "物品名:Z>A",
 
     // == game version ==
     "classic":             "經典",
