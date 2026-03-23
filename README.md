@@ -32,7 +32,7 @@ D2R-storehouse/
 - 🔍 **中文搜尋**：在 Search options / Search Stats / More Filters 欄位輸入中文，自動轉換為英文送出
 - 📄 **頁碼跳轉**：在分頁列旁新增數字輸入框，直接跳轉任意頁
 - 🔄 **自動更新**：透過載入器安裝，字典與腳本更新後**下次開頁面即生效**，無需重裝
-- 📱 **iOS Safari 相容**：支援 Tampermonkey for iOS / Userscripts App
+- 📱 **iOS Safari 相容**：支援 Userscripts App
 
 ---
 
@@ -89,6 +89,3 @@ D2R-storehouse/
 
 遇到翻譯錯誤、缺漏或功能問題，請至 [Issues](https://github.com/awdrrawd/D2R-storehouse/issues) 回報。
 
----
-
-*Made with ❤️ by 瀧月瀨*
