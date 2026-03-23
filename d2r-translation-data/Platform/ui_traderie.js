@@ -566,7 +566,7 @@ window.D2R_UI_TRADERIC = {
     "Privacy Policy":            "隱私政策",
     "Community Guidelines":      "社群守則",
     "Traderie is a fan-made website and is in no way affiliated with Diablo II: Resurrected or any other game on the website.":
-      "Traderie 為玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
+      "Traderie 是玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
 
     // == 特殊翻譯 ==
     "Diablo II: Resurrected": " ",
