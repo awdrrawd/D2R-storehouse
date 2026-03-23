@@ -41,13 +41,10 @@
 
     // ── 資料載入
     const FILE_PATHS = ['item/items.js','item/affixes.js','Platform/ui_traderie.js',];
-    const REPO      = 'awdrrawd/D2R-storehouse';
-    const BRANCH    = 'main';
-    const DATA_BASE = 'd2r-translation/';
 
     const CDN_BASES = [
-        `https://cdn.jsdelivr.net/gh/${REPO}@${BRANCH}/${DATA_BASE}`,
-        `https://raw.githubusercontent.com/${REPO}/refs/heads/${BRANCH}/${DATA_BASE}`,
+        `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/`,
+        `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/`,
     ];
 
     async function fetchAndExec(url) {
