@@ -519,6 +519,8 @@ window.D2R_UI_TRADERIC = {
     "AUTO ACCEPT DIRECT MESSAGES":"自動接受私訊",
     "LEADERBOARD OPT IN":         "加入排行榜",
     "EMAIL MARKETING OPT IN":     "訂閱行銷郵件",
+    "Join":                       "加入",
+    "Try Akrew Pro!":             "試試 Akrew Pro！",
     "Automatically set your status to online when you visit the site":"造訪網站時自動將狀態設為上線",
     "When relisting items, they will automatically go to the top of the profile":"重新上架物品時，將自動置頂於個人頁面",
     "This will keep your external account linked but hide it to other users.":"這將保留外部帳號連結，但對其他用戶隱藏。",
@@ -528,6 +530,8 @@ window.D2R_UI_TRADERIC = {
     "啟用後，您的交易與評價將計入成就系統與排行榜。注意：預設為關閉。",
     "When this is enabled, other logged in users will be able to send you a direct message request (through the chat icon on your profile). DISCLAIMER: This is turned on by default.":
     "啟用後，其他登入用戶可透過您個人頁面的聊天圖示發送私訊請求。注意：預設為開啟。",
+    "Get the best of Nookazon & Traderie. An ad free experience, custom profile pictures, relist all capability, and more.":
+    "盡享 Nookazon 和 Traderie 的最佳功能。無廣告體驗、自訂個人資料圖片、重新發布所有商品等更多精彩功能。",
 
     // == home / leaderboard ==
     "Top Traders":             "頂尖交易者",
