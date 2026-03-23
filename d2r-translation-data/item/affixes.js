@@ -1,8 +1,10 @@
-// affixes.js — D2R 屬性字典
+// affixes.js - 屬性字典
 // 格式：[英文 regex, 中文模板]  $1 $2... 對應捕獲群組數字
+// 由 d2r.world EN/ZH 頁面自動配對生成，人工審核後合併
+// 排序：長 pattern 優先（避免短 pattern 提早匹配）
 
 window.D2R_AFFIXES = [
-  // ━━ 屬性標籤（純文字，無數值）━━
+  // == 屬性標籤（純文字，無數值）==
   // Better Chance of Getting Magic Items
   ["Better\ Chance\ of\ Getting\ Magic\ Items", "尋獲魔法物品機率提高"],
   // Physical Damage Received Reduced by
@@ -166,7 +168,7 @@ window.D2R_AFFIXES = [
   // Mana
   ["Mana", "法力"],
 
-  // ━━ 固定屬性（無數值）━━
+  // == 固定屬性（無數值）==
   ["Cannot Be Frozen", "無法凍結"],
   ["Half Freeze Duration", "被凍結的時效減半"],
   ["Prevent Monster Heal", "防止怪物自療"],
@@ -174,9 +176,8 @@ window.D2R_AFFIXES = [
   ["Hit Blinds Target", "擊中使目標目盲"],
   ["Freezes target", "凍結目標"],
   ["Ethereal \(Cannot be Repaired\)", "無形（無法修復）"],
-  ["Socketed ", "插槽"],
-  ["Socketed \(([0-9]+)\)", "插槽（$1）"],
-  ["Socketed \(([0-9]+)-([0-9]+)\)", "插槽（$1-$2）"],
+  ["Socketed \(([0-9]+)\)", "鑲孔（$1）"],
+  ["Socketed \(([0-9]+)-([0-9]+)\)", "鑲孔（$1-$2）"],
   ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Fire\ Skill\ Damage", "+$1% 火焰技能傷害"],
   ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Cold\ Skill\ Damage", "+$1% 冰寒技能傷害"],
   ["\+([\+\-]?\d+(?:[.,]\d+)?)%\ to\ Lightning\ Skill\ Damage", "+$1% 閃電技能傷害"],
@@ -190,7 +191,7 @@ window.D2R_AFFIXES = [
   ["Magic\ Resist\ \+([\+\-]?\d+(?:[.,]\d+)?)%", "魔法抗性 +$1%"],
   ["Upgradeable\ via\ Cube\ Recipe", "可透過方塊配方升級"],
 
-  // ━━ 施法觸發 ━━
+  // == 施法觸發 ==
   // X% Chance to cast level X Fist of the Heavens when struck -> 被擊中時有 X% 機率施展等級 X 天堂之拳
   ["([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)%\ Chance\ to\ cast\ level\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Fist\ of\ the\ Heavens\ when\ struck", "被擊中時有 $1% 機率施展等級 $2 天堂之拳"],
   // X% Chance to cast level X Fist of the Heavens on striking -> 擊中時有 X% 機率施展等級 X 天堂之拳
@@ -314,7 +315,7 @@ window.D2R_AFFIXES = [
   // X% Chance to cast level X Nova on striking -> 等級 X 閃電新星（X 次）
   ["([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)%\ Chance\ to\ cast\ level\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Nova\ on\ striking", "等級 $1 閃電新星（$2 次）"],
 
-  // ━━ 技能充能 ━━
+  // == 技能充能 ==
   // Level X Heart of Wolverine (X Charges) -> 等級 X 狼獾之心（X 次）
   ["Level\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Heart\ of\ Wolverine\ \(([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Charges\)", "等級 $1 狼獾之心（$2 次）"],
   // Level X Corpse Explosion (X Charges) -> 等級 X 屍爆（X 次）
@@ -368,7 +369,7 @@ window.D2R_AFFIXES = [
   // Level X Hydra (X Charges) -> 等級 X 多頭蛇（X 次）
   ["Level\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Hydra\ \(([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Charges\)", "等級 $1 多頭蛇（$2 次）"],
 
-  // ━━ 職業/技能加成 ━━
+  // == 職業/技能加成 ==
   // +X-X to Poison and Bone Skills (Necromancer Only) -> +X-X 毒素與骸骨技能 （只限死靈法師）
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ to\ Poison\ and\ Bone\ Skills\ \(Necromancer\ Only\)", "+$1-$2 毒素與骸骨技能 （只限死靈法師）"],
   // +X to Necromancer Skill Levels (Necromancer Only) -> +X 死靈法師技能等級 （只限死靈法師）
@@ -612,7 +613,7 @@ window.D2R_AFFIXES = [
   // +X to All Skills -> +X 所有技能
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ to\ All\ Skills", "+$1 所有技能"],
 
-  // ━━ 附加傷害 ━━
+  // == 附加傷害 ==
   // Adds X-X-X lightning damage -> 附加 X - X-X 電擊傷害
   ["Adds\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ lightning\ damage", "附加 $1 - $2-$3 電擊傷害"],
   // Adds X-X lightning damage -> 附加 X - X 電擊傷害
@@ -636,7 +637,7 @@ window.D2R_AFFIXES = [
   // Adds X-X damage -> 附加 X - X 傷害
   ["Adds\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ damage", "附加 $1 - $2 傷害"],
 
-  // ━━ 抗性/吸收 ━━
+  // == 抗性/吸收 ==
   // +(X-X) Absorbs Cold Damage (Based on Character Level) -> +(X-X) 冰寒傷害吸收 （依角色等級而定）
   ["\+\(([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\)\ Absorbs\ Cold\ Damage\ \(Based\ on\ Character\ Level\)", "+($1-$2) 冰寒傷害吸收 （依角色等級而定）"],
   // Lightning Resist +(X-X)% (Based on Character Level) -> 電擊抗性 +(X-X)% （依角色等級而定）
@@ -732,7 +733,7 @@ window.D2R_AFFIXES = [
   // +X Fire Absorb -> +X 火焰吸收
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Fire\ Absorb", "+$1 火焰吸收"],
 
-  // ━━ 基礎屬性 ━━
+  // == 基礎屬性 ==
   // +X-X to Attack Rating against Demons -> +X-X 對惡魔的準確率
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ to\ Attack\ Rating\ against\ Demons", "+$1-$2 對惡魔的準確率"],
   // +X-X to Attack Rating against Undead -> +X-X 對不死怪物的準確率
@@ -856,7 +857,7 @@ window.D2R_AFFIXES = [
   // -X Defense -> -X 防禦
   ["\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ Defense", "-$1 防禦"],
 
-  // ━━ 其他 ━━
+  // == 其他 ==
   // (X-X)% Better Chance of Getting Magic Items (Based on Character Level) -> 尋獲魔法物品機率提高 (X-X)% （依角色等級而定）
   ["\(([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\)%\ Better\ Chance\ of\ Getting\ Magic\ Items\ \(Based\ on\ Character\ Level\)", "尋獲魔法物品機率提高 ($1-$2)% （依角色等級而定）"],
   // +(X-X) to Attack Rating against Demons (Based on Character Level) -> +(X-X) 對惡魔的準確率 （依角色等級而定）
@@ -934,7 +935,6 @@ window.D2R_AFFIXES = [
   // Replenishes quantity X in X sec. -> 回復數量 X in X sec.
   ["Replenishes\ quantity\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ in\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ sec\.", "回復數量 $1 in $2 sec."],
   // Increase Maximum Durability X-X% -> 耐久度上限提高 X-X%
-  ["Increase Maximum Durability"", "耐久度上限提高"],
   ["Increase\ Maximum\ Durability\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)%", "耐久度上限提高 $1-$2%"],
   // +X poison damage over X seconds -> +X 毒素傷害，時效 X 秒
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ poison\ damage\ over\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ seconds", "+$1 毒素傷害，時效 $2 秒"],
@@ -1104,10 +1104,12 @@ window.D2R_AFFIXES = [
   ["Damage\ \+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\-([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)", "傷害 +$1-$2"],
   // +X to Hydra -> +X 至多頭蛇
   ["\+([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)\ to\ Hydra", "+$1 至多頭蛇"],
+  // Knockback -> 基礎：那伽斧
+  ["Knockback", "基礎：那伽斧"],
   // Range: X -> 範圍: X
   ["Range:\ ([\\+\\-]?\\d+(?:[.,]\\d+)?(?:\\s*[-~]\\s*[\\+\\-]?\\d+(?:[.,]\\d+)?)?)", "範圍: $1"],
 
-  // ━━ 依角色等級而定（數字在獨立 span，需單獨匹配關鍵字部分）━━
+  // == 依角色等級而定（數字在獨立 span，需單獨匹配關鍵字部分）==
   ["% Bonus to Attack Rating \(Based on Character Level\)", "% 準確率加成 （依角色等級而定）"],
   ["% Better Chance of Getting Magic Items \(Based on Character Level\)", "% 尋獲魔法物品機率提高 （依角色等級而定）"],
   ["% Extra Gold from Monsters \(Based on Character Level\)", "% 怪物金幣掉落量提高 （依角色等級而定）"],
@@ -1129,4 +1131,5 @@ window.D2R_AFFIXES = [
   ["to Attack Rating against Demons \(Based on Character Level\)", "對惡魔的準確率 （依角色等級而定）"],
   ["to Attack Rating \(Based on Character Level\)", "準確率 （依角色等級而定）"],
   ["Lightning Resist \+[\+\-]?\d+\-[\+\-]?\d+% \(Based on Character Level\)", "電擊抗性 +X-X% （依角色等級而定）"],
+
 ];
