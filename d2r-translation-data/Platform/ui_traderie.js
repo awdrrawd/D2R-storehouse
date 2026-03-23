@@ -516,7 +516,7 @@ window.D2R_UI_TRADERIC = {
   // ━━ 首頁 / 排行榜 ━━
   "Top Traders":             "頂尖交易者",
   "My Rank":                 "我的排名",
-  "is now on Traderie!":    "已經登入Traderie!",
+  "is now on Traderie!":     "已經登入Traderie!",
   "Browse by Category": "按類別瀏覽",
   "Diablo II: Resurrected Trading FAQ": "《暗黑破壞神 II：獄火重生》交易常見問題",
   "In Diablo II: Resurrected, you can trade by listing the items you have or browsing offers from other players. Traderie provides a safe marketplace to help you trade quickly and securely.":
@@ -527,10 +527,10 @@ window.D2R_UI_TRADERIC = {
   "Is trading items safe on Traderie?":"在 Traderie 上交易安全嗎？",
   "Yes. Traderie uses ratings, trade history, and anti-scam systems to keep trading in Diablo II: Resurrected safe and reliable. Follow in-app guidance and only complete trades with trusted players.":
      "是的。Traderie 透過評價系統、交易紀錄以及防詐騙機制，確保《暗黑破壞神 II：獄火重生》的交易安全可靠。建議遵循平台指引，並只與可信任的玩家完成交易。",
-  "Can I trade rare or limited items in Diablo II: Resurrected?":"",
+  "Can I trade rare or limited items in Diablo II: Resurrected?":"可以交易稀有或限定物品嗎？",
   "Yes. Traderie supports trading rare, limited, and high-value items in Diablo II: Resurrected. You can browse offers, negotiate with players, and complete safe trades.":
     "可以。Traderie 支援稀有、限定以及高價值物品的交易。你可以瀏覽其他玩家的出價、進行協商，並安全地完成交易。",
-  "How do I list my items on Traderie?":"可以交易稀有或限定物品嗎？",
+  "How do I list my items on Traderie?":"如何在 Traderie 上刊登物品？",
   "Go to the Diablo II: Resurrected trading section, select the item you want to list, set your offer or request, and publish. Your listing will appear for other players to discover.":
     "前往《暗黑破壞神 II：獄火重生》的交易頁面，選擇你要刊登的物品，設定你的出售或需求條件，然後發佈。你的物品就會出現在列表中，供其他玩家查看與交易。",
   "How do you trade in Diablo II: Resurrected?": "在《暗黑破壞神 II：獄火重生》中如何交易？",
