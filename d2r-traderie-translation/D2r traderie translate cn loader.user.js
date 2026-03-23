@@ -12,8 +12,8 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        unsafeWindow
-// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r%20item-translation/D2R_Traderie_CN_Loader.user.js
-// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r%20item-translation/D2R_Traderie_CN_Loader.user.js
+// @updateURL    https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r%20traderie%20translate%20cn%20loader.user.js
+// @downloadURL  https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r%20traderie%20translate%20cn%20loader.user.js
 // @supportURL   https://github.com/awdrrawd/D2R-storehouse/issues
 // @run-at       document-idle
 // ==/UserScript==
