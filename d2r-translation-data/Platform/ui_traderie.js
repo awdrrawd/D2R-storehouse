@@ -487,10 +487,9 @@ window.D2R_UI_TRADERIC = {
     "Note: You may only change your username every 30 days":"注意：每 30 天只能更改一次用戶名",
     "Click here to sign up, manage, or cancel your Akrew Pro subscription.":"點擊此處註冊、管理或取消 Akrew Pro 訂閱。",
     "This will sign out all users logged into this account from every device.":"這將從所有裝置登出此帳號的所有登入。",
+    "Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":"最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
     "Multi factor authentication is a good way to add an extra layer of security to your account to make sure that only you have the ability to log in.":
       "多重身份驗證可為帳號增加一層安全保護，確保只有你能登入。",
-    "Requirements: Minimum 3 and maximum 15 characters. Must contain only letters, numbers, periods, and underscores.":
-      "需求：最少 3、最多 15 個字元，只能包含字母、數字、句點與底線。",
 
     // == notification settings ==
     "BROWSER PUSH NOTIFICATIONS": "瀏覽器推播通知",
