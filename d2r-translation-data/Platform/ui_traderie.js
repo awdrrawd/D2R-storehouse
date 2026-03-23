@@ -37,6 +37,13 @@ window.D2R_UI_TRADERIC = {
   "Follow":     "追蹤",
   "Unfollow":   "取消追蹤",
 
+  // == Service ==
+  "Ladder Team Finder":    "天梯組隊招募",
+  "Rush fresh Character":  "快速通關(Rush fresh Character)",
+  "Socket Quest":          "打洞任務(Socket Quest)",
+  "Uber Ancient Service" : "幫打遠古人(Uber Ancient Service)",
+  "Uber Tristram Service": "幫打火炬(Uber Tristram Service)"
+  
   // == buttons ==
   "My Offers":       "我的商品",
   "Create Wishlist": "創建願望清單",
@@ -524,6 +531,25 @@ window.D2R_UI_TRADERIC = {
   "Europe":                  "歐洲(EU)",
   "Asia":                    "亞州(Asia)",
 
+  // ==Bottom Information==
+  "HELP": "幫助",
+  "Getting Started": "入門指南",
+  "Submit Feedback": "提交回饋",
+  "Suggest A New Game": "建議新增遊戲",
+  "Report Users": "檢舉使用者",
+  "ABOUT": "關於",
+  "Contact Us": "聯絡我們",
+  "Advertise with Traderie": "在 Traderie 投放廣告",
+  "Our Moderators": "我們的管理員",
+  "Shop": "商店",
+  "Become a Content Creator": "成為內容創作者",
+  "Discord Values Bot": "Discord 價值機器人",
+  "LEGAL": "法律",
+  "Terms of Service": "服務條款",
+  "Privacy Policy": "隱私政策",
+  "Community Guidelines": "社群守則",
+  "Traderie is a fan-made website and is in no way affiliated with Diablo II: Resurrected or any other game on the website.": "Traderie 為玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
+
   // == 特殊翻譯 ==
   "Diablo II: Resurrected": " ",
   "Trading FAQ": "《暗黑破壞神 II：獄火重生》交易常見問題",
@@ -550,21 +576,5 @@ window.D2R_UI_TRADERIC = {
   "Trade Diablo II: Resurrected Items Instantly and Safely": "立即在《暗黑破壞神 II：獄火重生》上安全交易",
   "Discover and join the #1 moderated Diablo II: Resurrected trading community. Search trade ads to find uniques, runes, and rare items from other players. Post your own trade ad or browse real-time offers in a safe, trusted environment.":
     "加入排名第一的《暗黑破壞神 II：獄火重生》交易社區，體驗專業管理。瀏覽交易廣告，尋找其他玩家提供的獨特物品、符文和稀有物品。發布您自己的交易廣告，或在一個安全可靠的環境中瀏覽即時報價。",
-  "HELP": "幫助",
-  "Getting Started": "入門指南",
-  "Submit Feedback": "提交回饋",
-  "Suggest A New Game": "建議新增遊戲",
-  "Report Users": "檢舉使用者",
-  "ABOUT": "關於",
-  "Contact Us": "聯絡我們",
-  "Advertise with Traderie": "在 Traderie 投放廣告",
-  "Our Moderators": "我們的管理員",
-  "Shop": "商店",
-  "Become a Content Creator": "成為內容創作者",
-  "Discord Values Bot": "Discord 價值機器人",
-  "LEGAL": "法律",
-  "Terms of Service": "服務條款",
-  "Privacy Policy": "隱私政策",
-  "Community Guidelines": "社群守則",
-  "Traderie is a fan-made website and is in no way affiliated with Diablo II: Resurrected or any other game on the website.": "Traderie 為玩家自製網站，與《暗黑破壞神 II：獄火重生》或任何其他遊戲皆無官方關聯。",
+
 };
