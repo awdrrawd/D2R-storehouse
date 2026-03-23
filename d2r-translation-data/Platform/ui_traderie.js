@@ -12,6 +12,7 @@ window.D2R_UI_TRADERIC = {
     "Search Stats":             "搜尋屬性",
     "Search Runes":             "搜尋符文",
     "Search Items":             "搜尋道具",
+    "Search Values":            "搜尋物價",
 
     // == nav ==
     "All":        "全部",
@@ -87,12 +88,17 @@ window.D2R_UI_TRADERIC = {
     "Submit":            "提交",
     "Reason":            "原因",
     "Cancel":            "取消",
+    "Create Listing":    "建立報價",
+    "Value Calculator":  "物價器算機",
+    "Highest Values":    "按最高排列",
+    "Lowest Values":     "按最低排列",
     "Get Akrew Pro":     "升級 Akrew Pro",
     "Bulk Apply Option": "批量套用選項",
+    "Nothing here yet...":"這裡目前還沒有任何東西...",
     "Get Your Own Avatar":"獲取你的頭像",
     "Search Items and Users":"搜尋物品和用戶",
     "Search by full username":"以完整用戶名搜尋",
-    "Nothing here yet...":"這裡目前還沒有任何東西...",
+    "Add our Values Bot to your Discord":"將我們的物價BOT加入您的Discord頻道",
     "Want to contribute? Become a Traderie expert!":"想貢獻力量嗎？成為 Traderie 專家吧！",
 
     // == filters ==
@@ -128,6 +134,9 @@ window.D2R_UI_TRADERIC = {
     "Best Match":    "最佳匹配",
     "Lowest Price":  "最低價格",
     "Highest Price": "最高價格",
+    "Last Active":   "最後活躍時間",
+    "Item: A to Z":  "物品名:A>Z",
+    "Item: A to Z":  "物品名:Z>A",
 
     // == game version ==
     "classic":             "經典",
@@ -299,7 +308,10 @@ window.D2R_UI_TRADERIC = {
     "Any additional comment?":"有其他補充嗎？",
     "I agree that I have checked the F.A.Q. and Safe Trading Guide before submitting a question.":"我確認已查閱常見問題與安全交易指南。",
     "Please check our F.A.Q. and Safe Trading Guide before submitting a question.":"提問前請先查閱常見問題與安全交易指南。",
-    "Your message will be recorded and someone will reach out to you via Traderie Chat.":"您的訊息將被記錄，並有人透過 Traderie 聊天室聯繫您。",
+    "Your message will be recorded and someone will reach out to you via Traderie Chat.":"您的訊息將被記錄，並有人透過",
+    "Chat.":"聊天室聯繫您。",
+    "Note this is NOT for reporting users. You will not get a response for messages related to reporting a specific user.":
+    "請注意，此功能並非用於舉報用戶。您不會收到任何關於舉報特定用戶的訊息回覆。",
     "You already have an unanswered question. Please wait patiently until we can get to your question for any follow-ups or extra questions. Thank you!":
     "您已有一個待回覆的問題，請耐心等候勿重複提問。",
 
