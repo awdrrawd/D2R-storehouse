@@ -41,8 +41,8 @@ window.D2R_UI_TRADERIC = {
   "Ladder Team Finder":    "天梯組隊招募(Ladder Team Finder)",
   "Rush fresh Character":  "快速通關(Rush fresh Character)",
   "Socket Quest":          "打洞任務(Socket Quest)",
-  "Uber Ancient Service" : "幫打遠古人(Uber Ancient Service)",
-  "Uber Tristram Service": "幫打火炬(Uber Tristram Service)",
+  "Uber Ancient Service" : "幫打遠古人(Uber Ancient)",
+  "Uber Tristram Service": "幫打火炬(Uber Tristram)",
   
   // == buttons ==
   "My Offers":       "我的商品",
