@@ -69,8 +69,10 @@ window.D2R_UI_TRADERIC = {
     "Remove":            "移除",
     " hour(s)":          "小時",//無效
     " hour":             "小時",//無效
-    "Hide":              "隱藏",
+    "Hide All":          "全部隱藏",
     "Hide Listing":      "隱藏",
+    "Remove All":        "全部移除",
+    "Relist All":        "全部重新上架",
     "Share":             "分享",
     "Paste":             "貼上",
     "Back to":           "返回",
