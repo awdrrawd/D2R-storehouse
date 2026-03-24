@@ -64,7 +64,7 @@ window.D2R_UI_TRADERIC = {
     "Show less":         "顯示更少",
     "Show More":         "顯示更多",
     "Show Less":         "顯示更少",
-    "Mark Sold":         "標記已售",
+    "Mark Sold":         "已出售",
     "Relist":            "重新上架",
     "Remove":            "移除",
     "Hide":              "隱藏",
