@@ -331,7 +331,7 @@ window.D2R_UI_TRADERIC = {
     "completed their offer for your":   "完成交易，來自",
     "You got a new message from":       "你收到了一則信息，來自",
     "completed your offer for":         "已跟您完成關於", //無效
-    "Leave them a review":              "的交易，給他一個評價", //無效
+    "Leave them a review":              "的交易，給他一個評價",
     "You just got a":                   "你在剛才收到了",
     "star review from":                 "⭐評分，來自",
     "Review Ratings":                   "評分與評論",
@@ -340,7 +340,7 @@ window.D2R_UI_TRADERIC = {
     "Write Your Review":                "留下你的評論",
     "review":                           "評論",
     "Alert":                            "提醒",
-    "accepted your offer for":          "接受了報價，來自",
+    "accepted your offer for":          "接受了報價，來自", //無效
     "You already left a review for this user":"您已經為該用戶留過評論了",
     "Your messages will only be saved for one month":"您的訊息僅保存一個月。",
     "Looks like this conversation has closed. Check your archived chats.":"此對話已關閉，請查看封存聊天室。",
@@ -419,7 +419,8 @@ window.D2R_UI_TRADERIC = {
     "Daily Login":            "每日登入",
     "You logged in today!":   "今天已登入！",
     "You earned some points!":"你獲得了積分！",
-    "Earned 10 pts":          "獲得 10 點積分",
+    "Earned":                 "獲得",
+    "Close":                  "關閉",
 
     // == misc ==
     "Hide \u5168\u90e8":      "隱藏全部",
