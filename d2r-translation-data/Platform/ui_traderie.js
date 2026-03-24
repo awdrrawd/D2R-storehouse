@@ -15,7 +15,7 @@ window.D2R_UI_TRADERIC = {
     "Search Values":            "搜尋物價",
 
     // == nav ==
-    "All":        "全部",
+    //"All":        "全部",
     "Sets":       "套裝",
     "Uniques":    "獨特",
     "Runes":      "符文",
