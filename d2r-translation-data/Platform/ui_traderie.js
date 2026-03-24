@@ -282,8 +282,10 @@ window.D2R_UI_TRADERIC = {
     "Safety":           "防護系",
 
     // == profile ==
+    "Edit":             "編輯",
     "Listings":         "列表",
     "Offers":           "報價",
+    "Wishlist":         "願望清單",
     "Wishlists":        "願望清單",
     "Catalog":          "目錄",
     "Reviews":          "評價",
@@ -292,8 +294,8 @@ window.D2R_UI_TRADERIC = {
     "Following":        "追蹤中",
     "Online":           "線上",
     "Overall Rating":   "整體評分",
-    "Write":"撰寫",
-    "Your Review":"你的評論",
+    "Write":            "撰寫",
+    "Your Review":      "你的評論",
     "Review Standards": "評論規範",
     "Submit review":    "送出評論",
     "Remove Review":    "刪除評論",
@@ -301,7 +303,9 @@ window.D2R_UI_TRADERIC = {
     "Update Review":    "更新評論",
     "Cancelled trade":  "取消交易",
     "Verified trade":   "交易完成",
+    "Item you're trading":"您正在交換的物品",
     "Verified trade (Received)":"交易完成(已驗證)",
+    "Ask for additional item(s)": "請求添加其他物品",
 
     // == support ==
     "Ask A Question":         "提問",
