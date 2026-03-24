@@ -146,7 +146,6 @@ window.D2R_UI_TRADERIC = {
     "Lord of Destruction": "毀滅王座",
     "reign of the warlock":"術士軍臨",
     "Reign Of The Warlock":"術士軍臨",
-    "Reign of the Warlock":"術士軍臨",
 
     // == mode / ladder ==
     "Mode":       "模式",
@@ -382,6 +381,13 @@ window.D2R_UI_TRADERIC = {
     "Relist All is a Pro feature available in membership level Champion or above, but you can still relist individual items after 20 hours!":
     "「全部重新上架」是專業版功能，僅限冠軍級或以上會員等級使用，但您仍然可以在 20 小時後重新上架單一商品！",
     "Search Items and Users":"搜尋道具和用戶",
+    "Hide All is a Pro feature available in membership level Ally or above, but you can still hide individual listings!":
+    "「全部隱藏」是高級會員功能，僅限「盟友」及以上等級會員使用，但您仍然可以隱藏單一商品！",
+    "Remove All is a Pro feature available in membership level Ally or above, but you can still remove individual listings!":
+    "「全部移除」是高級會員功能，僅限「盟友」及以上等級會員使用，但您仍然可以移除單一商品！",
+    "Choose an option and value to apply to all current listings in this tab.":"在此標籤頁中，選擇一個option和value，將其應用於所有目前商品。",
+    "Apply Option to All Listings":"將選項應用於所有商品",
+    "Apply to All":"全部套用",
 
     // == cancel reasons ==
     "Why are you cancelling this offer?":              "為甚麼要取消這場交易?",
