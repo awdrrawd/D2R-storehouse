@@ -326,9 +326,9 @@ window.D2R_UI_TRADERIC = {
     "Messages":                         "訊息",
     "Requests":                         "請求",
     "Archived":                         "已封存",
-    "made an  offer for":               "已出價，對於", //一半有效
-    "cancelled their offer for":        "取消出價，對於",
-    "completed their offer for your":   "完成交易，於你的",
+    "made an  offer for":               "已出價，來自", //一半有效
+    "cancelled their offer for":        "取消出價，來自",
+    "completed their offer for your":   "完成交易，來自",
     "You got a new message from":       "你收到了一則信息，來自",
     "completed your offer for":         "已跟您完成關於", //無效
     "Leave them a review":              "的交易，給他一個評價", //無效
@@ -340,6 +340,7 @@ window.D2R_UI_TRADERIC = {
     "Write Your Review":                "留下你的評論",
     "review":                           "評論",
     "Alert":                            "提醒",
+    "accepted your offer for":          "接受了報價，來自",
     "You already left a review for this user":"您已經為該用戶留過評論了",
     "Your messages will only be saved for one month":"您的訊息僅保存一個月。",
     "Looks like this conversation has closed. Check your archived chats.":"此對話已關閉，請查看封存聊天室。",
