@@ -126,7 +126,8 @@ window.D2R_UI_TRADERIC = {
     "Region":          "地區",
     "Base Item Rarity":               "基礎物品稀有度",
     "Is Unmade (Roll It Yourself)":   "純符文（自己鑲嵌）",
-    "Includes Hel Rune for Rerolling":"附帶海爾(重置用)",
+    "Includes":"附帶",
+    "for Rerolling":"(重置用)",
 
     // == sort ==
     "Posted: Newest":"發布：最新",
