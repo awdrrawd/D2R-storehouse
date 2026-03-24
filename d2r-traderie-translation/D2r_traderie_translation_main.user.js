@@ -3,7 +3,7 @@
 // @name:zh-TW   D2R Traderie 繁體中文翻譯 (支援中文搜尋)
 // @name:zh-CN   D2R Traderie 繁体中文翻译（支援中文搜尋）
 // @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      2.0
+// @version      2.1
 // @description  Traderie 的 D2R 繁體中文化，並支援中文搜尋（僅載入翻譯資料）
 // @author       瀧月瀨
 // @match        https://traderie.com/diablo2resurrected*
@@ -103,11 +103,7 @@
     const ITEM_ENTRIES_RAW = Object.entries(ITEM_NAMES);
     const UI_ENTRIES_RAW   = Object.entries(UI_NAMES);
 
-    const ALL_ENTRIES = [
-        ...ITEM_ENTRIES_RAW.map(([en, zh]) => [en, zh, true]),
-        ...UI_ENTRIES_RAW.map(([en, zh])   => [en, zh, false]),
-    ].sort((a, b) => b[0].length - a[0].length);
-
+    // 修正①：移除 ALL_ENTRIES，改為分層各自排序
     const ITEM_ENTRIES = ITEM_ENTRIES_RAW.sort((a, b) => b[0].length - a[0].length);
     const UI_ENTRIES   = UI_ENTRIES_RAW.sort((a, b)   => b[0].length - a[0].length);
 
@@ -117,6 +113,22 @@
         .sort((a, b) => b.re.source.length - a.re.source.length);
 
     // ── 翻譯函式 ──
+
+    // 修正②：共用 slot 保護函式，將詞條替換為佔位符存入 slots 陣列
+    function slotEntries(text, entries, slots, showOrig) {
+        let r = text;
+        for (const [en, zh] of entries) {
+            if (r.toLowerCase().indexOf(en.toLowerCase()) === -1) continue;
+            const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const re  = new RegExp(`(?<![\\w'\\-])${esc}(?![\\w'\\-])`, 'gi');
+            r = r.replace(re, () => {
+                slots.push(showOrig ? `${zh}(${en})` : zh);
+                return `\x01${slots.length - 1}\x01`;
+            });
+        }
+        return r;
+    }
+
     function translateAffixes(text) {
         let r = text;
         for (const { re, tmpl } of AFFIX_PAT) {
@@ -126,27 +138,20 @@
         return r;
     }
 
-    function applyAllEntries(text) {
-        const SLOT = /\x01(\d+)\x01/g;
-        let r = text;
-        const slots = [];
-        for (const [en, zh, showOrig] of ALL_ENTRIES) {
-            if (r.toLowerCase().indexOf(en.toLowerCase()) === -1) continue;
-            const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const re  = new RegExp(`(?<![\\w'\\-])${esc}(?![\\w'\\-])`, 'gi');
-            r = r.replace(re, () => {
-                slots.push(showOrig ? `${zh}(${en})` : zh);
-                return `\x01${slots.length - 1}\x01`;
-            });
-        }
-        return r.replace(SLOT, (_, i) => slots[+i]);
-    }
-
+    // 修正③：翻譯順序改為 物品 → 屬性 → UI，並使用 slot 保護
     function translate(text) {
         if (!text || !text.trim()) return text;
-        let r = translateAffixes(text);
-        r = applyAllEntries(r);
-        return r;
+        const slots = [];
+        const SLOT  = /\x01(\d+)\x01/g;
+
+        // 1️⃣ 物品名稱：先 slot，受到最高保護（解決 Manald Heal → 法力ld 問題）
+        let r = slotEntries(text, ITEM_ENTRIES, slots, true);
+        // 2️⃣ 屬性：在物品已保護的情況下翻譯，不會誤傷複合名稱
+        r = translateAffixes(r);
+        // 3️⃣ 介面 UI：最後跑，優先度最低
+        r = slotEntries(r, UI_ENTRIES, slots, false);
+        // 4️⃣ 一次性還原全部 slot
+        return r.replace(SLOT, (_, i) => slots[+i]);
     }
 
     // ── DOM ──
@@ -160,9 +165,10 @@
         const cur = node.textContent;
         if (!cur || !cur.trim()) return;
         if (hasChinese(cur)) return;
+        // 修正④：cache 存原文，用來判斷是否已處理過同一份原文（避免反覆翻譯）
         if (nodeCache.get(node) === cur) return;
         const result = translate(cur);
-        nodeCache.set(node, result);
+        nodeCache.set(node, cur);  // ✅ 存原文而非翻譯結果
         if (result !== cur) {
             writingSet.add(node);
             node.textContent = result;
@@ -548,7 +554,7 @@
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
 
-        const scriptVersion = '2.0';
+        const scriptVersion = '2.1';
         panel.innerHTML = `
       <h3>⚔️ D2R 中文翻譯 <span>v${scriptVersion}</span></h3>
       <div class="d2r-row">
@@ -585,11 +591,18 @@
     }
 
     // ── SPA 路由偵測 ──
+    // 修正⑤：onRouteChange 換頁後延遲重新翻譯（等待 React 渲染完成）
     let lastPath = location.pathname + location.search;
     function onRouteChange() {
         const cur = location.pathname + location.search;
         if (cur === lastPath) return;
         lastPath = cur;
+        setTimeout(() => {
+            if (CONFIG.enabled) {
+                processTree(document.body);
+                document.title = translate(document.title);
+            }
+        }, 500);
     }
     ['pushState','replaceState'].forEach(m => {
         const orig = history[m];
