@@ -67,7 +67,7 @@ window.D2R_UI_TRADERIC = {
     "Mark Sold":         "已出售",
     "Relist":            "重新上架",
     "Remove":            "移除",
-    "20 hour(s)":        "小時",
+    "hour(s)":        "小時",
     "Hide Listing":      "隱藏",
     "Share":             "分享",
     "Paste":             "貼上",
