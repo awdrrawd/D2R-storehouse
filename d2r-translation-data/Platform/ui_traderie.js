@@ -533,6 +533,7 @@ window.D2R_UI_TRADERIC = {
     "ITEM NOTIFICATIONS":         "物品通知",
     "See Items Subscribed To":    "查看已訂閱的物品",
     "This option toggles discord notifications.": "此選項切換 Discord 通知。",
+    "Are you sure you want to clear all notifications":"您確定要清除所有通知嗎",
     "This option enables notifications. To remove notifications, you will have to block them within your device settings. DISCLAIMER: Browser push notifications do not work on iOS (iPhone)":
     "此選項啟用通知。若要移除，請在裝置設定中封鎖。注意：iOS（iPhone）不支援瀏覽器推播通知。",
     "View the list of items that you are currently getting new listing notifications for":
@@ -610,7 +611,7 @@ window.D2R_UI_TRADERIC = {
     "Yes.":"是的。",
     "uses ratings, trade history, and anti-scam systems to keep trading in":"透過評價系統、交易紀錄以及防詐騙機制，確保《暗黑破壞神 II：獄火重生》",
     "safe and reliable. Follow in-app guidance and only complete trades with trusted players.":"的交易安全可靠。建議遵循平台指引，並只與可信任的玩家完成交易。",
-    "Can I trade rare or limited items in": "可以在《暗黑破壞神 II：獄火重生》交易稀有或限定物品嗎？",
+    "Can I trade rare or limited items in": "可以在《暗黑破壞神 II：獄火重生》交易稀有或限定物品嗎",
     "supports trading rare, limited, and high-value items in":"支援《暗黑破壞神 II：獄火重生》上的稀有、限定以及高價值物品的交易。",
     ". You can browse offers, negotiate with players, and complete safe trades.":"你可以瀏覽其他玩家的出價、進行協商，並安全地完成交易。",
     "How do I list my items on": "如何刊登物品在",
