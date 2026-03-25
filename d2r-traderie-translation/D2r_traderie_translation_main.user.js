@@ -3,8 +3,8 @@
 // @name:zh-TW   D2R Traderie 繁體中文翻譯 (支援中文搜尋)
 // @name:zh-CN   D2R Traderie 繁体中文翻译（支援中文搜尋）
 // @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      2.1.1
-// @description  Traderie 的 D2R 繁體中文化，並支援中文搜尋（僅載入翻譯資料）
+// @version      2.1.2
+// @description  Traderie 的 D2R 繁體中文化，並支援中文搜尋
 // @author       瀧月瀨
 // @match        https://traderie.com/diablo2resurrected*
 // @match        https://*.traderie.com/diablo2resurrected/*
@@ -42,85 +42,175 @@
         }
     }
 
-    // ── 資料載入 ──
-    const FILE_PATHS = ['item/items.js', 'item/affixes.js', 'Platform/ui_traderie.js'];
+    // ════════════════════════════════════════
+    //  資料載入（純 JSON，不需 eval）
+    // ════════════════════════════════════════
 
-    const CDN_BASES = [
-        `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/`,
-        `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/`,
+    const FILE_PATHS = [
+        'item/items.json',
+        'Platform/tr_affixes.json',
+        'Platform/tr_ui.json',
     ];
 
-    async function fetchAndExec(url) {
+    const CDN_BASES = [
+        'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/',
+        'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/',
+    ];
+
+    async function fetchJSON(url) {
         const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-cache' });
         if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
-        const code = await res.text();
-        try { new Function(code)(); } catch (_) { eval(code); }
+        const text = await res.text();
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("JSON解析失敗，內容前100字：", text.slice(0, 100));
+            throw e;
+        }
     }
 
     async function loadWithFallback(filePath) {
         for (const base of CDN_BASES) {
-            try { await fetchAndExec(base + filePath); return; }
+            try { return await fetchJSON(base + filePath); }
             catch (e) { console.warn('[D2R] 來源失敗，嘗試備用：', e.message); }
         }
         throw new Error('所有來源均無法載入：' + filePath);
     }
 
+    let ITEM_NAMES, AFFIXES_TR, UI_NAMES;
     try {
-        for (const path of FILE_PATHS) await loadWithFallback(path);
+        [ITEM_NAMES, AFFIXES_TR, UI_NAMES] = await Promise.all(FILE_PATHS.map(loadWithFallback));
     } catch (e) {
         console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
         return;
     }
 
-    // ── 從頁面 window 讀取三個字典 ──
-    const ITEM_NAMES  = PAGE.D2R_ITEMS       || window.D2R_ITEMS       || {};
-    const AFFIXES_RAW = PAGE.D2R_AFFIXES     || window.D2R_AFFIXES     || [];
-    const UI_NAMES    = PAGE.D2R_UI_TRADERIC || window.D2R_UI_TRADERIC || {};
-
-    if (!Object.keys(ITEM_NAMES).length) {
-        console.warn('[D2R] items.js 資料為空，翻譯停用');
+    if (!ITEM_NAMES || !Object.keys(ITEM_NAMES).length) {
+        console.warn('[D2R] items.json 資料為空，翻譯停用');
         return;
     }
 
     // ── 設定 ──
-    const CONFIG = {
-        enabled: gmGet('d2r_enabled', true),
-    };
+    const CONFIG = { enabled: gmGet('d2r_enabled', true) };
     function saveConfig() { gmSet('d2r_enabled', CONFIG.enabled); }
 
-    // ── 預編譯字典 ──
+
+    // ════════════════════════════════════════
+    //  工具函式
+    // ════════════════════════════════════════
+
+    function hasChinese(str) { return /[\u4e00-\u9fa5]/.test(str); }
+
+
+    // ════════════════════════════════════════
+    //  預編譯字典
+    // ════════════════════════════════════════
+
+    // 物品 / UI：長 key 優先
     const ITEM_ENTRIES = Object.entries(ITEM_NAMES).sort((a, b) => b[0].length - a[0].length);
-    const UI_ENTRIES   = Object.entries(UI_NAMES).sort((a, b) => b[0].length - a[0].length);
+    const UI_ENTRIES   = Object.entries(UI_NAMES  ).sort((a, b) => b[0].length - a[0].length);
 
-    const AFFIX_PAT = AFFIXES_RAW
-        .map(([src, tmpl]) => { try { return { re: new RegExp(src, 'gi'), tmpl }; } catch (_) { return null; } })
-        .filter(Boolean)
-        .sort((a, b) => b.re.source.length - a.re.source.length);
+    // ── 詞綴：從 {"en_key": "zh_tmpl"} 建立 regex 匹配器 ──
+    // key 範例：  "Fire Resist +{{value}}%"
+    // tmpl 範例： "火焰抗性 +{{value}}%"
+    // 佔位符：{{value}} {{level}} {{charges}} {{duration}}
 
-    // ── 中文搜尋反查表 ──
-    const ITEM_ZH_TO_EN  = {};
-    const AFFIX_ZH_TO_EN = {};
+    const PLACEHOLDER_RE = /\{\{(?:value|level|charges|duration)\}\}/g;
+    const NUM_PAT = '([\\d.,+\\-]+(?:\\s*[-~]\\s*[\\d.,+\\-]+)?)';
 
+    function buildAffixRegex(enKey) {
+        const parts   = enKey.split(PLACEHOLDER_RE);
+        const escaped = parts.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        let src = escaped[0];
+        for (let i = 1; i < escaped.length; i++) src += NUM_PAT + escaped[i];
+        return new RegExp(src, 'gi');
+    }
+
+    function buildAffixTemplate(zhTmpl) {
+        let idx = 1;
+        return zhTmpl.replace(PLACEHOLDER_RE, () => `$${idx++}`);
+    }
+
+    // TR 搜尋用的 EN 顯示文字（{{value}} → X，與 TR 介面下拉一致）
+    function enDisplayText(enKey) {
+        return enKey.replace(PLACEHOLDER_RE, 'X');
+    }
+
+    const AFFIX_PAT = Object.entries(AFFIXES_TR).map(([en, zh]) => {
+        try { return { re: buildAffixRegex(en), tmpl: buildAffixTemplate(zh) }; }
+        catch (_) { return null; }
+    }).filter(Boolean).sort((a, b) => b.re.source.length - a.re.source.length);
+
+    const AFFIX_X_MAP = {};
+    for (const [en, zh] of Object.entries(AFFIXES_TR)) {
+        const enX = en.replace(PLACEHOLDER_RE, 'X');
+        const zhX = zh.replace(PLACEHOLDER_RE, 'X');
+        AFFIX_X_MAP[enX] = zhX;
+    }
+
+    // 翻譯 X 格式詞綴的函式
+    const AFFIX_X_ENTRIES = Object.entries(AFFIXES_TR)
+    .map(([en, zh]) => {
+        const enX = en.replace(PLACEHOLDER_RE, 'X');
+        const zhX = zh.replace(PLACEHOLDER_RE, 'X');
+        if (enX === zhX) return null;
+        try {
+            const esc = enX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return { re: new RegExp(esc, 'gi'), zh: zhX }; // ← 這裡預編譯
+        } catch (_) { return null; }
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.re.source.length - a.re.source.length);
+
+    // 從 X 格式詞綴抽出「數字後面的部分」做對照
+    const AFFIX_SUFFIX_MAP = {};
+    for (const [en, zh] of Object.entries(AFFIXES_TR)) {
+        const enX = en.replace(PLACEHOLDER_RE, '\x00');
+        const zhX = zh.replace(PLACEHOLDER_RE, '\x00');
+        const enParts = enX.split('\x00');
+        const zhParts = zhX.split('\x00');
+        // 取最後一段（數字後面的文字）
+        const enSuffix = enParts[enParts.length - 1].trim();
+        const zhSuffix = zhParts[zhParts.length - 1].trim();
+        if (enSuffix.length > 2 && enSuffix !== zhSuffix)
+            AFFIX_SUFFIX_MAP[enSuffix] = zhSuffix;
+    }
+
+    function translateAffixesX(text) {
+        let r = text;
+        for (const { re, zh } of AFFIX_X_ENTRIES) {
+            re.lastIndex = 0; // ← 重置，不重新建立
+            if (re.test(r)) { re.lastIndex = 0; r = r.replace(re, zh); }
+        }
+        return r;
+    }
+
+
+    // ════════════════════════════════════════
+    //  中文搜尋反查表
+    // ════════════════════════════════════════
+
+    // 物品：zh → en（英文名稱填入搜尋框）
+    const ITEM_ZH_TO_EN = {};
     for (const [en, zh] of Object.entries(ITEM_NAMES)) {
         const zhClean = zh.replace(/\(.*?\)/g, '').trim();
         if (zhClean && !ITEM_ZH_TO_EN[zhClean]) ITEM_ZH_TO_EN[zhClean] = en;
     }
 
-    for (const [src, tmpl] of AFFIXES_RAW) {
-        try {
-            const enReadable = regexToReadable(src);
-            if (!enReadable || enReadable.length < 2) continue;
-            const zhFull    = tmpl.replace(/\$\d+/g, 'X').replace(/\s+/g, ' ').trim();
-            const zhKeyword = tmpl.replace(/\$\d+/g, '').replace(/[+\-%X\s（）]/g, '').trim();
-            if (zhFull.length >= 2    && hasChinese(zhFull)    && !AFFIX_ZH_TO_EN[zhFull])    AFFIX_ZH_TO_EN[zhFull]    = enReadable;
-            if (zhKeyword.length >= 2 && hasChinese(zhKeyword) && !AFFIX_ZH_TO_EN[zhKeyword]) AFFIX_ZH_TO_EN[zhKeyword] = enReadable;
-            if (!tmpl.includes('$')   && hasChinese(tmpl)      && !AFFIX_ZH_TO_EN[tmpl])      AFFIX_ZH_TO_EN[tmpl]      = enReadable;
-            if (zhFull.includes('X')  && hasChinese(zhFull)) {
-                const subKw = zhFull.replace(/[\+\-]?X[\-X]*%?\s*/g, '').trim();
-                if (subKw.length >= 2 && hasChinese(subKw) && !AFFIX_ZH_TO_EN[subKw]) AFFIX_ZH_TO_EN[subKw] = enReadable;
-            }
-        } catch (_) {}
+    // 詞綴：zh關鍵字 → EN 顯示文字（填入 TR 搜尋框，X 取代數值）
+    const AFFIX_ZH_TO_EN = {};
+    for (const [en, zh] of Object.entries(AFFIXES_TR)) {
+        const enDisplay = enDisplayText(en);                                        // "Fire Resist +X%"
+        const zhDisplay = zh.replace(PLACEHOLDER_RE, 'X').trim();                  // "火焰抗性 +X%"
+        const zhKeyword = zh.replace(PLACEHOLDER_RE, '').replace(/[+\-%\sX（）]+/g, '').trim(); // "火焰抗性"
+
+        if (zhDisplay && hasChinese(zhDisplay) && !AFFIX_ZH_TO_EN[zhDisplay])
+            AFFIX_ZH_TO_EN[zhDisplay] = enDisplay;
+        if (zhKeyword.length >= 2 && hasChinese(zhKeyword) && !AFFIX_ZH_TO_EN[zhKeyword])
+            AFFIX_ZH_TO_EN[zhKeyword] = enDisplay;
     }
+
 
     // ── DOM 翻譯用快取與狀態 ──
     const SKIP       = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'INPUT', 'TEXTAREA']);
@@ -131,38 +221,16 @@
     let activeIndex    = -1;
     let currentResults = [];
     let currentInput   = null;
-    let zhSearchTimer  = null;       // debounce 計時器
+    let zhSearchTimer  = null;
 
-    // ── 數字欄位輸入旗標（暫停 MutationObserver 翻譯，避免卡頓）──
+    // ── 數字欄位旗標（暫停 MutationObserver，避免 Min/Max 輸入卡頓）──
     let isTypingInNumericField = false;
 
-    // ── 路由偵測暫存 ──
+    // ── 路由暫存 ──
     let lastPath = location.pathname + location.search;
 
-    // ── 導航鍵清單（避免方向鍵觸發重新搜尋）──
+    // ── 導航鍵（不觸發重新搜尋）──
     const NAV_KEYS = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Tab'];
-
-
-    // ════════════════════════════════════════
-    //  工具函式
-    // ════════════════════════════════════════
-
-    function hasChinese(str) {
-        return /[\u4e00-\u9fa5]/.test(str);
-    }
-
-    function regexToReadable(src) {
-        let r = src, prev;
-        do { prev = r; r = r.replace(/\((?:[^()])*\)/g, 'X'); } while (r !== prev);
-        r = r.replace(/\[[^\]]*\]/g, 'X');
-        r = r.replace(/\\([ +\-.()[\]{}|^$\\])/g, '$1');
-        r = r.replace(/\\s/g, ' ').replace(/\\d/g, 'X').replace(/\\w/g, 'X');
-        r = r.replace(/\\/g, '');
-        r = r.replace(/(\w|X)[*+?]+/g, '$1');
-        r = r.replace(/(?<![a-zA-Z0-9X])[*?]/g, '');
-        r = r.replace(/X+/g, 'X').replace(/\s{2,}/g, ' ').trim();
-        return r;
-    }
 
 
     // ════════════════════════════════════════
@@ -189,16 +257,17 @@
             re.lastIndex = 0;
             if (re.test(r)) { re.lastIndex = 0; r = r.replace(re, tmpl); }
         }
-        return r;
+        return translateAffixesX(r); // ← 加這行
     }
 
+    // 翻譯順序：物品名稱（保護）→ 詞綴（數值替換）→ UI 文字
     function translate(text) {
         if (!text || !text.trim()) return text;
         const slots = [];
         const SLOT  = /\x01(\d+)\x01/g;
-        let r = slotEntries(text, ITEM_ENTRIES, slots, true);
-        r = translateAffixes(r);
-        r = slotEntries(r, UI_ENTRIES, slots, false);
+        let r = translateAffixes(text);                    // 1. 詞綴（含數字）
+        r = slotEntries(r, ITEM_ENTRIES, slots, true);     // 2. 物品名
+        r = slotEntries(r, UI_ENTRIES,   slots, false);    // 3. UI
         return r.replace(SLOT, (_, i) => slots[+i]);
     }
 
@@ -213,9 +282,13 @@
         const cur = node.textContent;
         if (!cur || !cur.trim()) return;
         if (hasChinese(cur)) return;
-        if (nodeCache.get(node) === cur) return;
+
+        // ← 改這裡：cache 存翻譯結果，而不是原文
+        const cached = nodeCache.get(node);
         const result = translate(cur);
-        nodeCache.set(node, cur);
+        if (cached === result) return; // 已是最新翻譯結果，跳過
+
+        nodeCache.set(node, result);   // ← 存翻譯後的文字
         if (result !== cur) {
             writingSet.add(node);
             node.textContent = result;
@@ -223,12 +296,56 @@
         }
     }
 
+    // 新增：組合式詞綴翻譯（處理被拆分成多個 span 的屬性）
+    function processAffixSpan(spanEl) {
+        if (hasChinese(spanEl.textContent)) return;  // 已翻譯過
+
+        const children = Array.from(spanEl.childNodes);
+        if (!children.length) return;
+
+        // 1. 組合完整文字（所有子節點）
+        const combined = spanEl.textContent.trim();
+        if (!combined) return;
+
+        const translated = translate(combined);  // 使用完整 translate()，含詞綴字典
+        if (translated === combined) return;
+
+        console.log('[D2R] 翻譯詞綴:', combined, '→', translated);  // debug
+
+        // 2. 保留紅色數字 span，不動
+        const numSpans = spanEl.querySelectorAll('.text-\\[red\\]');
+        const blueSpans = spanEl.querySelectorAll('.text-theme-listing-props');
+
+        if (blueSpans.length < 2) return;  // 至少兩個藍字 span
+
+        // 3. 分割翻譯結果，按原數字位置重新分配
+        let parts = [translated];
+        numSpans.forEach((numSpan, idx) => {
+            const numVal = numSpan.textContent;
+            parts = parts.flatMap(p => p.split(numVal));
+            parts.splice(parts.length - (numSpans.length - idx), 0, numVal);  // 插入數字
+        });
+
+        // 4. 分配到藍字 span（前後部分）
+        blueSpans.forEach((blueSpan, i) => {
+            const partIdx = i * 2;  // 每個藍字對應 parts 的前/後部分
+            if (parts[partIdx]) blueSpan.textContent = parts[partIdx];
+        });
+    }
+
+
     function processTree(root) {
         if (!root || root.nodeType !== 1) return;
+
+        // ✅ 新增：先處理組合式詞綴 span（listing 屬性）
+        root.querySelectorAll('.listing-num-properties > span').forEach(span => {
+            if (!hasChinese(span.textContent)) processAffixSpan(span);
+        });
+
         const walker = document.createTreeWalker(
             root, NodeFilter.SHOW_TEXT,
             { acceptNode: n => (!n.parentElement || SKIP.has(n.parentElement.tagName))
-                ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT }
+             ? NodeFilter.FILTER_SKIP : NodeFilter.FILTER_ACCEPT }
         );
         const nodes = []; let n;
         while ((n = walker.nextNode())) nodes.push(n);
@@ -241,7 +358,7 @@
     // ════════════════════════════════════════
 
     function searchZh(query, mode = 'item') {
-        if (!query || !query.trim()) return [];
+        if (!query?.trim()) return [];
         const q = query.trim();
         const source = mode === 'affix' ? AFFIX_ZH_TO_EN : ITEM_ZH_TO_EN;
         const exact = [], startsWith = [], contains = [];
@@ -252,16 +369,16 @@
             if (exact.length + startsWith.length + contains.length >= 100) break;
         }
         const seen = new Map();
-        for (const r of [...exact, ...startsWith, ...contains]) {
+        for (const r of [...exact, ...startsWith, ...contains])
             if (!seen.has(r.en)) seen.set(r.en, r);
-        }
         return [...seen.values()].slice(0, 20);
     }
 
     function getFieldText(el) {
         if (el.placeholder) return el.placeholder;
-        const descId = el.getAttribute('aria-describedby');
-        if (descId) { const d = document.getElementById(descId); if (d) return d.textContent || ''; }
+        const descEl = el.getAttribute('aria-describedby')
+        ? document.getElementById(el.getAttribute('aria-describedby')) : null;
+        if (descEl) return descEl.textContent || '';
         let p = el.parentElement;
         for (let i = 0; i < 6 && p; i++, p = p.parentElement) {
             const ph = p.querySelector('[class*="placeholder"]');
@@ -296,13 +413,12 @@
     document.body.appendChild(zhDropdown);
 
     function positionDropdown(inputEl) {
-        const rect = inputEl.getBoundingClientRect();
+        const rect  = inputEl.getBoundingClientRect();
         const dropH = Math.min(320, currentResults.length * 40 + 60);
-        if (window.innerHeight - rect.bottom < dropH && rect.top > dropH) {
+        if (window.innerHeight - rect.bottom < dropH && rect.top > dropH)
             zhDropdown.style.top = `${rect.top + window.scrollY - dropH - 4}px`;
-        } else {
+        else
             zhDropdown.style.top = `${rect.bottom + window.scrollY + 4}px`;
-        }
         zhDropdown.style.left  = `${rect.left + window.scrollX}px`;
         zhDropdown.style.width = `${Math.max(rect.width, 260)}px`;
     }
@@ -311,7 +427,6 @@
         activeIndex    = -1;
         currentResults = results;
         currentInput   = inputEl;
-
         if (!results.length) { zhDropdown.style.display = 'none'; return; }
 
         zhDropdown.innerHTML = '';
@@ -362,7 +477,6 @@
     //  事件監聽
     // ════════════════════════════════════════
 
-    // 中文搜尋輸入（input + compositionend 已足夠，不需 keyup）
     function handleZhInput(e) {
         if (!CONFIG.enabled) return;
         const el = e.target;
@@ -370,7 +484,7 @@
         if (el.type === 'hidden' || el.type === 'number') return;
         if (NAV_KEYS.includes(e.key)) return;
 
-        // 純數字欄位（Min / Max）直接跳過
+        // 純數字欄位（Min / Max）跳過，避免卡頓
         if (/^[\d\s.\-]*$/.test(el.value)) {
             zhDropdown.style.display = 'none';
             return;
@@ -381,7 +495,8 @@
         zhSearchTimer = setTimeout(() => {
             const val = el.value;
             if (!hasChinese(val)) { zhDropdown.style.display = 'none'; return; }
-            renderDropdown(searchZh(val, getSearchMode(el)), el, getSearchMode(el));
+            const mode = getSearchMode(el);
+            renderDropdown(searchZh(val, mode), el, mode);
         }, 150);
     }
 
@@ -421,18 +536,17 @@
         if (zhDropdown.style.display !== 'none' && currentInput) positionDropdown(currentInput);
     });
 
-    // 數字欄位聚焦旗標（暫停 MutationObserver 翻譯）
+    // 數字欄位聚焦旗標（暫停 Observer 翻譯，避免 Min/Max 卡頓）
     document.addEventListener('focusin', e => {
         const el = e.target;
         if (el.tagName !== 'INPUT') return;
-        isTypingInNumericField =
-            el.placeholder === 'Min' || el.placeholder === 'Max' ||
-            /^[\d\s.\-]*$/.test(el.value);
+        const isMinMax = el.placeholder === 'Min' || el.placeholder === 'Max';
+        // ✅ 空字串不算數字欄位；必須有非空的純數字內容
+        const isNumericContent = el.value.length > 0 && /^[\d\s.\-]*$/.test(el.value);
+        isTypingInNumericField = isMinMax || isNumericContent;
     }, true);
 
-    document.addEventListener('focusout', () => {
-        isTypingInNumericField = false;
-    }, true);
+    document.addEventListener('focusout', () => { isTypingInNumericField = false; }, true);
 
 
     // ════════════════════════════════════════
@@ -507,7 +621,7 @@
       padding:6px 12px 8px;color:#5a3a7a;font-size:11px;
       border-top:1px solid #2d1456;text-align:center;
     }
-  `);
+    `);
 
 
     // ════════════════════════════════════════
@@ -515,16 +629,16 @@
     // ════════════════════════════════════════
 
     function createFAB() {
-        const fab   = document.createElement('div');
-        fab.id      = 'd2r-fab';
+        const fab = document.createElement('div');
+        fab.id = 'd2r-fab';
         fab.textContent = '⚔️';
-        fab.title   = 'D2R 中文翻譯';
+        fab.title = 'D2R 中文翻譯';
         if (!CONFIG.enabled) fab.classList.add('off');
 
         const panel = document.createElement('div');
-        panel.id    = 'd2r-panel';
+        panel.id = 'd2r-panel';
         panel.innerHTML = `
-      <h3>⚔️ D2R 中文翻譯 <span>v2.1.1</span></h3>
+      <h3>⚔️ D2R 中文翻譯 <small>v2.1.2</small></h3>
       <div class="d2r-row">
         <label for="d2r-en">啟用翻譯</label>
         <label class="d2r-toggle">
@@ -535,8 +649,7 @@
       <div class="d2r-stat">
         道具 ${ITEM_ENTRIES.length} ｜ 介面 ${UI_ENTRIES.length} ｜ 屬性 ${AFFIX_PAT.length}<br>
         搜尋：道具 ${Object.keys(ITEM_ZH_TO_EN).length} ／ 屬性 ${Object.keys(AFFIX_ZH_TO_EN).length}
-      </div>
-    `;
+      </div>`;
 
         document.body.appendChild(fab);
         document.body.appendChild(panel);
@@ -598,7 +711,7 @@
 
     const observer = new MutationObserver(muts => {
         if (!CONFIG.enabled) return;
-        if (isTypingInNumericField) return;   // 數字欄位輸入時暫停，避免卡頓
+        if (isTypingInNumericField) return;
         for (const m of muts) {
             if (m.type === 'characterData') {
                 if (writingSet.has(m.target)) continue;
@@ -622,7 +735,7 @@
         document.title = translate(document.title);
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-        // iOS Safari MutationObserver 常漏觸發，加輪詢保命符
+        // iOS Safari 保命輪詢
         setInterval(() => {
             if (CONFIG.enabled && !isTypingInNumericField) processTree(document.body);
         }, 1500);
