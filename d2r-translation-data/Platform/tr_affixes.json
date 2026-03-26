@@ -61,7 +61,7 @@
   "% Increase Maximum Durability":"%耐久度上限提高",
   "Repairs {{value}} durability per second": "每秒修復 {{value}} 點耐久度",
   "Cannot Be Frozen": "無法凍結",
-  "Half Freeze Duration":"冰凍持續時間減半"
+  "Half Freeze Duration":"冰凍持續時間減半",
   "Ignore Target's Defense":"無視目標防禦",
   "-{{value}}% Target Defense": "-{{value}}% 目標防禦",
   "+{{value}}% to Experience Gained": "+{{value}}% 獲得經驗值",
