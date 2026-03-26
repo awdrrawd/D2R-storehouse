@@ -1,6 +1,8 @@
 {
   "Sockets":"插槽",
   "Socketed ({{value}})": "插槽（{{value}}）",
+  "{{value}}% Life stolen per hit": "擊中竊取 {{value}}% 生命",
+  "{{value}}% Mana stolen per hit": "擊中竊取 {{value}}% 法力",
   "Damage +{{value}}": "傷害 +{{value}}",
   "+{{value}} Defense": "+{{value}} 防禦",
   "+{{value}} Defense (Based on Character Level)": "+{{value}} 防禦 （依角色等級）",
@@ -305,8 +307,6 @@
   "{{value}}% Increased Chance of Blocking": "{{value}}% 格擋機率提高",
   "+{{value}} Life after each Demon Kill": "+{{value}} 擊殺惡魔後回復生命",
   "+{{value}} Life after each Kill": "+{{value}} 擊殺後回復生命",
-  "{{value}}% Life stolen per hit": "{{value}}% 每次命中竊取生命",
-  "{{value}}% Mana stolen per hit": "{{value}}% 每次命中竊取法力",
   "+{{value}}% Piercing Attack": "+{{value}}% 穿透攻擊",
   "{{value}} Poison Damage": "{{value}} 毒素傷害",
   "+{{value}} poison damage over {{duration}} seconds": "+{{value}} 毒素傷害（持續 {{duration}} 秒）",
