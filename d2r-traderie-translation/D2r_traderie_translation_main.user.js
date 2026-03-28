@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 繁體中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 繁体中文翻译 + 自动编辑（支援中文搜尋）
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.3
+// @version            2.3.1
 // @description:zh-tw  Traderie 的 D2R 繁體中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 繁体中文化，支援中文搜寻，并新增快捷编辑
 // @author             瀧月瀨
@@ -45,7 +45,7 @@
     }
 
     // ── 版本（獨立常數，modal 和更新判斷都用這裡）──
-    const VERSION = '2.3';
+    const VERSION = '2.3.1';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
 
@@ -253,6 +253,7 @@
         const p = node?.parentElement;
         if (!p || SKIP.has(p.tagName)) return;
         if (p.closest('[data-d2r-affix-translated]')) return;
+        if (p.closest('.messages-container')) return; //停用聊天室翻譯
 
         const cur = node.textContent;
         if (!cur || !cur.trim()) return;
@@ -273,6 +274,7 @@
     function processAffixSpan(spanEl) {
         if (spanEl.dataset.d2rAffixTranslated) return;
         if (hasChinese(spanEl.textContent)) return;
+        if (spanEl.closest('.messages-container')) return; //停用聊天室翻譯
 
         const combined = spanEl.textContent.trim();
         if (!combined) return;
@@ -297,6 +299,8 @@
 
     function processTree(root) {
         if (!root || root.nodeType !== 1) return;
+        if (root.closest?.('.messages-container')) return; //停用聊天室翻譯
+        if (root.classList?.contains('messages-container')) return; //停用聊天室翻譯
 
         root.querySelectorAll('.listing-num-properties > span').forEach(span => {
             processAffixSpan(span);
