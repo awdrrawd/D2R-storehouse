@@ -1,7 +1,0 @@
-{
-  "latest": "2.3.0",
-  "versions": [
-    { "version": "2.3.0", "title": "更新說明 v2.3.0", "content": "• PC Navbar 注入\n• 多版本更新歷程" },
-    { "version": "2.2.9", "title": "更新說明 v2.2.9", "content": "• 新增編輯開關\n• 手機 Nav 支援" }
-  ]
-}
