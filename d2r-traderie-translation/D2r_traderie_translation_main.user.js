@@ -1,23 +1,21 @@
 // ==UserScript==
-// @name               Traderie D2R Chinese Translator + Chinese search
-// @name:zh-tw         D2R Traderie 繁體中文翻譯 + 自動編輯 (支援中文搜尋)
-// @name:zh-cn         D2R Traderie 繁体中文翻译 + 自动编辑（支援中文搜尋）
-// @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.3.1
-// @description:zh-tw  Traderie 的 D2R 繁體中文化，支援中文搜尋，並新增快捷編輯
-// @description:zh-cn  Traderie 的 D2R 繁体中文化，支援中文搜寻，并新增快捷编辑
-// @author             瀧月瀨
-// @match              https://traderie.com/diablo2resurrected*
-// @match              https://*.traderie.com/diablo2resurrected/*
-// @icon               https://www.google.com/s2/favicons?domain=traderie.com&sz=64
-// @grant              GM_addStyle
-// @grant              GM_getValue
-// @grant              GM_setValue
-// @grant              unsafeWindow
-// @run-at             document-idle
-// @description Traderie 的 D2R 繁體中文化，並支援中文搜尋（僅載入翻譯資料）
-// @downloadURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.user.js
-// @updateURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.meta.js
+// @name         Traderie D2R Chinese Translator + Auto Edit
+// @name:zh-TW   D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
+// @name:zh-CN   D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
+// @namespace    https://github.com/awdrrawd/D2R-storehouse
+// @version      2.4.0
+// @description  Traderie 的 D2R 中文化，支援中文搜尋，並整合快速編輯按鈕
+// @author       瀧月瀨
+// @match        https://traderie.com/diablo2resurrected*
+// @match        https://*.traderie.com/diablo2resurrected/*
+// @icon         https://www.google.com/s2/favicons?domain=traderie.com&sz=64
+// @grant        GM_addStyle
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        unsafeWindow
+// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
+// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
+// @run-at       document-idle
 // ==/UserScript==
 
 (async function () {
@@ -45,7 +43,7 @@
     }
 
     // ── 版本（獨立常數，modal 和更新判斷都用這裡）──
-    const VERSION = '2.3.1';
+    const VERSION = '2.4.0';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
 
@@ -89,16 +87,122 @@
 
     // ── 更新說明（非阻塞，失敗時靜默略過）──
     let CHANGELOG = null;
-    try { CHANGELOG = await loadWithFallback('Platform/tr_changelog.json'); } catch (_) {}
+    try { CHANGELOG = await loadWithFallback('Platform/changelog.json'); } catch (_) {}
+
+    // ════════════════════════════════════════
+    //  ★ 語言設定（放在 CONFIG 之前，detectLang 需要先定義）
+    // ════════════════════════════════════════
+
+    // OpenCC converter（lazy 初始化，只有選 zh-CN 時才載入）
+    let simplifiedConverter = null;
+    let openccLoading = false;
+
+    async function loadOpenCC() {
+        if (simplifiedConverter) return true;
+        if (openccLoading) {
+            // 等待已在進行的載入完成
+            await new Promise(resolve => {
+                const check = setInterval(() => {
+                    if (!openccLoading) { clearInterval(check); resolve(); }
+                }, 100);
+            });
+            return !!simplifiedConverter;
+        }
+        openccLoading = true;
+        try {
+            // 動態載入 OpenCC（繁體用戶零負擔）
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js';
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+            // OpenCC 掛在 window.OpenCC
+            simplifiedConverter = PAGE.OpenCC.Converter({ from: 'tw', to: 'cn' });
+            console.log('[D2R] OpenCC 載入成功');
+            return true;
+        } catch (e) {
+            console.warn('[D2R] OpenCC 載入失敗，將保持繁體：', e.message);
+            return false;
+        } finally {
+            openccLoading = false;
+        }
+    }
+
+    // 簡體 → 繁體 converter（搜尋反查用：使用者輸入簡體 → 轉繁體 → 查表）
+    let toTWConverter = null;
+
+    async function loadOpenCCReverse() {
+        if (toTWConverter) return;
+        // OpenCC 本體必須已載入
+        if (!PAGE.OpenCC) await loadOpenCC();
+        if (!PAGE.OpenCC) return;
+        try {
+            toTWConverter = PAGE.OpenCC.Converter({ from: 'cn', to: 'tw' });
+        } catch (e) {
+            console.warn('[D2R] 反向 OpenCC 建立失敗：', e.message);
+        }
+    }
+
+    // 偵測瀏覽器語言，返回 'zh-TW' 或 'zh-CN'
+    function detectBrowserLang() {
+        const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        // 簡體地區：中國大陸、新加坡
+        if (nav === 'zh-cn' || nav === 'zh-hans' || nav === 'zh-sg') return 'zh-CN';
+        // 繁體地區：台灣、香港、澳門
+        // 由於使用OpenCC繁轉簡，所以預設為繁體
+        return 'zh-TW';
+    }
+
+    // 取得實際生效語系（auto 時看瀏覽器）
+    function detectLang() {
+        if (CONFIG.lang !== 'auto') return CONFIG.lang;
+        return detectBrowserLang();
+    }
+
+    // 翻譯出口：所有繁體翻譯結果都經過這裡
+    function applyLang(text) {
+        if (!text) return text;
+        if (detectLang() === 'zh-CN' && simplifiedConverter) {
+            return simplifiedConverter(text);
+        }
+        return text;
+    }
 
     // ── 設定 ──
     const CONFIG = {
         enabled: gmGet('d2r_enabled', true),
-        editBtn: gmGet('d2r_editbtn', true)   // 編輯快捷按鈕開關
+        editBtn: gmGet('d2r_editbtn', true),
+        lang:    gmGet('d2r_lang', 'auto')   // ★ 新增：'auto' | 'zh-TW' | 'zh-CN'
     };
     function saveConfig() {
         gmSet('d2r_enabled', CONFIG.enabled);
         gmSet('d2r_editbtn', CONFIG.editBtn);
+        gmSet('d2r_lang',    CONFIG.lang);   // ★ 新增
+    }
+
+    // ★ 語言切換（清快取 → 重新掃描）
+    async function switchLang(lang) {
+        CONFIG.lang = lang;
+        saveConfig();
+
+        if (detectLang() === 'zh-CN') {
+            await loadOpenCC();
+            await loadOpenCCReverse();
+        }
+
+        // 清除節點快取，強制重新翻譯整頁
+        nodeCache = new WeakMap();
+        // 清除 affix 已翻譯標記
+        document.querySelectorAll('[data-d2r-affix-translated]').forEach(el => {
+            delete el.dataset.d2rAffixTranslated;
+        });
+
+        if (CONFIG.enabled) {
+            processTree(document.body);
+            document.title = applyLang(translate(document.title));
+        }
     }
 
 
@@ -107,6 +211,7 @@
     // ════════════════════════════════════════
 
     function hasChinese(str) { return /[\u4e00-\u9fa5]/.test(str); }
+
 
     // ════════════════════════════════════════
     //  預編譯字典
@@ -188,7 +293,8 @@
 
     // ── DOM 翻譯用快取與狀態 ──
     const SKIP       = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'INPUT', 'TEXTAREA']);
-    const nodeCache  = new WeakMap();
+    // ★ 改為 let，switchLang 時需要重建
+    let nodeCache  = new WeakMap();
     const writingSet = new WeakSet();
 
     // ── 中文搜尋下拉狀態 ──
@@ -234,6 +340,7 @@
         return translateAffixesX(r);
     }
 
+    // translate() 只負責繁體，applyLang() 在輸出時統一處理簡繁
     function translate(text) {
         if (!text || !text.trim()) return text;
         const slots = [];
@@ -253,14 +360,16 @@
         const p = node?.parentElement;
         if (!p || SKIP.has(p.tagName)) return;
         if (p.closest('[data-d2r-affix-translated]')) return;
-        if (p.closest('.messages-container')) return; //停用聊天室翻譯
+        // ★ 聊天室區域不翻譯
+        if (p.closest('.messages-container')) return;
 
         const cur = node.textContent;
         if (!cur || !cur.trim()) return;
         if (hasChinese(cur)) return;
 
         const cached = nodeCache.get(node);
-        const result = translate(cur);
+        // ★ 翻譯後套用語系轉換
+        const result = applyLang(translate(cur));
         if (cached === result) return;
 
         nodeCache.set(node, result);
@@ -274,12 +383,14 @@
     function processAffixSpan(spanEl) {
         if (spanEl.dataset.d2rAffixTranslated) return;
         if (hasChinese(spanEl.textContent)) return;
-        if (spanEl.closest('.messages-container')) return; //停用聊天室翻譯
+        // ★ 聊天室區域不翻譯
+        if (spanEl.closest('.messages-container')) return;
 
         const combined = spanEl.textContent.trim();
         if (!combined) return;
 
-        const translated = translate(combined);
+        // ★ 翻譯後套用語系轉換
+        const translated = applyLang(translate(combined));
         if (translated === combined) return;
 
         const blueSpans = spanEl.querySelectorAll('.text-theme-listing-props');
@@ -299,8 +410,9 @@
 
     function processTree(root) {
         if (!root || root.nodeType !== 1) return;
-        if (root.closest?.('.messages-container')) return; //停用聊天室翻譯
-        if (root.classList?.contains('messages-container')) return; //停用聊天室翻譯
+        // ★ 聊天室區域完全跳過
+        if (root.closest?.('.messages-container')) return;
+        if (root.classList?.contains('messages-container')) return;
 
         root.querySelectorAll('.listing-num-properties > span').forEach(span => {
             processAffixSpan(span);
@@ -323,7 +435,11 @@
 
     function searchZh(query, mode = 'item') {
         if (!query?.trim()) return [];
-        const q = query.trim();
+        // ★ 簡體模式：先把輸入轉繁體再查表（反查表 key 全是繁體）
+        let q = query.trim();
+        if (detectLang() === 'zh-CN' && toTWConverter) {
+            q = toTWConverter(q);
+        }
         const source = mode === 'affix' ? AFFIX_ZH_TO_EN : ITEM_ZH_TO_EN;
         const exact = [], startsWith = [], contains = [];
         for (const [zh, en] of Object.entries(source)) {
@@ -425,18 +541,13 @@
         zhDropdown.style.display = 'none';
         activeIndex = -1;
 
-        // ── 自動送出搜尋 ──
-        // 策略：優先找 form submit → 再找搜尋按鈕 → 最後送 Enter keydown
-        // 短暫延遲讓 React 先處理 input/change 事件，確保搜尋值已更新
         setTimeout(() => {
-            // 1. input 在 form 裡 → 直接 submit
             const form = inputEl.closest('form');
             if (form) {
                 form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 return;
             }
 
-            // 2. 找附近的搜尋按鈕（涵蓋手機端的搜尋圖示按鈕）
             const container = inputEl.closest(
                 '[class*="search"], [class*="filter"], [class*="Search"], form'
             ) || inputEl.parentElement;
@@ -450,7 +561,6 @@
                 return;
             }
 
-            // 3. 送出 Enter keydown（PC 標準行為 + React 鍵盤事件）
             inputEl.dispatchEvent(new KeyboardEvent('keydown', {
                 key: 'Enter', code: 'Enter', keyCode: 13,
                 bubbles: true, cancelable: true
@@ -549,10 +659,8 @@
     //  ★ 編輯按鈕模組
     // ════════════════════════════════════════
 
-    // 路由判斷
     function isListingsOrWishlist() {
         const p = location.pathname;
-        // 排除 /listings/history，那頁不應顯示編輯按鈕
         if (/\/diablo2resurrected\/profile\/[^/]+\/listings\/history/.test(p)) return false;
         return /\/diablo2resurrected\/profile\/[^/]+\/(listings|wishlist)/.test(p);
     }
@@ -560,18 +668,15 @@
         return /\/diablo2resurrected\/listing\/\d+/.test(location.pathname);
     }
 
-    // 更新 body class → CSS 控制按鈕顯示/隱藏
     function syncEditPageClass() {
-        // 同時滿足「開關開啟」和「在目標頁」才顯示
         document.body.classList.toggle(
             'd2r-show-edit-btns',
             CONFIG.editBtn && isListingsOrWishlist()
         );
     }
 
-    // 建立編輯按鈕（僅建立一次，CSS 控制可見性）
     function addEditButtons() {
-        if (!isListingsOrWishlist()) return; // 不在目標頁就不建立，節省資源
+        if (!isListingsOrWishlist()) return;
 
         const listings = Array.from(
             document.querySelectorAll('.listing-row[id], .col-xs-12.col-sm-6.col-md-6.fade')
@@ -596,14 +701,12 @@
                     0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75L21 5.75z"/>
                 </svg>`;
 
-            // stopPropagation 防止觸發卡片本身的點擊事件
-            // 寫入旗標，讓 listing 頁知道是由我們的按鈕跳轉過來的
             btn.addEventListener('click', e => {
                 e.stopPropagation();
                 e.preventDefault();
                 sessionStorage.setItem('d2r_auto_edit', '1');
                 location.href = `https://traderie.com/diablo2resurrected/listing/${listingId}`;
-            }, true); // capture phase，確保優先於 React 事件
+            }, true);
 
             card.style.position = 'relative';
             card.appendChild(btn);
@@ -614,21 +717,14 @@
     //  ★ 自動編輯模組
     // ════════════════════════════════════════
 
-    // ── DEBUG 開關：false = 關閉 Console 日誌（正式版）──
     const AE_DEBUG = false;
     function aeLog(...args) { if (AE_DEBUG) console.log('[D2R-AutoEdit]', ...args); }
 
     let autoEditObserver = null;
     let autoEditTimer    = null;
     let autoEditDone     = false;
-
-    // ★ 核心修正：把「需要自動編輯」的意圖存在 JS 記憶體，而非只靠 sessionStorage
-    //   sessionStorage 讀完就可以清掉，但這個變數要一直保留到點擊成功或離開頁面
-    //   重點：resetAutoEditState 不清除它，避免 SPA 二次觸發把意圖搶先抹掉
     let pendingAutoEdit  = false;
 
-    // ── 找到編輯圖示後，等一個 rAF 再點擊 ──
-    // 原因：元素進入 DOM 的瞬間 React 可能還沒掛上 onClick
     function scheduleClick(el, label) {
         aeLog(`找到編輯元素（${label}），等待下一幀後點擊：`, el);
         requestAnimationFrame(() => {
@@ -638,9 +734,6 @@
             }
             aeLog('開始 fireClick');
             ['mousedown', 'mouseup', 'click'].forEach(type => {
-                // ★ 修正：userscript 沙箱的 window !== 頁面 window
-                //   使用 PAGE（= unsafeWindow）才能通過 MouseEvent 建構子的檢查
-                //   若連 PAGE 也不行就完全省略 view，讓瀏覽器用預設值
                 let evt;
                 try {
                     evt = new MouseEvent(type, { bubbles: true, cancelable: true, view: PAGE });
@@ -656,19 +749,13 @@
         });
     }
 
-    // ── 尋找可點擊的編輯目標 ──
-    // React 合成事件用 event.target 往上找 handler，
-    // 所以必須點 SVG 本身（#edit-listing），讓事件從它往上冒泡，
-    // 而不是點父層 .tooltip（那樣 React 找不到掛在 SVG 上的 onClick）
     function findEditTarget() {
-        // 1. 直接回傳 SVG 本身
         const svg = document.querySelector('#edit-listing, .listing-edit-icon');
         if (svg) {
             aeLog('找到 SVG #edit-listing，直接點擊它');
             return svg;
         }
 
-        // 2. 備用：tooltiptext 含 "Edit Listing" 的 tooltip 容器裡找 svg/button
         for (const d of document.querySelectorAll('div.tooltip, [class*="tooltip"]')) {
             const tip = d.querySelector('.tooltiptext');
             if (tip && /edit\s*listing/i.test(tip.textContent)) {
@@ -689,20 +776,15 @@
         return true;
     }
 
-    // ── 啟動自動編輯 ──
-    //   A. 若 sessionStorage 有旗標 → 讀進 pendingAutoEdit，清除 sessionStorage
-    //   B. 若 pendingAutoEdit = true 且還沒完成 → 繼續嘗試（即使被 reset 也不怕）
     function startAutoEdit() {
         aeLog('startAutoEdit 呼叫，路徑：', location.pathname);
 
-        // 編輯功能關閉時清除旗標並直接返回
         if (!CONFIG.editBtn) {
             sessionStorage.removeItem('d2r_auto_edit');
             return;
         }
 
         if (!isListingDetailPage()) {
-            // 離開 listing 頁 → 清除所有自動編輯狀態，包含 Observer
             if (pendingAutoEdit || autoEditObserver) {
                 aeLog('離開 listing 頁，清除所有自動編輯狀態');
                 pendingAutoEdit = false;
@@ -714,7 +796,6 @@
             return;
         }
 
-        // 從 sessionStorage 讀入記憶體（只需成功讀一次）
         if (sessionStorage.getItem('d2r_auto_edit')) {
             sessionStorage.removeItem('d2r_auto_edit');
             pendingAutoEdit = true;
@@ -733,7 +814,6 @@
             return;
         }
 
-        // Observer 已在運行中，不重複啟動
         if (autoEditObserver) {
             aeLog('Observer 已在運行，跳過重複啟動');
             return;
@@ -741,7 +821,6 @@
 
         aeLog('開始嘗試點擊編輯...');
 
-        // 先試一次
         if (tryClickEdit()) {
             aeLog('初次嘗試成功');
             return;
@@ -759,7 +838,6 @@
             }
             const target = findEditTarget();
             if (target) {
-                // ★ 立即斷開 Observer，防止 rAF 等待期間繼續重複觸發
                 aeLog('Observer 找到目標，立即斷開後排程點擊');
                 autoEditObserver.disconnect();
                 autoEditObserver = null;
@@ -780,12 +858,9 @@
         }, 15000);
     }
 
-    // ── 路由切換時重置（不清除 pendingAutoEdit）──
     function resetAutoEditState() {
         aeLog('resetAutoEditState（保留 pendingAutoEdit =', pendingAutoEdit, '）');
         autoEditDone = false;
-        // ★ 不斷開 Observer，讓它繼續等待元素出現
-        // Observer 會在 tryClickEdit 成功或 15 秒超時後自行清理
     }
 
 
@@ -794,9 +869,6 @@
     // ════════════════════════════════════════
 
     gmStyle(`
-    #d2r-fab:hover{transform:scale(1.1);}
-    #d2r-fab.off{filter:grayscale(1) brightness(.4);}
-
     /* ══════ 控制面板 ══════ */
     #d2r-panel {
       position:fixed;bottom:78px;left:16px;z-index:99999;
@@ -827,6 +899,22 @@
     }
     .d2r-toggle input:checked+.d2r-slider{background:#6a1fa0;}
     .d2r-toggle input:checked+.d2r-slider::before{background:#d4a0ff;transform:translateX(16px);}
+
+    /* ★ 語言選擇下拉 */
+    .d2r-select{
+      background:#1e0d38;border:1px solid #6a2fa0;
+      border-radius:4px;color:#c0a0e0;
+      font-size:12px;padding:3px 6px;cursor:pointer;
+      outline:none;
+    }
+    .d2r-select:focus{border-color:#9b4dca;}
+
+    /* 語言載入提示 */
+    #d2r-lang-status{
+      font-size:10px;color:#7a5a9a;text-align:right;
+      min-height:14px;margin-top:-4px;margin-bottom:4px;
+    }
+
     /* 面板底部按鈕列 */
     .d2r-panel-btns{
       display:flex;gap:6px;margin-top:10px;padding-top:8px;
@@ -869,7 +957,6 @@
       padding:10px 16px 14px;border-top:1px solid #2d1456;
       flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;
     }
-    /* 返回按鈕靠左，其他按鈕自然在右側置中區 */
     .d2r-modal-btn-left{ margin-right:auto; }
     .d2r-modal-btn{
       padding:7px 16px;font-size:13px;cursor:pointer;
@@ -940,9 +1027,12 @@
       white-space:nowrap;user-select:none;
     }
     #d2r-navbar-btn:hover{background:rgba(154,77,202,0.3);border-color:#9b4dca;}
+
+    body.d2r-desktop #d2r-panel{
+      top:auto;bottom:auto;left:auto;right:auto;
+    }
     `);
 
-    // panel 定位輔助：每次開啟時根據按鈕位置重算
     function positionPanelByBtn(btn, panel) {
         const r = btn.getBoundingClientRect();
         const pw = 220;
@@ -959,8 +1049,6 @@
     //  通用 Modal 系統
     // ════════════════════════════════════════
 
-    // options.buttons = [{ txt, primary, left, onClick }]
-    // left: true → 靠左（用於「返回列表」）
     function showModal({ title, html, closeTxt = '關閉', onClose, buttons } = {}) {
         document.getElementById('d2r-modal-overlay')?.remove();
 
@@ -1059,7 +1147,6 @@
         showList();
     }
 
-    // ── 關於 modal（含翻譯統計）──
     function showAboutModal() {
         const latestVer = CHANGELOG
         ? (CHANGELOG.latest || CHANGELOG.versions?.[0]?.version || CHANGELOG.version)
@@ -1067,7 +1154,7 @@
         const html = `
           <div style="margin-bottom:10px">
             <strong style="color:#d4a0ff">⚔️ Traderie D2R 繁體中文翻譯　　　　　　作者 瀧月瀨(likolisu)</strong><br><br>
-            <span style="color:#bf8cf3">功能：中文介面翻譯 ／ 中文關鍵字搜尋 ／ 快捷編輯按鈕</span>
+            <span style="color:#bf8cf3">功能：介面中文化 ／ 中文關鍵字搜尋 ／ 快捷編輯按鈕</span>
           </div>
           <div style="margin-bottom:10px;font-size:12px;color:#9a7ab0;line-height:1.8">
             已翻譯<br>
@@ -1086,46 +1173,59 @@
             </a>
             ${latestVer ? `<br><br><span style="color:#9a7ab0">當前版本：${latestVer}</span>` : ''}
           </div>`;
-
         showModal({ title: '❓ 關於本插件', html, closeTxt: '關閉' });
     }
 
 
     // ════════════════════════════════════════
-    //  Navbar 注入
+    //  控制面板（無浮動球，由 Navbar 按鈕控制）
     // ════════════════════════════════════════
 
     function createPanel() {
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
+
+        // ★ 語言選單：auto / zh-TW / zh-CN
+        // detectBrowserLang() 先算好，顯示在 auto 選項旁給使用者參考
+        const browserLang = detectBrowserLang();
+        const browserHint = browserLang === 'zh-CN' ? '简体' : '繁體';
+
         panel.innerHTML = `
-  <h3>⚔️TR D2R 中文翻譯 <small>v${VERSION}</small></h3>
-  <div class="d2r-row">
-    <label for="d2r-en">啟用翻譯</label>
-    <label class="d2r-toggle">
-      <input type="checkbox" id="d2r-en" ${CONFIG.enabled ? 'checked' : ''}>
-      <span class="d2r-slider"></span>
-    </label>
-  </div>
-  <div class="d2r-row">
-    <label for="d2r-eb" title="在 listings/wishlist 頁顯示快捷編輯按鈕">快捷編輯</label>
-    <label class="d2r-toggle">
-      <input type="checkbox" id="d2r-eb" ${CONFIG.editBtn ? 'checked' : ''}>
-      <span class="d2r-slider"></span>
-    </label>
-  </div>
-  <div class="d2r-panel-btns">
-    <button class="d2r-panel-btn" id="d2r-btn-about">❓ 關於</button>
-    <button class="d2r-panel-btn" id="d2r-btn-log">📋 更新</button>
-    <a class="d2r-panel-btn" id="d2r-btn-gh"
-       href="https://github.com/awdrrawd/D2R-storehouse/" target="_blank">
-      <img src="https://www.google.com/s2/favicons?domain=github.com&sz=16"
-           width="14" height="14" style="vertical-align:middle;border-radius:2px"> GitHub</a>
-  </div>`;
+      <h3>⚔️ D2R 中文翻譯 <small>v${VERSION}</small></h3>
+      <div class="d2r-row">
+        <label for="d2r-en">啟用翻譯</label>
+        <label class="d2r-toggle">
+          <input type="checkbox" id="d2r-en" ${CONFIG.enabled ? 'checked' : ''}>
+          <span class="d2r-slider"></span>
+        </label>
+      </div>
+      <div class="d2r-row">
+        <label for="d2r-eb" title="在 listings/wishlist 頁顯示快速編輯按鈕">編輯快捷按鈕</label>
+        <label class="d2r-toggle">
+          <input type="checkbox" id="d2r-eb" ${CONFIG.editBtn ? 'checked' : ''}>
+          <span class="d2r-slider"></span>
+        </label>
+      </div>
+      <div class="d2r-row">
+        <label for="d2r-lang-sel">語言</label>
+        <select id="d2r-lang-sel" class="d2r-select">
+          <option value="auto" ${CONFIG.lang === 'auto'  ? 'selected' : ''}>自動（${browserHint}）</option>
+          <option value="zh-TW" ${CONFIG.lang === 'zh-TW' ? 'selected' : ''}>繁體中文</option>
+          <option value="zh-CN" ${CONFIG.lang === 'zh-CN' ? 'selected' : ''}>简体中文</option>
+        </select>
+      </div>
+      <div id="d2r-lang-status"></div>
+      <div class="d2r-panel-btns">
+        <button class="d2r-panel-btn" id="d2r-btn-about">❓ 關於</button>
+        <button class="d2r-panel-btn" id="d2r-btn-log">📋 更新</button>
+        <a class="d2r-panel-btn" id="d2r-btn-gh"
+           href="https://github.com/awdrrawd/D2R-storehouse/" target="_blank">
+          <img src="https://www.google.com/s2/favicons?domain=github.com&sz=16"
+               width="14" height="14" style="vertical-align:middle;border-radius:2px"> GitHub</a>
+      </div>`;
 
         document.body.appendChild(panel);
 
-        // 點擊 panel 外部關閉
         const togglePanel = (e, anchorEl) => {
             e.stopPropagation();
             const opening = !panel.classList.contains('open');
@@ -1138,17 +1238,41 @@
                 panel.classList.remove('open');
         });
 
-        // 翻譯開關（移除 fab.classList 操作）
+        // 翻譯開關
         panel.querySelector('#d2r-en').addEventListener('change', e => {
             CONFIG.enabled = e.target.checked;
             saveConfig();
             CONFIG.enabled ? processTree(document.body) : location.reload();
         });
+
+        // 編輯快捷按鈕開關
         panel.querySelector('#d2r-eb').addEventListener('change', e => {
             CONFIG.editBtn = e.target.checked;
             saveConfig();
             syncEditPageClass();
         });
+
+        // ★ 語言切換
+        const langStatus = panel.querySelector('#d2r-lang-status');
+        panel.querySelector('#d2r-lang-sel').addEventListener('change', async e => {
+            const val = e.target.value;
+            CONFIG.lang = val;
+            saveConfig();
+
+            if (detectLang() === 'zh-CN') {
+                langStatus.textContent = '⏳ 載入簡體轉換模組...';
+                const ok = await loadOpenCC();
+                await loadOpenCCReverse();
+                langStatus.textContent = ok ? '✅ 簡體模組已就緒' : '⚠️ 載入失敗，保持繁體';
+                setTimeout(() => { langStatus.textContent = ''; }, 3000);
+            } else {
+                langStatus.textContent = '';
+            }
+
+            await switchLang(val);
+        });
+
+        // 關於 / 更新說明
         panel.querySelector('#d2r-btn-about').addEventListener('click', () => {
             panel.classList.remove('open');
             showAboutModal();
@@ -1158,10 +1282,10 @@
             showChangelogModal(true);
         });
 
+        // ── Navbar 注入 ──
         injectNavBtn(togglePanel);
     }
 
-    // 偵測 PC navbar 並注入按鈕
     function injectNavBtn(onToggle) {
         let injected = false;
 
@@ -1175,7 +1299,7 @@
 
             const btn = document.createElement('div');
             btn.id = 'd2r-navbar-btn';
-            btn.title = 'TR D2R 中文翻譯';
+            btn.title = 'D2R 中文翻譯';
             btn.innerHTML = `⚔️ <span style="font-size:12px">翻譯</span>`;
             btn.addEventListener('click', e => onToggle(e, btn));
 
@@ -1206,20 +1330,16 @@
         if (cur === lastPath) return;
         lastPath = cur;
 
-        // 修復④：清除可能殘留的中文搜尋 debounce timer
         clearTimeout(zhSearchTimer);
         zhDropdown.style.display = 'none';
 
-        // 重置自動編輯狀態（SPA 換頁時清乾淨）
         resetAutoEditState();
-
-        // 更新按鈕顯示 class（立即同步）
         syncEditPageClass();
 
         setTimeout(() => {
             if (CONFIG.enabled) {
                 processTree(document.body);
-                document.title = translate(document.title);
+                document.title = applyLang(translate(document.title));
             }
             startAutoEdit();
         }, 500);
@@ -1255,7 +1375,6 @@
 
     const observer = new MutationObserver(muts => {
         if (isTypingInNumericField) return;
-        // 翻譯和編輯按鈕分開判斷，互不干擾
         const doTranslate = CONFIG.enabled;
         const doEditBtn   = CONFIG.editBtn && isListingsOrWishlist();
         if (!doTranslate && !doEditBtn) return;
@@ -1276,7 +1395,12 @@
     //  初始化
     // ════════════════════════════════════════
 
-    function init() {
+    async function init() {
+        if (detectLang() === 'zh-CN') {
+            loadOpenCC();
+            loadOpenCCReverse();
+        }
+
         createPanel();
         syncEditPageClass();
         addEditButtons();
@@ -1284,12 +1408,10 @@
 
         if (CONFIG.enabled) {
             processTree(document.body);
-            document.title = translate(document.title);
+            document.title = applyLang(translate(document.title));
         }
-        // 無論翻譯是否開啟，Observer 都要啟動（編輯按鈕需要它）
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
-        // iOS Safari 保命輪詢（翻譯和編輯按鈕各自獨立判斷）
         let lastChildCount = document.body.childElementCount;
         setInterval(() => {
             if (isTypingInNumericField) return;
@@ -1301,7 +1423,6 @@
             if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
         }, 1500);
 
-        // 版本有更新時自動彈出更新說明
         setTimeout(() => showChangelogModal(), 1200);
     }
 
