@@ -1,27 +1,28 @@
 // ==UserScript==
-// @name         Traderie D2R Chinese Translator + Auto Edit
-// @name:zh-TW   D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
-// @name:zh-CN   D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
-// @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      2.4.0
-// @description  Traderie 的 D2R 中文化，支援中文搜尋，並整合快速編輯按鈕
-// @author       瀧月瀨
-// @match        https://traderie.com/diablo2resurrected*
-// @match        https://*.traderie.com/diablo2resurrected/*
-// @icon         https://www.google.com/s2/favicons?domain=traderie.com&sz=64
-// @grant        GM_addStyle
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @grant        unsafeWindow
-// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
-// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
-// @run-at       document-idle
+// @name               Traderie D2R Chinese Translator + Chinese search
+// @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
+// @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
+// @namespace          https://github.com/awdrrawd/D2R-storehouse
+// @version            2.4.1
+// @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
+// @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
+// @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
+// @author             瀧月瀨
+// @license            CC BY-ND 4.0
+// @match              https://traderie.com/diablo2resurrected*
+// @match              https://*.traderie.com/diablo2resurrected/*
+// @icon               https://www.google.com/s2/favicons?domain=traderie.com&sz=64
+// @require            https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js
+// @grant              GM_addStyle
+// @grant              GM_getValue
+// @grant              GM_setValue
+// @grant              unsafeWindow
+// @run-at             document-idle
 // ==/UserScript==
 
 (async function () {
     'use strict';
 
-    // ── iOS 相容包裝：GM_ 函式不存在時 fallback 到 localStorage ──
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     function gmGet(key, def) {
@@ -42,8 +43,7 @@
         }
     }
 
-    // ── 版本（獨立常數，modal 和更新判斷都用這裡）──
-    const VERSION = '2.4.0';
+    const VERSION = '2.4.1';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
 
@@ -85,22 +85,15 @@
         return;
     }
 
-    // ── 更新說明（非阻塞，失敗時靜默略過）──
     let CHANGELOG = null;
-    try { CHANGELOG = await loadWithFallback('Platform/changelog.json'); } catch (_) {}
+    try { CHANGELOG = await loadWithFallback('Platform/tr_changelog.json'); } catch (_) {}
 
-    // ════════════════════════════════════════
-    //  ★ 語言設定（放在 CONFIG 之前，detectLang 需要先定義）
-    // ════════════════════════════════════════
-
-    // OpenCC converter（lazy 初始化，只有選 zh-CN 時才載入）
     let simplifiedConverter = null;
     let openccLoading = false;
 
     async function loadOpenCC() {
         if (simplifiedConverter) return true;
         if (openccLoading) {
-            // 等待已在進行的載入完成
             await new Promise(resolve => {
                 const check = setInterval(() => {
                     if (!openccLoading) { clearInterval(check); resolve(); }
@@ -110,58 +103,42 @@
         }
         openccLoading = true;
         try {
-            // 動態載入 OpenCC（繁體用戶零負擔）
-            await new Promise((resolve, reject) => {
-                const s = document.createElement('script');
-                s.src = 'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js';
-                s.onload = resolve;
-                s.onerror = reject;
-                document.head.appendChild(s);
-            });
-            // OpenCC 掛在 window.OpenCC
-            simplifiedConverter = PAGE.OpenCC.Converter({ from: 'tw', to: 'cn' });
+            simplifiedConverter = (typeof OpenCC !== 'undefined' ? OpenCC : PAGE.OpenCC).Converter({ from: 'tw', to: 'cn' });
             console.log('[D2R] OpenCC 載入成功');
             return true;
         } catch (e) {
-            console.warn('[D2R] OpenCC 載入失敗，將保持繁體：', e.message);
+            console.warn('[D2R] OpenCC 初始化失敗，將保持繁體：', e.message);
             return false;
         } finally {
             openccLoading = false;
         }
     }
 
-    // 簡體 → 繁體 converter（搜尋反查用：使用者輸入簡體 → 轉繁體 → 查表）
     let toTWConverter = null;
-
     async function loadOpenCCReverse() {
         if (toTWConverter) return;
-        // OpenCC 本體必須已載入
-        if (!PAGE.OpenCC) await loadOpenCC();
-        if (!PAGE.OpenCC) return;
+        const OCC = typeof OpenCC !== 'undefined' ? OpenCC : PAGE.OpenCC;
+        if (!OCC) await loadOpenCC();
+        const OCC2 = typeof OpenCC !== 'undefined' ? OpenCC : PAGE.OpenCC;
+        if (!OCC2) return;
         try {
-            toTWConverter = PAGE.OpenCC.Converter({ from: 'cn', to: 'tw' });
+            toTWConverter = OCC2.Converter({ from: 'cn', to: 'tw' });
         } catch (e) {
             console.warn('[D2R] 反向 OpenCC 建立失敗：', e.message);
         }
     }
 
-    // 偵測瀏覽器語言，返回 'zh-TW' 或 'zh-CN'
     function detectBrowserLang() {
         const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
-        // 簡體地區：中國大陸、新加坡
         if (nav === 'zh-cn' || nav === 'zh-hans' || nav === 'zh-sg') return 'zh-CN';
-        // 繁體地區：台灣、香港、澳門
-        // 由於使用OpenCC繁轉簡，所以預設為繁體
         return 'zh-TW';
     }
 
-    // 取得實際生效語系（auto 時看瀏覽器）
     function detectLang() {
         if (CONFIG.lang !== 'auto') return CONFIG.lang;
         return detectBrowserLang();
     }
 
-    // 翻譯出口：所有繁體翻譯結果都經過這裡
     function applyLang(text) {
         if (!text) return text;
         if (detectLang() === 'zh-CN' && simplifiedConverter) {
@@ -170,19 +147,17 @@
         return text;
     }
 
-    // ── 設定 ──
     const CONFIG = {
         enabled: gmGet('d2r_enabled', true),
         editBtn: gmGet('d2r_editbtn', true),
-        lang:    gmGet('d2r_lang', 'auto')   // ★ 新增：'auto' | 'zh-TW' | 'zh-CN'
+        lang:    gmGet('d2r_lang', 'auto')
     };
     function saveConfig() {
         gmSet('d2r_enabled', CONFIG.enabled);
         gmSet('d2r_editbtn', CONFIG.editBtn);
-        gmSet('d2r_lang',    CONFIG.lang);   // ★ 新增
+        gmSet('d2r_lang',    CONFIG.lang);
     }
 
-    // ★ 語言切換（清快取 → 重新掃描）
     async function switchLang(lang) {
         CONFIG.lang = lang;
         saveConfig();
@@ -192,9 +167,7 @@
             await loadOpenCCReverse();
         }
 
-        // 清除節點快取，強制重新翻譯整頁
         nodeCache = new WeakMap();
-        // 清除 affix 已翻譯標記
         document.querySelectorAll('[data-d2r-affix-translated]').forEach(el => {
             delete el.dataset.d2rAffixTranslated;
         });
@@ -205,17 +178,7 @@
         }
     }
 
-
-    // ════════════════════════════════════════
-    //  工具函式
-    // ════════════════════════════════════════
-
     function hasChinese(str) { return /[\u4e00-\u9fa5]/.test(str); }
-
-
-    // ════════════════════════════════════════
-    //  預編譯字典
-    // ════════════════════════════════════════
 
     const ITEM_ENTRIES = Object.entries(ITEM_NAMES).sort((a, b) => b[0].length - a[0].length);
     const UI_ENTRIES   = Object.entries(UI_NAMES  ).sort((a, b) => b[0].length - a[0].length);
@@ -267,11 +230,6 @@
         return r;
     }
 
-
-    // ════════════════════════════════════════
-    //  中文搜尋反查表
-    // ════════════════════════════════════════
-
     const ITEM_ZH_TO_EN = {};
     for (const [en, zh] of Object.entries(ITEM_NAMES)) {
         const zhClean = zh.replace(/\(.*?\)/g, '').trim();
@@ -290,32 +248,20 @@
             AFFIX_ZH_TO_EN[zhKeyword] = enDisplay;
     }
 
-
-    // ── DOM 翻譯用快取與狀態 ──
     const SKIP       = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'CODE', 'PRE', 'INPUT', 'TEXTAREA']);
-    // ★ 改為 let，switchLang 時需要重建
     let nodeCache  = new WeakMap();
     const writingSet = new WeakSet();
 
-    // ── 中文搜尋下拉狀態 ──
     let activeIndex    = -1;
     let currentResults = [];
     let currentInput   = null;
     let zhSearchTimer  = null;
 
-    // ── 數字欄位旗標 ──
     let isTypingInNumericField = false;
 
-    // ── 路由暫存 ──
     let lastPath = location.pathname + location.search;
 
-    // ── 導航鍵 ──
     const NAV_KEYS = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Tab'];
-
-
-    // ════════════════════════════════════════
-    //  翻譯函式
-    // ════════════════════════════════════════
 
     function slotEntries(text, entries, slots, showOrig) {
         let r = text;
@@ -340,7 +286,6 @@
         return translateAffixesX(r);
     }
 
-    // translate() 只負責繁體，applyLang() 在輸出時統一處理簡繁
     function translate(text) {
         if (!text || !text.trim()) return text;
         const slots = [];
@@ -351,16 +296,10 @@
         return r.replace(SLOT, (_, i) => slots[+i]);
     }
 
-
-    // ════════════════════════════════════════
-    //  DOM 掃描 / 翻譯
-    // ════════════════════════════════════════
-
     function processNode(node) {
         const p = node?.parentElement;
         if (!p || SKIP.has(p.tagName)) return;
         if (p.closest('[data-d2r-affix-translated]')) return;
-        // ★ 聊天室區域不翻譯
         if (p.closest('.messages-container')) return;
 
         const cur = node.textContent;
@@ -368,7 +307,6 @@
         if (hasChinese(cur)) return;
 
         const cached = nodeCache.get(node);
-        // ★ 翻譯後套用語系轉換
         const result = applyLang(translate(cur));
         if (cached === result) return;
 
@@ -383,13 +321,11 @@
     function processAffixSpan(spanEl) {
         if (spanEl.dataset.d2rAffixTranslated) return;
         if (hasChinese(spanEl.textContent)) return;
-        // ★ 聊天室區域不翻譯
         if (spanEl.closest('.messages-container')) return;
 
         const combined = spanEl.textContent.trim();
         if (!combined) return;
 
-        // ★ 翻譯後套用語系轉換
         const translated = applyLang(translate(combined));
         if (translated === combined) return;
 
@@ -410,7 +346,6 @@
 
     function processTree(root) {
         if (!root || root.nodeType !== 1) return;
-        // ★ 聊天室區域完全跳過
         if (root.closest?.('.messages-container')) return;
         if (root.classList?.contains('messages-container')) return;
 
@@ -428,14 +363,8 @@
         nodes.forEach(processNode);
     }
 
-
-    // ════════════════════════════════════════
-    //  中文搜尋模組
-    // ════════════════════════════════════════
-
     function searchZh(query, mode = 'item') {
         if (!query?.trim()) return [];
-        // ★ 簡體模式：先把輸入轉繁體再查表（反查表 key 全是繁體）
         let q = query.trim();
         if (detectLang() === 'zh-CN' && toTWConverter) {
             q = toTWConverter(q);
@@ -481,11 +410,6 @@
             ph.includes('選項')   || ph.includes('屬性')) return 'affix';
         return 'item';
     }
-
-
-    // ════════════════════════════════════════
-    //  下拉清單 DOM
-    // ════════════════════════════════════════
 
     const zhDropdown = document.createElement('div');
     zhDropdown.id = 'd2r-zh-dropdown';
@@ -582,11 +506,6 @@
         activeIndex = idx;
     }
 
-
-    // ════════════════════════════════════════
-    //  事件監聽
-    // ════════════════════════════════════════
-
     function handleZhInput(e) {
         if (!CONFIG.enabled) return;
         const el = e.target;
@@ -654,11 +573,6 @@
 
     document.addEventListener('focusout', () => { isTypingInNumericField = false; }, true);
 
-
-    // ════════════════════════════════════════
-    //  ★ 編輯按鈕模組
-    // ════════════════════════════════════════
-
     function isListingsOrWishlist() {
         const p = location.pathname;
         if (/\/diablo2resurrected\/profile\/[^/]+\/listings\/history/.test(p)) return false;
@@ -712,10 +626,6 @@
             card.appendChild(btn);
         });
     }
-
-    // ════════════════════════════════════════
-    //  ★ 自動編輯模組
-    // ════════════════════════════════════════
 
     const AE_DEBUG = false;
     function aeLog(...args) { if (AE_DEBUG) console.log('[D2R-AutoEdit]', ...args); }
@@ -863,11 +773,6 @@
         autoEditDone = false;
     }
 
-
-    // ════════════════════════════════════════
-    //  CSS（翻譯 UI + 編輯按鈕）
-    // ════════════════════════════════════════
-
     gmStyle(`
     /* ══════ 控制面板 ══════ */
     #d2r-panel {
@@ -1003,7 +908,7 @@
       border-top:1px solid #2d1456;text-align:center;
     }
 
-    /* ══════ 編輯快捷按鈕 ══════ */
+    /* ══════ 快捷編輯按鈕 ══════ */
     .tr-edit-btn {
       display:none;
       position:absolute;top:6px;right:6px;
@@ -1043,11 +948,6 @@
         panel.style.top   = (r.bottom + window.scrollY + 6) + 'px';
         panel.style.bottom = 'auto';
     }
-
-
-    // ════════════════════════════════════════
-    //  通用 Modal 系統
-    // ════════════════════════════════════════
 
     function showModal({ title, html, closeTxt = '關閉', onClose, buttons } = {}) {
         document.getElementById('d2r-modal-overlay')?.remove();
@@ -1110,8 +1010,11 @@
             showModal({
                 title: '📋 更新歷程',
                 html: `<div style="font-size:12px;color:#7a5a9a;margin-bottom:10px">
-                         共 ${versions.length} 個版本，點擊查看詳細說明
-                       </div>${listHTML}`,
+                           共 ${versions.length} 個版本，點擊查看詳細說明
+                       </div>
+                       <div style="max-height:300px;overflow-y:auto;padding-right:4px;">
+                            ${listHTML}
+               </div>`,
                 buttons: [
                     { txt: '關閉', primary: true,
                      onClick: () => gmSet('d2r_seen_ver', latestVer) }
@@ -1176,17 +1079,9 @@
         showModal({ title: '❓ 關於本插件', html, closeTxt: '關閉' });
     }
 
-
-    // ════════════════════════════════════════
-    //  控制面板（無浮動球，由 Navbar 按鈕控制）
-    // ════════════════════════════════════════
-
     function createPanel() {
         const panel = document.createElement('div');
         panel.id = 'd2r-panel';
-
-        // ★ 語言選單：auto / zh-TW / zh-CN
-        // detectBrowserLang() 先算好，顯示在 auto 選項旁給使用者參考
         const browserLang = detectBrowserLang();
         const browserHint = browserLang === 'zh-CN' ? '简体' : '繁體';
 
@@ -1200,7 +1095,7 @@
         </label>
       </div>
       <div class="d2r-row">
-        <label for="d2r-eb" title="在 listings/wishlist 頁顯示快速編輯按鈕">編輯快捷按鈕</label>
+        <label for="d2r-eb" title="在 listings/wishlist 頁顯示快捷編輯按鈕">快捷編輯按鈕</label>
         <label class="d2r-toggle">
           <input type="checkbox" id="d2r-eb" ${CONFIG.editBtn ? 'checked' : ''}>
           <span class="d2r-slider"></span>
@@ -1238,21 +1133,18 @@
                 panel.classList.remove('open');
         });
 
-        // 翻譯開關
         panel.querySelector('#d2r-en').addEventListener('change', e => {
             CONFIG.enabled = e.target.checked;
             saveConfig();
             CONFIG.enabled ? processTree(document.body) : location.reload();
         });
 
-        // 編輯快捷按鈕開關
         panel.querySelector('#d2r-eb').addEventListener('change', e => {
             CONFIG.editBtn = e.target.checked;
             saveConfig();
             syncEditPageClass();
         });
 
-        // ★ 語言切換
         const langStatus = panel.querySelector('#d2r-lang-status');
         panel.querySelector('#d2r-lang-sel').addEventListener('change', async e => {
             const val = e.target.value;
@@ -1272,7 +1164,6 @@
             await switchLang(val);
         });
 
-        // 關於 / 更新說明
         panel.querySelector('#d2r-btn-about').addEventListener('click', () => {
             panel.classList.remove('open');
             showAboutModal();
@@ -1282,7 +1173,6 @@
             showChangelogModal(true);
         });
 
-        // ── Navbar 注入 ──
         injectNavBtn(togglePanel);
     }
 
@@ -1320,11 +1210,6 @@
         setTimeout(() => navObs.disconnect(), 30000);
     }
 
-
-    // ════════════════════════════════════════
-    //  SPA 路由偵測
-    // ════════════════════════════════════════
-
     function onRouteChange() {
         const cur = location.pathname + location.search;
         if (cur === lastPath) return;
@@ -1350,11 +1235,6 @@
         history[m] = function (...args) { orig.apply(this, args); onRouteChange(); };
     });
     window.addEventListener('popstate', onRouteChange);
-
-
-    // ════════════════════════════════════════
-    //  MutationObserver
-    // ════════════════════════════════════════
 
     const pending = new Set();
     let rafId = null;
@@ -1390,11 +1270,6 @@
         scheduleProcess();
     });
 
-
-    // ════════════════════════════════════════
-    //  初始化
-    // ════════════════════════════════════════
-
     async function init() {
         if (detectLang() === 'zh-CN') {
             loadOpenCC();
@@ -1425,6 +1300,5 @@
 
         setTimeout(() => showChangelogModal(), 1200);
     }
-
     init();
 })();
