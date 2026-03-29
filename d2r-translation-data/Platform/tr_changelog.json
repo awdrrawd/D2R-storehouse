@@ -1,6 +1,7 @@
 {
-  "latest": "2.4.0",
+  "latest": "2.4.1",
   "versions": [
+    { "version": "2.4.1", "title": "更新說明 v2.4.1", "content": "• 修改OpenCC加載方式\n• 部分錯誤修正\n• 部分翻譯修正" },
     { "version": "2.4.0", "title": "更新說明 v2.4.0", "content": "• 支援簡體化界面與搜尋功能(使用OpenCC)" },
     { "version": "2.3.1", "title": "更新說明 v2.3.1", "content": "• 修正聊天室不分內文被翻譯的問題" },
     { "version": "2.3", "title": "更新說明 v2.3", "content": "• 更換UI位置\n• 在個人檔案新增快捷商品編輯\n• 新增更新日誌" },
