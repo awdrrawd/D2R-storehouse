@@ -1,6 +1,7 @@
 {
-  "latest": "2.4.1",
+  "latest": "2.4.2",
   "versions": [
+    { "version": "2.4.2", "title": "更新說明 v2.4.2", "content": "• 修改翻譯邏輯，讓翻譯覆蓋更廣\n• 修改腳本翻譯運作機制，降低耗能" },
     { "version": "2.4.1", "title": "更新說明 v2.4.1", "content": "• 修改OpenCC加載方式\n• 部分錯誤修正\n• 部分翻譯修正" },
     { "version": "2.4.0", "title": "更新說明 v2.4.0", "content": "• 支援簡體化界面與搜尋功能(使用OpenCC)" },
     { "version": "2.3.1", "title": "更新說明 v2.3.1", "content": "• 修正聊天室不分內文被翻譯的問題" },
