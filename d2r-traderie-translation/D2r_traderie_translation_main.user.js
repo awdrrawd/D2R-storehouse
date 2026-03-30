@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.1
+// @version            2.4.2
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -17,6 +17,8 @@
 // @grant              GM_getValue
 // @grant              GM_setValue
 // @grant              unsafeWindow
+// @updateURL          https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
+// @downloadURL        https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
 // @run-at             document-idle
 // ==/UserScript==
 
@@ -43,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.1';
+    const VERSION = '2.4.2';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
 
@@ -207,6 +209,31 @@
         try { return { re: buildAffixRegex(en), tmpl: buildAffixTemplate(zh) }; }
         catch (_) { return null; }
     }).filter(Boolean).sort((a, b) => b.re.source.length - a.re.source.length);
+    // ──────────────────────────────────────────────────────────
+    // create-listing 專用：剝除前綴 (+/-/% /{{placeholder}}) 後的匹配表
+    // ──────────────────────────────────────────────────────────
+    const STRIP_PREFIX_RE = /^[\s+\-]*(?:\{\{(?:value|level|charges|duration)\}\}[\s+\-]*)*%?\s*/;
+
+    const AFFIX_STRIPPED_PAT = (() => {
+        const result = [];
+        for (const [en, zh] of Object.entries(AFFIXES_TR)) {
+            const enStripped = en.replace(STRIP_PREFIX_RE, '').trim();
+            const zhStripped = zh.replace(STRIP_PREFIX_RE, '').trim();
+            if (!enStripped || enStripped === en || !zhStripped) continue;
+            try {
+                const parts   = enStripped.split(PLACEHOLDER_RE);
+                const escaped = parts.map(p => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+                let src = '^\\s*' + escaped[0];
+                for (let i = 1; i < escaped.length; i++) src += NUM_PAT + escaped[i];
+                src += '\\s*$';
+                result.push({
+                    re:   new RegExp(src, 'gi'),
+                    tmpl: buildAffixTemplate(zhStripped)
+                });
+            } catch (_) {}
+        }
+        return result.sort((a, b) => b.re.source.length - a.re.source.length);
+    })();
 
     const AFFIX_X_ENTRIES = Object.entries(AFFIXES_TR)
     .map(([en, zh]) => {
@@ -228,6 +255,32 @@
             if (re.test(r)) { re.lastIndex = 0; r = r.replace(re, zh); }
         }
         return r;
+    }
+    // 判斷節點是否在 create-listing 區域內
+    function isCreateListingCtx(node) {
+        const el = node.nodeType === 3 ? node.parentElement : node;
+        if (!el) return false;
+        return !!el.closest(
+            '.create-listing-section, .create-listing-properties, ' +
+            '[class*="create-listing"], [id*="create-listing"]'
+        );
+    }
+
+    // 剝除文字節點前綴後嘗試匹配（僅用於 create-listing）
+    const TEXT_STRIP_RE = /^([\s+\-\d.,]*%?\s*)([\s\S]*)$/;
+
+    function translateStripped(text) {
+        const m = text.match(TEXT_STRIP_RE);
+        if (!m) return text;
+        const body = m[2].trim();
+        if (!body) return text;
+
+        for (const { re, tmpl } of AFFIX_STRIPPED_PAT) {
+            re.lastIndex = 0;
+            const translated = body.replace(re, tmpl);
+            if (translated !== body) return translated; // 前綴捨棄，回傳翻譯後內文
+        }
+        return text;
     }
 
     const ITEM_ZH_TO_EN = {};
@@ -286,13 +339,36 @@
         return translateAffixesX(r);
     }
 
+    // 合併 item 與 UI，依長度排序，同長度 item 優先
+    const MERGED_ENTRIES = [
+        ...ITEM_ENTRIES.map(e => ({ entry: e, isItem: true  })),
+        ...UI_ENTRIES  .map(e => ({ entry: e, isItem: false }))
+    ].sort((a, b) => {
+        const lenDiff = b.entry[0].length - a.entry[0].length;
+        if (lenDiff !== 0) return lenDiff;
+        return a.isItem ? -1 : 1;
+    }).map(({ entry, isItem }) => {
+        const [en, zh] = entry;
+        const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re  = new RegExp(`(?<![\\w'\\-])${esc}(?![\\w'\\-])`, 'gi'); // ← 只建一次
+        return { entry, isItem, re };
+    });
+
     function translate(text) {
         if (!text || !text.trim()) return text;
         const slots = [];
         const SLOT  = /\x01(\d+)\x01/g;
         let r = translateAffixes(text);
-        r = slotEntries(r, ITEM_ENTRIES, slots, true);
-        r = slotEntries(r, UI_ENTRIES,   slots, false);
+
+        for (const { entry, isItem, re } of MERGED_ENTRIES) {
+            const [en, zh] = entry;
+            if (r.toLowerCase().indexOf(en.toLowerCase()) === -1) continue;
+            re.lastIndex = 0;  // ← gi flag 必須每次重置
+            r = r.replace(re, () => {
+                slots.push(isItem ? `${zh}(${en})` : zh);
+                return `\x01${slots.length - 1}\x01`;
+            });
+        }
         return r.replace(SLOT, (_, i) => slots[+i]);
     }
 
@@ -307,7 +383,28 @@
         if (hasChinese(cur)) return;
 
         const cached = nodeCache.get(node);
-        const result = applyLang(translate(cur));
+        let result;
+
+        if (isCreateListingCtx(node)) {
+            // create-listing 優先順序：
+            // 1. 先嘗試完整 affix 匹配（避免 item/UI 先污染文字）
+            const affixResult = applyLang(translateAffixes(cur));
+            if (affixResult !== cur) {
+                result = affixResult;
+            } else {
+                // 2. 嘗試剝除前綴的 affix 匹配
+                const strippedResult = applyLang(translateStripped(cur));
+                if (strippedResult !== cur) {
+                    result = strippedResult;
+                } else {
+                    // 3. 最後才套用 item / UI 替換
+                    result = applyLang(translate(cur));
+                }
+            }
+        } else {
+            result = applyLang(translate(cur));
+        }
+
         if (cached === result) return;
 
         nodeCache.set(node, result);
@@ -1244,11 +1341,21 @@
         rafId = requestAnimationFrame(() => {
             rafId = null;
             const batch = [...pending]; pending.clear();
+
+            // 節點太多時，整棵掃比逐個處理更有效率
+            if (batch.length > 80) {
+                if (CONFIG.enabled) processTree(document.body);
+                if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+                return;
+            }
+
             for (const node of batch) {
                 if (node.nodeType === 1) {
                     if (CONFIG.enabled) processTree(node);
                     if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
-                } else if (node.nodeType === 3 && CONFIG.enabled) processNode(node);
+                } else if (node.nodeType === 3 && CONFIG.enabled) {
+                    processNode(node);
+                }
             }
         });
     }
@@ -1288,15 +1395,20 @@
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
 
         let lastChildCount = document.body.childElementCount;
-        setInterval(() => {
+        let stableCount = 0;
+        const fallbackInterval = setInterval(() => {
             if (isTypingInNumericField) return;
             const count = document.body.childElementCount;
             const changed = count !== lastChildCount;
             lastChildCount = count;
-            if (!changed) return;
+            if (!changed) {
+                stableCount++;
+                return;
+            }
+            stableCount = 0;
             if (CONFIG.enabled) processTree(document.body);
             if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
-        }, 1500);
+        }, stableCount > 10 ? 5000 : 1500); // 穩定後降頻
 
         setTimeout(() => showChangelogModal(), 1200);
     }
