@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name               Traderie D2R Chinese Translator + Chinese search
+// @name               Traderie D2R Chinese Translator + Chinese search1
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
@@ -17,9 +17,9 @@
 // @grant              GM_getValue
 // @grant              GM_setValue
 // @grant              unsafeWindow
-// @updateURL          https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
-// @downloadURL        https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js
 // @run-at             document-idle
+// @downloadURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.user.js
+// @updateURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.meta.js
 // ==/UserScript==
 
 (async function () {
@@ -477,20 +477,13 @@
 
     // Enter：commit → 把 Enter 傳給原框觸發搜尋
     overlayInput.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            commitOverlay();
-            const target = overlayTarget;
-            hideOverlay();
-            resumeTranslation(400);
-            if (target) {
-                target.focus();
-                target.dispatchEvent(new KeyboardEvent('keydown',
-                                                       { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
-                target.dispatchEvent(new KeyboardEvent('keyup',
-                                                       { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
-            }
-        } else if (e.key === 'Escape') {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+
+        commitOverlay();
+        hideOverlay();
+        resumeTranslation(200);
+    } else if (e.key === 'Escape') {
             hideOverlay();
             resumeTranslation(200);
         }
