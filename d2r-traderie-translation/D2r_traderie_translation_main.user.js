@@ -18,8 +18,8 @@
 // @grant              GM_setValue
 // @grant              unsafeWindow
 // @run-at             document-idle
-// @downloadURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.user.js
-// @updateURL https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.meta.js
+// @downloadURL        https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.user.js
+// @updateURL          https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.meta.js
 // ==/UserScript==
 
 (async function () {
