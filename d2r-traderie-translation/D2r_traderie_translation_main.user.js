@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.3
+// @version            2.4.4
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -45,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.3';
+    const VERSION = '2.4.4';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -373,19 +373,7 @@
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // ── OVERLAY INPUT：在屬性 Min/Max 上覆蓋假輸入框 ──────────────────────
-    //
-    // 原理：
-    //   1. focus 到 property-min/max-input 時，建立絕對定位的 overlay input
-    //      完全貼合原框，使用者實際在 overlay 裡輸入。
-    //   2. 原框完全不動 → 不觸發 React re-render → 不觸發翻譯器。
-    //   3. blur 或 Enter 時才一次性把值寫入原框並觸發 React onChange。
-    //   4. 翻譯器在輸入期間暫停（translationPaused = true），blur 後延遲恢復。
-    //
-    // 判定「輸入完成」的方式（不依賴 Enter）：
-    //   - blur：使用者點其他地方 / Tab / 點搜尋按鈕，overlay 失去焦點
-    //   - 切換到另一個 min/max input：先 commit 再切換
-    //   - Enter 鍵：commit 後把 Enter 傳給原框觸發搜尋
+    // ── OVERLAY INPUT
     // ════════════════════════════════════════════════════════════════════════
 
     let translationPaused = false;
@@ -406,7 +394,6 @@
         }, delay);
     }
 
-    // 單例 overlay input
     const overlayInput = document.createElement('input');
     overlayInput.type        = 'text';
     overlayInput.id          = 'd2r-overlay-input';
@@ -420,8 +407,8 @@
     ].join(';');
     document.body.appendChild(overlayInput);
 
-    let overlayTarget    = null;   // 對應的原始 input
-    let overlayCommitted = false;  // 防止 blur 重複 commit
+    let overlayTarget    = null;
+    let overlayCommitted = false;
 
     function syncOverlayPos() {
         if (!overlayTarget) return;
@@ -459,56 +446,102 @@
         target.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
+    // [FIX] Tab 鍵：優先在 property range inputs 之間循環，離開時才交給一般焦點管理
+    // 因為頁面上所有 min/max input 的 id 全部重複，不能靠 id 定位，
+    // 改用 .min-max-filter-info 裡的 placeholder=Min/Max 來抓完整清單。
+    function getPropertyRangeInputs() {
+        return Array.from(
+            document.querySelectorAll('.min-max-filter-info input[placeholder="Min"], .min-max-filter-info input[placeholder="Max"]')
+        ).filter(el => {
+            const style = getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        });
+    }
+
+    function focusNextPropertyInput(currentTarget, reverse = false) {
+        const inputs = getPropertyRangeInputs();
+        if (!inputs.length) return false;
+
+        // 用元素參考直接比對（不靠 id，因為 id 重複）
+        let idx = inputs.indexOf(currentTarget);
+        if (idx === -1) {
+            // 找不到就用座標找最近的
+            const rect = currentTarget.getBoundingClientRect();
+            let minDist = Infinity;
+            inputs.forEach((el, i) => {
+                const r = el.getBoundingClientRect();
+                const d = Math.abs(r.top - rect.top) + Math.abs(r.left - rect.left);
+                if (d < minDist) { minDist = d; idx = i; }
+            });
+        }
+
+        const nextIdx = idx + (reverse ? -1 : 1);
+        // 超出範圍就離開 property range 區域，回傳 false 讓呼叫方決定後續
+        if (nextIdx < 0 || nextIdx >= inputs.length) return false;
+
+        inputs[nextIdx].focus();
+        return true;
+    }
+
     // blur：commit → 隱藏 → 延遲恢復翻譯
     overlayInput.addEventListener('blur', e => {
         const next = e.relatedTarget;
         commitOverlay();
 
         if (next && isPropertyRangeInput(next)) {
-            // 切換到另一個 min/max → 繼續暫停，換 overlay 目標
             hideOverlay();
             showOverlay(next);
         } else {
             hideOverlay();
-            // 延遲 400ms 讓 React 完成 re-render 後再補翻
             resumeTranslation(400);
         }
     });
 
-    // Enter：commit → 把 Enter 傳給原框觸發搜尋
+    // [FIX] Tab / Shift+Tab：在 property range inputs 之間循環
+    // 最後一格 Tab → 跳到「套用篩選」按鈕；第一格 Shift+Tab → 同樣跳到「套用篩選」
     overlayInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-
-        commitOverlay();
-        hideOverlay();
-        resumeTranslation(200);
-    } else if (e.key === 'Escape') {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            e.stopPropagation();
+            commitOverlay();
+            const target = overlayTarget;   // hideOverlay 會清掉，先存起來
+            hideOverlay();
+            resumeTranslation(200);
+            setTimeout(() => {
+                const moved = focusNextPropertyInput(target, e.shiftKey);
+                if (!moved) {
+                    // 已到達第一個或最後一個，跳到「套用篩選」按鈕
+                    const applyBtn = document.getElementById('listings-apply-filters-btn')
+                        || document.querySelector('[aria-label="Apply Filters"]');
+                    if (applyBtn) applyBtn.focus();
+                }
+            }, 0);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            commitOverlay();
+            hideOverlay();
+            resumeTranslation(200);
+        } else if (e.key === 'Escape') {
             hideOverlay();
             resumeTranslation(200);
         }
-        // Tab：讓 blur 自然發生，blur handler 處理
     });
 
-    // 只允許數字、小數點、負號
     overlayInput.addEventListener('input', () => {
         const v = overlayInput.value;
         const c = v.replace(/[^\d.\-]/g, '');
         if (c !== v) overlayInput.value = c;
     });
 
-    // 滾動 / 縮放時同步 overlay 位置
     window.addEventListener('scroll', syncOverlayPos, true);
     window.addEventListener('resize', syncOverlayPos);
 
-    // ── focusin：攔截對 property-min/max-input 的 focus ──────────────────
     document.addEventListener('focusin', e => {
         const el = e.target;
-        if (el === overlayInput) return;   // overlay 自身 focus，不處理
+        if (el === overlayInput) return;
 
         if (el.tagName === 'INPUT' && isPropertyRangeInput(el)) {
             showOverlay(el);
-            // 把原框的焦點移走（使用者視覺上感覺不到，因為 overlay 已接管）
             requestAnimationFrame(() => { if (document.activeElement === el) el.blur(); });
         }
     }, true);
@@ -771,6 +804,39 @@
 
     // ── CSS ─────────────────────────────────────────────────────────────────
     gmStyle(`
+    /* [FIX] 篩選標籤文字截斷修復：允許標籤自動撐開，不裁切翻譯後的中文 */
+    [class*="filter"] [class*="chip"],
+    [class*="filter"] [class*="tag"],
+    [class*="filter"] [class*="badge"],
+    [class*="filter"] [class*="pill"],
+    [class*="selected"] [class*="chip"],
+    [class*="selected"] [class*="tag"],
+    .sc-bdVTJa,
+    [class*="filter-tag"],
+    [class*="filterTag"],
+    [class*="FilterTag"],
+    [class*="activeFilter"],
+    [class*="active-filter"] {
+        max-width: none !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        min-width: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* [FIX] 篩選標籤的容器也要允許換行，避免整排擠出去 */
+    [class*="filter"] [class*="tags"],
+    [class*="filter"] [class*="chips"],
+    [class*="selected-filters"],
+    [class*="selectedFilters"],
+    [class*="activeFilters"],
+    [class*="active-filters"] {
+        flex-wrap: wrap !important;
+        overflow: visible !important;
+    }
+
     #d2r-panel{position:fixed;bottom:78px;left:16px;z-index:99999;background:#120a24;border:1px solid #6a2fa0;border-radius:8px;padding:12px 14px;min-width:210px;box-shadow:0 4px 16px rgba(0,0,0,.7);color:#d4b0f0;font-size:13px;font-family:sans-serif;display:none;user-select:none;}
     #d2r-panel.open{display:block;}
     #d2r-panel h3{margin:0 0 10px;font-size:13px;color:#d4a0ff;border-bottom:1px solid #2d1456;padding-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
@@ -993,25 +1059,55 @@
     });
     window.addEventListener('popstate', onRouteChange);
 
-    const pending = new Set();
-    let rafId     = null;
+    // ── 找到節點所屬的最近 listing 卡片根元素 ─────────────────────────────────
+    // listing 卡片的根是 .col-xs-12.listing-row 或 .sc-eqUAAy，用這個縮小翻譯範圍。
+    function getListingRoot(node) {
+        const el = node.nodeType === 1 ? node : node.parentElement;
+        if (!el) return null;
+        // 如果節點本身就是 listing card 或其祖先是，回傳那個 card
+        const card = el.closest('.listing-row, [id^="100"]');
+        if (card) return card;
+        // 非卡片區域（navbar、filter bar 等）回傳 null，讓呼叫方用原始節點
+        return null;
+    }
+
+    const pending    = new Set();   // 待處理根節點 Set（自動去重）
+    let   rafId      = null;
 
     function scheduleProcess() {
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
             rafId = null;
-            // 暫停期間丟棄所有待處理節點
             if (translationPaused) { pending.clear(); return; }
+
             const batch = [...pending]; pending.clear();
+            const doEdit = CONFIG.editBtn && isListingsOrWishlist();
+
+            // [PERF] 如果待處理節點太多，不要 fallback 整個 body，
+            // 而是先把它們 dedupe 到 listing card 層級再處理。
+            // 這樣 50 張卡更新 → 最多只跑 50 次 processTree(card)，不跑 body。
             if (batch.length > 80) {
-                if (CONFIG.enabled) processTree(document.body);
-                if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+                // 收集受影響的 listing card
+                const roots = new Set();
+                let hasNonCard = false;
+                for (const node of batch) {
+                    const root = getListingRoot(node);
+                    if (root) roots.add(root);
+                    else hasNonCard = true;
+                }
+                if (CONFIG.enabled) {
+                    // 非卡片節點（如 navbar）才需要掃整個 body，卡片各掃各的
+                    if (hasNonCard) processTree(document.body);
+                    else roots.forEach(r => processTree(r));
+                }
+                if (doEdit) addEditButtons();
                 return;
             }
+
             for (const node of batch) {
                 if (node.nodeType === 1) {
                     if (CONFIG.enabled) processTree(node);
-                    if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+                    if (doEdit) addEditButtons();
                 } else if (node.nodeType === 3 && CONFIG.enabled) {
                     processNode(node);
                 }
@@ -1023,7 +1119,6 @@
         const doTranslate = CONFIG.enabled;
         const doEditBtn   = CONFIG.editBtn && isListingsOrWishlist();
         if (!doTranslate && !doEditBtn) return;
-        // 暫停期間直接丟棄
         if (translationPaused) return;
 
         for (const m of muts) {
@@ -1031,38 +1126,57 @@
                 if (writingSet.has(m.target)) continue;
                 if (isPropertyRangeNode(m.target)) continue;
                 nodeCache.delete(m.target);
-                pending.add(m.target);
+                // [PERF] characterData 變動：改成加入 listing card 根，不加裸 TextNode
+                // 這樣同一張卡的多次 characterData 會被 Set 自動合併成一次處理
+                const root = getListingRoot(m.target);
+                pending.add(root || m.target);
             }
             for (const node of m.addedNodes) {
                 const el = node.nodeType === 1 ? node : node.parentElement;
                 if (el === overlayInput) continue;
-                if (el && (isPropertyRangeInput(el) || el.closest?.('#property-min-input, #property-max-input'))) continue;
-                pending.add(node);
+                if (el && (isPropertyRangeInput(el) || el.closest?.('.min-max-filter-info'))) continue;
+                // [PERF] 加入 listing card 根，自動合併同卡多個子節點
+                const root = getListingRoot(node);
+                pending.add(root || node);
             }
         }
         if (pending.size) scheduleProcess();
     });
 
-    let fallbackTimer  = null;
-    let stableCount    = 0;
-    let lastChildCount = 0;
+    // [PERF] fallback：改用 requestIdleCallback + 只掃未翻譯的卡片，不輪詢整個 body
+    let fallbackTimer = null;
 
     function scheduleFallback() {
-        const delay = stableCount > 10 ? 5000 : 1500;
-        fallbackTimer = setTimeout(() => {
-            if (!translationPaused) {
-                const count   = document.body.childElementCount;
-                const changed = count !== lastChildCount;
-                lastChildCount = count;
-                if (!changed) { stableCount++; }
-                else {
-                    stableCount = 0;
-                    if (CONFIG.enabled) processTree(document.body);
-                    if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+        const idleFn = () => {
+            if (!translationPaused && CONFIG.enabled) {
+                // 只找還沒翻譯完的卡片（沒有 data-d2r-affix-translated 子元素的）
+                const untranslated = document.querySelectorAll(
+                    '.listing-row:not([data-d2r-done]) .listing-num-properties > span:not([data-d2r-affix-translated])'
+                );
+                if (untranslated.length) {
+                    // 找到包含這些 span 的 listing card，各自 processTree
+                    const cards = new Set();
+                    untranslated.forEach(span => {
+                        const card = span.closest('.listing-row');
+                        if (card) cards.add(card);
+                    });
+                    cards.forEach(card => processTree(card));
                 }
+                // 同時補翻非卡片靜態 UI（數量少，成本低）
+                const staticRoots = document.querySelectorAll(
+                    '#nav-container, .search-filters, .listing-header, [class*="breadcrumb"]'
+                );
+                staticRoots.forEach(el => processTree(el));
             }
-            scheduleFallback();
-        }, delay);
+            if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+            fallbackTimer = setTimeout(scheduleFallback, 3000);
+        };
+
+        if (typeof requestIdleCallback !== 'undefined') {
+            fallbackTimer = setTimeout(() => requestIdleCallback(idleFn, { timeout: 2000 }), 1000);
+        } else {
+            fallbackTimer = setTimeout(idleFn, 1500);
+        }
     }
 
     window.addEventListener('pagehide', () => {
@@ -1078,7 +1192,6 @@
         createPanel(); syncEditPageClass(); addEditButtons(); startAutoEdit();
         if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-        lastChildCount = document.body.childElementCount;
         scheduleFallback();
         setTimeout(() => showChangelogModal(), 1200);
     }
