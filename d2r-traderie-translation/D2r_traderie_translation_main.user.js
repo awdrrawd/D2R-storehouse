@@ -1,9 +1,9 @@
 // ==UserScript==
-// @name               Traderie D2R Chinese Translator + Chinese search1
+// @name               Traderie D2R Chinese Translator + Chinese search
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
-// @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑（支援中文搜尋）
+// @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.4
+// @version            2.4.5
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -18,8 +18,8 @@
 // @grant              GM_setValue
 // @grant              unsafeWindow
 // @run-at             document-idle
-// @downloadURL        https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.user.js
-// @updateURL          https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search.meta.js
+// @downloadURL        https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search1.user.js
+// @updateURL          https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search1.meta.js
 // ==/UserScript==
 
 (async function () {
@@ -45,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.4';
+    const VERSION = '2.4.5';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -512,7 +512,7 @@
                 if (!moved) {
                     // 已到達第一個或最後一個，跳到「套用篩選」按鈕
                     const applyBtn = document.getElementById('listings-apply-filters-btn')
-                        || document.querySelector('[aria-label="Apply Filters"]');
+                    || document.querySelector('[aria-label="Apply Filters"]');
                     if (applyBtn) applyBtn.focus();
                 }
             }, 0);
@@ -1101,6 +1101,9 @@
                     else roots.forEach(r => processTree(r));
                 }
                 if (doEdit) addEditButtons();
+                if (cardObserver && node.nodeType === 1) {
+                    node.querySelectorAll?.('.listing-row').forEach(card => cardObserver.observe(card));
+                }
                 return;
             }
 
@@ -1185,12 +1188,37 @@
         clearTimeout(listingDebounceTimer); clearTimeout(resumeTimer);
         autoEditObserver?.disconnect(); observer.disconnect();
     });
+    // ── IntersectionObserver：只翻譯進入視口的卡片 ─────────────────────────────
+    let cardObserver = null;
 
+    function setupCardObserver() {
+        if (cardObserver) cardObserver.disconnect();
+        cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting || !CONFIG.enabled) return;
+                processTree(entry.target);
+                cardObserver.unobserve(entry.target); // 翻完就不再觀察
+            });
+        }, { rootMargin: '300px' }); // 提前 300px 預翻，滾動時不閃
+
+        // 套用到目前所有卡片
+        document.querySelectorAll('.listing-row').forEach(card => cardObserver.observe(card));
+    }
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {
         if (detectLang() === 'zh-CN') { const ok = await loadOpenCC(); await loadOpenCCReverse(); openccReady = ok; }
         createPanel(); syncEditPageClass(); addEditButtons(); startAutoEdit();
-        if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
+        if (CONFIG.enabled) {
+            const firstScan = () => {
+                processTree(document.body);
+                document.title = applyLang(translate(document.title));
+                setupCardObserver(); // ← 第一次掃完後，啟動 IntersectionObserver
+            };
+            if (typeof requestIdleCallback !== 'undefined')
+                requestIdleCallback(firstScan, { timeout: 3000 });
+            else
+                setTimeout(firstScan, 300);
+        }
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
         scheduleFallback();
         setTimeout(() => showChangelogModal(), 1200);
