@@ -54,7 +54,7 @@ D2R-storehouse/
 
 點擊下方連結，在 Tampermonkey 確認安裝：
 
-**[💻 安裝 Traderie D2R 中文化腳本（載入器）](https://greasyfork.org/zh-CN/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search)**
+**[💻 安裝 Traderie D2R 中文化腳本](https://greasyfork.org/zh-CN/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search)**
 
 安裝完成後，前往 [Traderie D2R](https://traderie.com/diablo2resurrected) 即可看到繁體中文介面。
 
