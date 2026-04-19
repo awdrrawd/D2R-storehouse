@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.6
+// @version            2.4.7
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -45,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.6';
+    const VERSION = '2.4.7';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -648,19 +648,47 @@
         if (setter) setter.call(inputEl, en);
         inputEl.dispatchEvent(new Event('input',  { bubbles: true }));
         inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-        inputEl.focus();
-        zhDropdown.style.display = 'none'; activeIndex = -1;
+
+        // ❌ 移除這行，它會重置 IME
+        // inputEl.focus();
+
+        zhDropdown.style.display = 'none';
+        activeIndex = -1;
+
         let submitFired = false;
         setTimeout(() => {
             if (submitFired) return;
+
+            // 優先找 form 送出
             const form = inputEl.closest('form');
-            if (form) { submitFired = true; form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); return; }
-            const container = inputEl.closest('[class*="search"], [class*="filter"], [class*="Search"], form') || inputEl.parentElement;
-            const searchBtn = container?.querySelector('button[type="submit"], button[aria-label*="search" i], button[class*="search" i], [role="button"][class*="search" i], svg[class*="search" i]');
-            if (searchBtn) { submitFired = true; searchBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })); return; }
+            if (form) {
+                submitFired = true;
+                form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                return;
+            }
+
+            // 找搜尋按鈕直接 click（不走 keydown/keyup，避免 IME 重置）
+            const container = inputEl.closest('[class*="search"], [class*="filter"], [class*="Search"], form')
+            || inputEl.parentElement;
+            const searchBtn = container?.querySelector(
+                'button[type="submit"], button[aria-label*="search" i], ' +
+                'button[class*="search" i], [role="button"][class*="search" i], ' +
+                'svg[class*="search" i]'
+            );
+            if (searchBtn) {
+                submitFired = true;
+                searchBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                return;
+            }
+
+            // ⚠️ 最後手段：只送 keydown，移除 keyup（減少 IME 誤判機率）
+            // 若還是會重置，可考慮完全移除這段，改提示用戶手動按 Enter
             submitFired = true;
-            inputEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
-            inputEl.dispatchEvent(new KeyboardEvent('keyup',   { key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true, cancelable: true }));
+            inputEl.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter', code: 'Enter', keyCode: 13,
+                bubbles: true, cancelable: true,
+                isComposing: false   // 明確標示非組字狀態
+            }));
         }, 80);
     }
 
