@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.5
+// @version            2.4.6
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -45,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.5';
+    const VERSION = '2.4.6';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -727,12 +727,12 @@
     function addEditButtons() {
         if (!isListingsOrWishlist()) return;
         const listings = Array.from(
-            document.querySelectorAll('.listing-row[id], .col-xs-12.col-sm-6.col-md-6.fade')
+            document.querySelectorAll('.listing-row[id]')
         ).filter(l => !l.querySelector('.tr-edit-btn') && !l.querySelector('.react-loading-skeleton'));
         listings.forEach(listing => {
             const listingId = listing.id?.match(/(\d+)/)?.[1];
             if (!listingId) return;
-            const card = listing.querySelector('.sc-eqUAAy.sc-isRoRg');
+            const card = listing.querySelector('.sc-eqUAAy') // [FIX] 移除 .sc-satoz 限制
             if (!card) return;
             const btn = document.createElement('div');
             btn.className = 'tr-edit-btn';
@@ -825,7 +825,12 @@
         min-width: 0 !important;
         flex-shrink: 0 !important;
     }
-
+    /* 修改個人清單的按鈕大小 */
+    .listing-action-bar .app-btn {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        min-width: 0 !important;
+    }
     /* [FIX] 篩選標籤的容器也要允許換行，避免整排擠出去 */
     [class*="filter"] [class*="tags"],
     [class*="filter"] [class*="chips"],
@@ -1171,7 +1176,12 @@
                 );
                 staticRoots.forEach(el => processTree(el));
             }
-            if (CONFIG.editBtn && isListingsOrWishlist()) addEditButtons();
+            if (CONFIG.editBtn && isListingsOrWishlist()) {
+                addEditButtons();
+                // [FIX] React re-render 後補注入
+                setTimeout(() => addEditButtons(), 1000);
+                setTimeout(() => addEditButtons(), 3000);
+            }
             fallbackTimer = setTimeout(scheduleFallback, 3000);
         };
 
