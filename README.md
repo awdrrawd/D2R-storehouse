@@ -1,9 +1,11 @@
 # D2R-storehouse
-
 **暗黑破壞神 2 重製版（Diablo II: Resurrected）繁體中文翻譯資源庫**
 
 本倉庫分為兩個部分：**通用翻譯資料**與**平台專用腳本**。
 資料層與腳本層分離，方便未來將同一份字典套用到其他平台。
+
+> ⚠️ **目前翻譯腳本僅支援 [Traderie](https://traderie.com/diablo2resurrected) 平台。**
+> 其他平台（如 D2JSP、PTR 等）尚未實作，字典資料可供未來擴充使用。
 
 ---
 
@@ -36,9 +38,10 @@ D2R-storehouse/
 
 ---
 
-## 安裝方式
+## 安裝方式（Traderie 平台中文化）
 
-> 只需安裝**載入器**，之後所有更新自動套用。
+> 以下安裝步驟適用於 **Traderie D2R 交易平台**的中文化腳本。
+> 只需安裝**載入器**，之後所有更新自動套用，無需重新安裝。
 
 ### 1. 安裝 Tampermonkey
 
@@ -48,11 +51,13 @@ D2R-storehouse/
 | Firefox | [Tampermonkey - Firefox Add-ons](https://www.tampermonkey.net/) |
 | iOS Safari | [Userscripts App](https://apps.apple.com/app/userscripts/id1463298887) |
 
-### 2. 安裝載入器
+### 2. 安裝 Traderie 中文化載入器
 
 點擊下方連結，在 Tampermonkey 確認安裝：
 
-**[💻 安裝 D2R Traderie 中文翻譯](https://greasyfork.org/zh-CN/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search)**
+**[💻 安裝 Traderie D2R 中文化腳本（載入器）](https://greasyfork.org/zh-CN/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search)**
+
+安裝完成後，前往 [Traderie D2R](https://traderie.com/diablo2resurrected) 即可看到繁體中文介面。
 
 ---
 
@@ -85,7 +90,28 @@ D2R-storehouse/
 
 ---
 
+## 語言支援說明
+
+| 語言 | 翻譯方式 |
+|------|---------|
+| 繁體中文 | 人工維護字典，為本專案主要翻譯語言 |
+| 簡體中文 | 由繁體中文輸出透過 [OpenCC](https://github.com/BYVoid/OpenCC) 轉換，**未另行維護簡體字典** |
+
+> 簡體中文的準確度取決於 OpenCC 的轉換品質，部分遊戲專有名詞可能與官方簡體版本有所差異。
+
+---
+
 ## 問題回報
 
-遇使用BUG請至 [Issues](https://github.com/awdrrawd/D2R-storehouse/issues) 回報。
-由於文本量過大，翻譯問題原則上短時間不修
+遇使用 BUG 請至 [Issues](https://github.com/awdrrawd/D2R-storehouse/issues) 回報。
+由於文本量過大，翻譯問題原則上短時間不修正。
+
+---
+
+## 版權聲明
+
+Copyright © 2024 likolisu. All rights reserved.
+
+- 本專案翻譯內容（字典、詞綴對照表、介面文字）為貢獻者自行整理或編寫，依 [MIT License](./LICENSE) 授權開放使用。
+- **暗黑破壞神 2 重製版（Diablo II: Resurrected）** 及其所有遊戲內容、名稱、圖像均為 **Blizzard Entertainment** 之財產，本專案與 Blizzard 無任何官方關聯。
+- **Traderie** 平台及其介面為 Traderie 所有，本專案僅為使用者端的非官方在地化工具，不修改平台本身。
