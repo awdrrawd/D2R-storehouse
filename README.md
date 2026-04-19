@@ -110,8 +110,20 @@ D2R-storehouse/
 
 ## 版權聲明
 
-Copyright © 2024 likolisu. All rights reserved.
+Copyright © 2024 awdrrawd.
 
-- 本專案翻譯內容（字典、詞綴對照表、介面文字）為貢獻者自行整理或編寫，依 [MIT License](./LICENSE) 授權開放使用。
-- **暗黑破壞神 2 重製版（Diablo II: Resurrected）** 及其所有遊戲內容、名稱、圖像均為 **Blizzard Entertainment** 之財產，本專案與 Blizzard 無任何官方關聯。
+本專案腳本與翻譯內容（字典、詞綴對照表、介面文字）依 [CC BY-ND 4.0](https://creativecommons.org/licenses/by-nd/4.0/) 授權釋出。
+
+您可以自由：
+- **分享** — 以任何媒介或格式重製及散布本專案內容
+
+但須遵守以下條件：
+- **姓名標示** — 須適當標示原作者（likolisu）及來源連結
+- **禁止改作** — 不得修改、重混或基於本內容建立衍生著作後再行散布
+
+> 簡單來說：可以轉載或分享，但**不可修改後重新發布**。若有合作或特殊授權需求，請透過 Issues 聯繫。
+
+---
+
+- **Diablo II: Resurrected** 及其所有遊戲內容、名稱、圖像均為 **Blizzard Entertainment** 之財產，本專案與 Blizzard 無任何官方關聯。
 - **Traderie** 平台及其介面為 Traderie 所有，本專案僅為使用者端的非官方在地化工具，不修改平台本身。
