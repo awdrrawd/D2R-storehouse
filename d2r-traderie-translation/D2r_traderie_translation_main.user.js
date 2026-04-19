@@ -683,12 +683,12 @@
 
             // ⚠️ 最後手段：只送 keydown，移除 keyup（減少 IME 誤判機率）
             // 若還是會重置，可考慮完全移除這段，改提示用戶手動按 Enter
-            submitFired = true;
+            /*submitFired = true;
             inputEl.dispatchEvent(new KeyboardEvent('keydown', {
                 key: 'Enter', code: 'Enter', keyCode: 13,
                 bubbles: true, cancelable: true,
                 isComposing: false   // 明確標示非組字狀態
-            }));
+            }));*/
         }, 80);
     }
 
