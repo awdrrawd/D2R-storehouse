@@ -4,8 +4,7 @@
 本倉庫分為兩個部分：**通用翻譯資料**與**平台專用腳本**。
 資料層與腳本層分離，方便未來將同一份字典套用到其他平台。
 
-> ⚠️ **目前翻譯腳本僅支援 [Traderie](https://traderie.com/diablo2resurrected) 平台。**
-> 其他平台（如 D2JSP、PTR 等）尚未實作，字典資料可供未來擴充使用。
+> ⚠️ **目前翻譯腳本支援 [Traderie](https://traderie.com/diablo2resurrected) 平台。**
 
 ---
 
