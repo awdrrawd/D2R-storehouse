@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.7
+// @version            2.4.8
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -45,7 +45,7 @@
         }
     }
 
-    const VERSION = '2.4.7';
+    const VERSION = '2.4.8';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -681,14 +681,6 @@
                 return;
             }
 
-            // ⚠️ 最後手段：只送 keydown，移除 keyup（減少 IME 誤判機率）
-            // 若還是會重置，可考慮完全移除這段，改提示用戶手動按 Enter
-            /*submitFired = true;
-            inputEl.dispatchEvent(new KeyboardEvent('keydown', {
-                key: 'Enter', code: 'Enter', keyCode: 13,
-                bubbles: true, cancelable: true,
-                isComposing: false   // 明確標示非組字狀態
-            }));*/
         }, 80);
     }
 
@@ -776,6 +768,111 @@
         });
     }
 
+    // ── 清除所有通知 ─────────────────────────────────────────────────────────────
+    async function clearAllNotifications(container, triggerBtn) {
+        const origText = triggerBtn.textContent;
+        triggerBtn.style.opacity = '0.5';
+        triggerBtn.style.pointerEvents = 'none';
+
+        // 直接找到所有刪除按鈕（tooltip 內 flex div）並存起來
+        const allBtns = Array.from(container.querySelectorAll('.tooltip'))
+        .filter(tip => /delete/i.test(tip.querySelector('.tooltiptext')?.textContent || ''))
+        .map(tip => tip.querySelector('div[style*="flex"]'))
+        .filter(Boolean);
+
+        let count = 0;
+        for (const btn of allBtns) {
+            if (!document.contains(btn)) continue;
+            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            count++;
+            triggerBtn.title = `🗑️ ${count} / ${allBtns.length}`;
+            await new Promise(r => setTimeout(r, 350));
+        }
+
+        //triggerBtn.textContent = `✅ ${count}`;
+        triggerBtn.textContent = `✅ 清除完畢`;
+        triggerBtn.style.opacity = '1';
+        triggerBtn.style.pointerEvents = 'auto';
+        setTimeout(() => { triggerBtn.textContent = origText; triggerBtn.title = '清除所有通知'; }, 700);
+    }
+    function injectNotifClearIntoDropdown(dropdown) {
+        if (dropdown.querySelector('#d2r-notif-clear-dropdown')) return;
+
+        const footer = dropdown.querySelector('.notification-footer');
+        if (!footer) return;
+
+        // 用 wrapper 把 footer 和按鈕包在同一行
+        const wrapper = document.createElement('div');
+        wrapper.id = 'd2r-notif-clear-wrapper';
+        wrapper.style.cssText = 'display:flex;align-items:stretch;border-top:1px solid rgba(255,255,255,0.08);';
+
+        // 把 footer <a> 移進 wrapper，並移除原本的 border（wrapper 負責）
+        footer.style.borderTop = 'none';
+        footer.style.flex = '1';
+        footer.parentNode.insertBefore(wrapper, footer);
+        wrapper.appendChild(footer);
+
+        const btn = document.createElement('button');
+        btn.id = 'd2r-notif-clear-dropdown';
+        btn.type = 'button';
+        btn.style.cssText = [
+            'display:inline-flex', 'align-items:center', 'cursor:pointer',
+            'color:#ff6b6b', 'font-size:12px', 'padding:0 14px',
+            'background:#131416', 'border:none',                        // ← 固定黑色
+            'border-left:1px solid rgba(255,255,255,0.08)',
+            'user-select:none', 'transition:color .15s', 'flex-shrink:0'
+        ].join(';');
+        btn.textContent = '🗑️ 全部清除';
+        btn.title = '清除所有通知';
+        btn.addEventListener('mouseover', () => btn.style.background = 'rgba(255,107,107,0.1)');
+        btn.addEventListener('mouseout',  () => btn.style.background = '#131416');
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            e.preventDefault();
+            clearAllNotifications(dropdown, btn);
+        });
+
+        wrapper.appendChild(btn);
+    }
+
+    function injectNotifClearIntoPage(notifPage) {
+        if (notifPage.querySelector('#d2r-notif-clear-page')) return;
+
+        const titleBar = notifPage.querySelector('.notification-title-container');
+        if (!titleBar) return;
+
+        const btn = document.createElement('span');
+        btn.id = 'd2r-notif-clear-page';
+        btn.style.cssText = 'cursor:pointer;color:#ff6b6b;font-size:13px;margin:0 8px;user-select:none;';
+        btn.textContent = '🗑️ 全部清除';
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            clearAllNotifications(notifPage, btn);
+        });
+
+        const nativeSpan = titleBar.querySelector('[aria-label="Clear all"]');
+        if (nativeSpan) nativeSpan.after(btn);
+        else titleBar.appendChild(btn);
+    }
+
+    function setupNotificationObserver() {
+        // 通知頁不再注入（避免重複按鈕）
+        // 只處理下拉面板
+        const notifObserver = new MutationObserver(muts => {
+            for (const m of muts) {
+                for (const node of m.addedNodes) {
+                    if (node.nodeType !== 1) continue;
+                    if (node.classList?.contains('dropdown-menu') ||
+                        node.querySelector?.('.dropdown-menu')) {
+                        const dropdown = node.classList?.contains('dropdown-menu')
+                        ? node : node.querySelector('.dropdown-menu');
+                        if (dropdown) injectNotifClearIntoDropdown(dropdown);
+                    }
+                }
+            }
+        });
+        notifObserver.observe(document.body, { childList: true, subtree: true });
+    }
     // ── 自動編輯 ────────────────────────────────────────────────────────────
     const AE_DEBUG = false;
     function aeLog(...args) { if (AE_DEBUG) console.log('[D2R-AutoEdit]', ...args); }
@@ -869,7 +966,8 @@
         flex-wrap: wrap !important;
         overflow: visible !important;
     }
-
+    #d2r-batch-relist:hover { background: #2f9e44 !important; }
+    #d2r-batch-remove:hover { background: #c73b3b !important; }
     #d2r-panel{position:fixed;bottom:78px;left:16px;z-index:99999;background:#120a24;border:1px solid #6a2fa0;border-radius:8px;padding:12px 14px;min-width:210px;box-shadow:0 4px 16px rgba(0,0,0,.7);color:#d4b0f0;font-size:13px;font-family:sans-serif;display:none;user-select:none;}
     #d2r-panel.open{display:block;}
     #d2r-panel h3{margin:0 0 10px;font-size:13px;color:#d4a0ff;border-bottom:1px solid #2d1456;padding-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
@@ -1206,6 +1304,7 @@
             }
             if (CONFIG.editBtn && isListingsOrWishlist()) {
                 addEditButtons();
+                addRelistAllButton();
                 // [FIX] React re-render 後補注入
                 setTimeout(() => addEditButtons(), 1000);
                 setTimeout(() => addEditButtons(), 3000);
@@ -1251,6 +1350,7 @@
                 processTree(document.body);
                 document.title = applyLang(translate(document.title));
                 setupCardObserver(); // ← 第一次掃完後，啟動 IntersectionObserver
+                setupNotificationObserver();
             };
             if (typeof requestIdleCallback !== 'undefined')
                 requestIdleCallback(firstScan, { timeout: 3000 });
