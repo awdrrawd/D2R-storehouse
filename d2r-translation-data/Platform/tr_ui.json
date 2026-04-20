@@ -342,9 +342,9 @@
     "You already have an unanswered question. Please wait patiently until we can get to your question for any follow-ups or extra questions. Thank you!":
     "您已有一個待回覆的問題，請耐心等候勿重複提問。",
 
-    "Notifications":                    "通知",
-    "No Notifications":                 "沒有通知",
     "No New Notifications":             "沒有新通知",
+    "No Notifications":                 "沒有通知",
+    "Notifications":                    "通知",
     "Messages":                         "訊息",
     "Requests":                         "請求",
     "Archived":                         "已封存",
