@@ -324,6 +324,12 @@
     "Item you're trading":"您正在交換的物品",
     "Verified trade (Received)":"交易完成(已驗證)",
     "Ask for additional item(s)": "請求添加其他物品",
+    "Must wait before being able to leave a review": "必須等待一段時間才能發表評論",
+    "Request to Start A Chat with ": "請求發起聊天，對象",
+    "optional": "可選",
+    "Send Request": "發送請求",
+    "If you have previously chatted with the user, the chat will automatically be opened. If it's your first time chatting this user, you will have to wait for the other user to approve your chat request.":
+    "如果您之前與該使用者聊天過，聊天視窗將自動開啟。如果您是第一次與該用戶聊天，則需要等待對方批准您的聊天要求。",
 
     "Ask A Question":         "提問",
     "How Do I...?":           "如何操作？",
