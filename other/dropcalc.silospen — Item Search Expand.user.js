@@ -1,18 +1,19 @@
 // ==UserScript==
-// @name               dropcalc.silospen — Item Search Expand
-// @name:zh-TW         dropcalc.silospen — 物品搜尋擴展
-// @name:zh-cn         dropcalc.silospen — 物品搜寻扩展
-// @namespace          https://github.com/awdrrawd
-// @version            1.0
-// @description        Enhances the item dropdown on dropcalc.silospen.com with a searchable combobox. Type to filter, press ✕ to clear.
+// @name         dropcalc.silospen — Item Search Expand
+// @name:zh-TW   dropcalc.silospen — 物品搜尋擴展
+// @namespace    https://github.com/awdrrawd
+// @version      1.0.0
+// @description  Enhances the item dropdown on dropcalc.silospen.com with a searchable combobox. Type to filter, press ✕ to clear.
 // @description:zh-TW  擴展 dropcalc.silospen.com 的物品搜尋功能，將下拉選單改為可輸入搜尋的 combobox，輸入即過濾，右側 ✕ 清除。
-// @description:zh-cn  扩展 dropcalc.silospen.com 的物品搜寻功能，将下拉选单改为可输入搜寻的 combobox，输入即过滤，右侧 ✕ 清除。
-// @author             瀧月瀨
-// @license            CC BY-ND 4.0
-// @homepageURL        https://github.com/awdrrawd
-// @match              https://dropcalc.silospen.com/*
-// @grant              none
-// @run-at             document-idle
+// @author       awdrrawd
+// @license      CC BY-ND 4.0
+// @homepageURL  https://github.com/awdrrawd/D2R-storehouse
+// @supportURL   https://github.com/awdrrawd/D2R-storehouse/issues
+// @downloadURL  https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/other/dropcalc.silospen%20%E2%80%94%20Item%20Search%20Expand.user.js
+// @updateURL    https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/main/other/dropcalc.silospen%20%E2%80%94%20Item%20Search%20Expand.user.js
+// @match        https://dropcalc.silospen.com/*
+// @grant        none
+// @run-at       document-idle
 // ==/UserScript==
 
 (function () {
