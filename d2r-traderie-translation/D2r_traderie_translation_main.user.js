@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.4.8
+// @version            2.5.0
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -25,6 +25,7 @@
 (async function () {
     'use strict';
 
+    // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     function gmGet(key, def) {
@@ -44,8 +45,9 @@
             (document.head || document.documentElement).appendChild(s);
         }
     }
+    // ────────────────────────────────────────────────────────────────────────
 
-    const VERSION = '2.4.8';
+    const VERSION = '2.5.0';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -130,14 +132,16 @@
 
     // ── Config ──────────────────────────────────────────────────────────────
     const CONFIG = {
-        enabled: gmGet('d2r_enabled', true),
-        editBtn: gmGet('d2r_editbtn', true),
-        lang:    gmGet('d2r_lang', 'auto')
+        enabled:   gmGet('d2r_enabled', true),
+        editBtn:   gmGet('d2r_editbtn', true),
+        lang:      gmGet('d2r_lang', 'auto'),
+        chatSound: gmGet('d2r_chat_sound', false),
     };
     function saveConfig() {
-        gmSet('d2r_enabled', CONFIG.enabled);
-        gmSet('d2r_editbtn', CONFIG.editBtn);
-        gmSet('d2r_lang',    CONFIG.lang);
+        gmSet('d2r_enabled',    CONFIG.enabled);
+        gmSet('d2r_editbtn',    CONFIG.editBtn);
+        gmSet('d2r_lang',       CONFIG.lang);
+        gmSet('d2r_chat_sound', CONFIG.chatSound);
     }
 
     async function switchLang(lang) {
@@ -446,9 +450,6 @@
         target.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    // [FIX] Tab 鍵：優先在 property range inputs 之間循環，離開時才交給一般焦點管理
-    // 因為頁面上所有 min/max input 的 id 全部重複，不能靠 id 定位，
-    // 改用 .min-max-filter-info 裡的 placeholder=Min/Max 來抓完整清單。
     function getPropertyRangeInputs() {
         return Array.from(
             document.querySelectorAll('.min-max-filter-info input[placeholder="Min"], .min-max-filter-info input[placeholder="Max"]')
@@ -461,11 +462,8 @@
     function focusNextPropertyInput(currentTarget, reverse = false) {
         const inputs = getPropertyRangeInputs();
         if (!inputs.length) return false;
-
-        // 用元素參考直接比對（不靠 id，因為 id 重複）
         let idx = inputs.indexOf(currentTarget);
         if (idx === -1) {
-            // 找不到就用座標找最近的
             const rect = currentTarget.getBoundingClientRect();
             let minDist = Infinity;
             inputs.forEach((el, i) => {
@@ -474,20 +472,15 @@
                 if (d < minDist) { minDist = d; idx = i; }
             });
         }
-
         const nextIdx = idx + (reverse ? -1 : 1);
-        // 超出範圍就離開 property range 區域，回傳 false 讓呼叫方決定後續
         if (nextIdx < 0 || nextIdx >= inputs.length) return false;
-
         inputs[nextIdx].focus();
         return true;
     }
 
-    // blur：commit → 隱藏 → 延遲恢復翻譯
     overlayInput.addEventListener('blur', e => {
         const next = e.relatedTarget;
         commitOverlay();
-
         if (next && isPropertyRangeInput(next)) {
             hideOverlay();
             showOverlay(next);
@@ -497,20 +490,17 @@
         }
     });
 
-    // [FIX] Tab / Shift+Tab：在 property range inputs 之間循環
-    // 最後一格 Tab → 跳到「套用篩選」按鈕；第一格 Shift+Tab → 同樣跳到「套用篩選」
     overlayInput.addEventListener('keydown', e => {
         if (e.key === 'Tab') {
             e.preventDefault();
             e.stopPropagation();
             commitOverlay();
-            const target = overlayTarget;   // hideOverlay 會清掉，先存起來
+            const target = overlayTarget;
             hideOverlay();
             resumeTranslation(200);
             setTimeout(() => {
                 const moved = focusNextPropertyInput(target, e.shiftKey);
                 if (!moved) {
-                    // 已到達第一個或最後一個，跳到「套用篩選」按鈕
                     const applyBtn = document.getElementById('listings-apply-filters-btn')
                     || document.querySelector('[aria-label="Apply Filters"]');
                     if (applyBtn) applyBtn.focus();
@@ -539,7 +529,6 @@
     document.addEventListener('focusin', e => {
         const el = e.target;
         if (el === overlayInput) return;
-
         if (el.tagName === 'INPUT' && isPropertyRangeInput(el)) {
             showOverlay(el);
             requestAnimationFrame(() => { if (document.activeElement === el) el.blur(); });
@@ -611,7 +600,7 @@
         const dropH = Math.min(320, currentResults.length * 40 + 60);
         zhDropdown.style.top  = (window.innerHeight - rect.bottom < dropH && rect.top > dropH)
             ? `${rect.top + window.scrollY - dropH - 4}px`
-        : `${rect.bottom + window.scrollY + 4}px`;
+            : `${rect.bottom + window.scrollY + 4}px`;
         zhDropdown.style.left  = `${rect.left + window.scrollX}px`;
         zhDropdown.style.width = `${Math.max(rect.width, 260)}px`;
     }
@@ -648,26 +637,17 @@
         if (setter) setter.call(inputEl, en);
         inputEl.dispatchEvent(new Event('input',  { bubbles: true }));
         inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-
-        // ❌ 移除這行，它會重置 IME
-        // inputEl.focus();
-
         zhDropdown.style.display = 'none';
         activeIndex = -1;
-
         let submitFired = false;
         setTimeout(() => {
             if (submitFired) return;
-
-            // 優先找 form 送出
             const form = inputEl.closest('form');
             if (form) {
                 submitFired = true;
                 form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
                 return;
             }
-
-            // 找搜尋按鈕直接 click（不走 keydown/keyup，避免 IME 重置）
             const container = inputEl.closest('[class*="search"], [class*="filter"], [class*="Search"], form')
             || inputEl.parentElement;
             const searchBtn = container?.querySelector(
@@ -678,9 +658,7 @@
             if (searchBtn) {
                 submitFired = true;
                 searchBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-                return;
             }
-
         }, 80);
     }
 
@@ -752,7 +730,7 @@
         listings.forEach(listing => {
             const listingId = listing.id?.match(/(\d+)/)?.[1];
             if (!listingId) return;
-            const card = listing.querySelector('.sc-eqUAAy') // [FIX] 移除 .sc-satoz 限制
+            const card = listing.querySelector('.sc-eqUAAy');
             if (!card) return;
             const btn = document.createElement('div');
             btn.className = 'tr-edit-btn';
@@ -768,111 +746,310 @@
         });
     }
 
-    // ── 清除所有通知 ─────────────────────────────────────────────────────────────
-    async function clearAllNotifications(container, triggerBtn) {
-        const origText = triggerBtn.textContent;
-        triggerBtn.style.opacity = '0.5';
-        triggerBtn.style.pointerEvents = 'none';
 
-        // 直接找到所有刪除按鈕（tooltip 內 flex div）並存起來
-        const allBtns = Array.from(container.querySelectorAll('.tooltip'))
-        .filter(tip => /delete/i.test(tip.querySelector('.tooltiptext')?.textContent || ''))
-        .map(tip => tip.querySelector('div[style*="flex"]'))
-        .filter(Boolean);
+    // ── 聊天通知 ────────────────────────────────────────────────────
+    let chatMsgObserver = null;
+    let badgeObserver   = null;
+    let notifAudio      = null;
 
-        let count = 0;
-        for (const btn of allBtns) {
-            if (!document.contains(btn)) continue;
-            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-            count++;
-            triggerBtn.title = `🗑️ ${count} / ${allBtns.length}`;
-            await new Promise(r => setTimeout(r, 350));
-        }
+    function isChatFocused() { return !document.hidden && document.hasFocus(); }
 
-        //triggerBtn.textContent = `✅ ${count}`;
-        triggerBtn.textContent = `✅ 清除完畢`;
-        triggerBtn.style.opacity = '1';
-        triggerBtn.style.pointerEvents = 'auto';
-        setTimeout(() => { triggerBtn.textContent = origText; triggerBtn.title = '清除所有通知'; }, 700);
+    function getNotifAudio() {
+        if (!notifAudio) { notifAudio = new Audio('https://cdn.nookazon.com/juntos.mp3'); notifAudio.volume = 1.0; }
+        return notifAudio;
     }
+    function playMsgSound() {
+        try { const a = getNotifAudio(); a.currentTime = 0; a.play().catch(() => {}); } catch (_) {}
+    }
+
+    function fireNotif(sender, text) {
+        if (isChatFocused()) return;   // TR 是主控視窗 → 靜默
+        if (CONFIG.chatSound) playMsgSound();
+    }
+
+    // ── 當前 chat 頁面 observer（偵測對方在同一聊天室發新訊息）────────────
+
+    // ── 假 badge ────────────────────────────────────────────────────────────
+    // 用途：記錄我們成功清除 badge 的次數（≠ CHANNEL 次數）
+    // 計數規則：callNotifReadAllAPI() 成功一次 → fakeNotifCount++
+    // 清除方式：點擊假 badge 本身，或點擊鈴鐺圖示
+    // chatSound 關閉時：移除假 badge，還原 TR 原生行為
+
+    let fakeNotifCount = 0;
+    let fakeBadgeEl    = null;
+
+    function ensureFakeBadge() {
+        if (fakeBadgeEl && document.contains(fakeBadgeEl)) return;
+        // 注入到桌面版 dropdown 鈴鐺（data-cy="dropdown-btn"）的 .notif-bell-icon
+        const bellIcon = document.querySelector('[data-cy="dropdown-btn"] .notif-bell-icon')
+                      || document.querySelector('.notif-bell-icon');
+        if (!bellIcon) return;
+        // 複用 TR 的 .badge class 繼承原生樣式（顏色、大小、位置）
+        fakeBadgeEl = document.createElement('span');
+        fakeBadgeEl.id        = 'd2r-fake-badge';
+        fakeBadgeEl.className = 'badge';
+        fakeBadgeEl.style.cssText = 'cursor:pointer;display:none;';
+        fakeBadgeEl.title = '點擊清除未讀計數';
+        fakeBadgeEl.addEventListener('click', e => {
+            e.stopPropagation(); e.preventDefault();
+            fakeNotifCount = 0;
+            updateFakeBadge();
+        }, true);
+        bellIcon.appendChild(fakeBadgeEl);
+        // 隱藏 TR 自己的 badge，避免兩個重疊
+        bellIcon.querySelectorAll('.badge:not(#d2r-fake-badge)').forEach(b => {
+            b.style.display = 'none';
+            b.dataset.d2rHidden = '1';
+        });
+    }
+
+    function updateFakeBadge() {
+        if (fakeNotifCount > 0) {
+            ensureFakeBadge();
+            if (fakeBadgeEl) {
+                fakeBadgeEl.textContent = fakeNotifCount > 99 ? '99+' : String(fakeNotifCount);
+                fakeBadgeEl.style.display = '';
+            }
+        } else {
+            if (fakeBadgeEl) fakeBadgeEl.style.display = 'none';
+            // 還原 TR 的 badge
+            document.querySelectorAll('.badge[data-d2r-hidden]').forEach(b => {
+                delete b.dataset.d2rHidden;
+                b.style.display = '';
+            });
+        }
+    }
+
+    function removeFakeBadge() {
+        fakeBadgeEl?.remove(); fakeBadgeEl = null;
+        fakeNotifCount = 0;
+        // 還原 TR 的 badge
+        document.querySelectorAll('.badge[data-d2r-hidden]').forEach(b => {
+            delete b.dataset.d2rHidden;
+            b.style.display = '';
+        });
+    }
+
+    function setupBellClickReset() {
+        const bellArea = document.querySelector('[data-cy="dropdown-btn"]');
+        if (!bellArea || bellArea.dataset.d2rBellPatch) return;
+        bellArea.dataset.d2rBellPatch = '1';
+        bellArea.addEventListener('click', () => {
+            fakeNotifCount = 0;
+            updateFakeBadge();
+        });
+    }
+
+    // ── badge observer：偵測真實訊息 → 播音效 → 清除 badge → 假 badge 計數 ──
+    // 計數規則：每次 callNotifReadAllAPI() 成功 → fakeNotifCount++（非 CHANNEL 計數）
+
+    let lastBadgeVal      = 0;
+    let clearBadgePending = false;
+
+    function setupBadgeObserver() {
+        badgeObserver?.disconnect(); badgeObserver = null;
+        const root = document.querySelector('nav, header, #nav-container, .nav-right') || document.body;
+        badgeObserver = new MutationObserver(() => {
+            // 忽略我們自己的假 badge
+            const badge = document.querySelector(
+                '.notif-bell-icon .badge:not(#d2r-fake-badge), [class*="bell"] .badge:not(#d2r-fake-badge)'
+            );
+            const val = parseInt(badge?.textContent?.trim() || '0', 10) || 0;
+            if (val === 0) { lastBadgeVal = 0; return; }
+            if (clearBadgePending) return;
+            if (val > lastBadgeVal) {
+                lastBadgeVal = val;
+                fireNotif('Traderie', '你有未讀訊息或通知');
+                clearBadgePending = true;
+                setTimeout(async () => {
+                    const res = await callNotifReadAllAPI();
+                    // 只有 API 成功才計數（避免 CHANNEL 誤觸）
+                    if (res && (res.ok || res.status === 200)) {
+                        fakeNotifCount++;
+                        updateFakeBadge();
+                    }
+                    setTimeout(() => {
+                        lastBadgeVal = 0;
+                        clearBadgePending = false;
+                    }, 2000);
+                }, 2000);
+            }
+        });
+        badgeObserver.observe(root, {
+            childList: true, subtree: true,
+            characterData: true,
+            attributes: true, attributeFilter: ['class']
+        });
+    }
+
+    // ── 當前 chat 頁面 observer（偵測對方在同一聊天室發新訊息）────────────
+    function setupChatMsgObserver() {
+        chatMsgObserver?.disconnect(); chatMsgObserver = null;
+        const container = document.querySelector('.messages-container');
+        if (!container) return;
+        const seen = new WeakSet(
+            Array.from(container.querySelectorAll('div[style*="flex-start"] .message-container'))
+        );
+        chatMsgObserver = new MutationObserver(muts => {
+            for (const m of muts) {
+                for (const node of m.addedNodes) {
+                    if (node.nodeType !== 1) continue;
+                    const wraps = node.style?.justifyContent === 'flex-start'
+                        ? [node]
+                        : Array.from(node.querySelectorAll?.('div[style*="flex-start"]') ?? []);
+                    for (const wrap of wraps) {
+                        const msgEl = wrap.querySelector('.message-container');
+                        if (msgEl && !seen.has(msgEl)) {
+                            seen.add(msgEl);
+                            const sender  = msgEl.querySelector('.message-user')?.textContent?.trim() || '';
+                            const content = msgEl.querySelector('.message-content')?.textContent?.trim() || '';
+                            fireNotif(sender, content);
+                        }
+                    }
+                }
+            }
+        });
+        chatMsgObserver.observe(container, { childList: true, subtree: false });
+    }
+
+    function maybeSetupChatObserver() {
+        if (CONFIG.chatSound) {
+            hookFetchForAuth();
+            setupBadgeObserver();
+            setupBellClickReset();
+            if (document.querySelector('.messages-container')) setupChatMsgObserver();
+        } else {
+            // 關閉：移除假 badge，還原 TR 原生行為
+            badgeObserver?.disconnect();   badgeObserver   = null;
+            chatMsgObserver?.disconnect(); chatMsgObserver = null;
+            removeFakeBadge();
+        }
+    }
+
+
+    // ── 通知面板注入──────────────────────────────────────────────
+    let capturedAuthHeader = null;
+
+    function hookFetchForAuth() {
+        if (PAGE.__d2r_fetch_hooked) return;
+        PAGE.__d2r_fetch_hooked = true;
+        const origFetch = PAGE.fetch;
+        PAGE.fetch = function (input, init = {}) {
+            // 攔截 TR 自己發出的含 Authorization header 的請求，偷走 token
+            const auth = init?.headers?.Authorization || init?.headers?.authorization;
+            if (auth && !capturedAuthHeader) capturedAuthHeader = auth;
+            return origFetch.call(this, input, init);
+        };
+    }
+
+    function callNotifDeleteAPI(notifId) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (capturedAuthHeader) headers['Authorization'] = capturedAuthHeader;
+        return PAGE.fetch(
+            `/api/diablo2resurrected/notifications/delete?id=${encodeURIComponent(notifId)}`,
+            { method: 'DELETE', credentials: 'include', headers }
+        ).catch(() => null);
+    }
+
+    // 全部已讀（清除 badge）：帶捕獲的 auth token，不需要點擊鈴鐺
+    function callNotifReadAllAPI() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (capturedAuthHeader) headers['Authorization'] = capturedAuthHeader;
+        return PAGE.fetch(
+            '/api/diablo2resurrected/notifications/read/all',
+            { method: 'PUT', credentials: 'include', headers }
+        ).catch(() => null);
+    }
+
+    // 從 React fiber 取 notification id（bundle 確認 key === i.id）
+    function getNotifIdFromLi(li) {
+        const key = Object.keys(li).find(k =>
+            k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance')
+        );
+        return li[key]?.key ?? null;
+    }
+
+    // 視覺隱藏 li（不觸發 React）
+    function hideLi(li) {
+        li.style.display = 'none';
+    }
+
     function injectNotifClearIntoDropdown(dropdown) {
         if (dropdown.querySelector('#d2r-notif-clear-dropdown')) return;
 
+        // 每個刪除按鈕：攔截點擊 → 視覺隱藏 + 背景 API 刪除
+        Array.from(dropdown.querySelectorAll('li.list-item')).forEach(li => {
+            if (li.dataset.d2rPatch) return;
+            li.dataset.d2rPatch = '1';
+            const trDelDiv = li.querySelector('.tooltip > div:first-child');
+            if (!trDelDiv) return;
+            trDelDiv.addEventListener('click', e => {
+                e.stopPropagation();
+                e.preventDefault();
+                hideLi(li);
+                const notifId = getNotifIdFromLi(li);
+                if (notifId) callNotifDeleteAPI(notifId);
+            }, true); // capture：在 React #root 之前攔截
+        });
+
         const footer = dropdown.querySelector('.notification-footer');
         if (!footer) return;
-
-        // 用 wrapper 把 footer 和按鈕包在同一行
         const wrapper = document.createElement('div');
         wrapper.id = 'd2r-notif-clear-wrapper';
         wrapper.style.cssText = 'display:flex;align-items:stretch;border-top:1px solid rgba(255,255,255,0.08);';
-
-        // 把 footer <a> 移進 wrapper，並移除原本的 border（wrapper 負責）
-        footer.style.borderTop = 'none';
-        footer.style.flex = '1';
+        footer.style.borderTop = 'none'; footer.style.flex = '1';
         footer.parentNode.insertBefore(wrapper, footer);
         wrapper.appendChild(footer);
-
         const btn = document.createElement('button');
-        btn.id = 'd2r-notif-clear-dropdown';
-        btn.type = 'button';
+        btn.id = 'd2r-notif-clear-dropdown'; btn.type = 'button';
         btn.style.cssText = [
-            'display:inline-flex', 'align-items:center', 'cursor:pointer',
-            'color:#ff6b6b', 'font-size:12px', 'padding:0 14px',
-            'background:#131416', 'border:none',                        // ← 固定黑色
+            'display:inline-flex','align-items:center','cursor:pointer',
+            'color:#ff6b6b','font-size:12px','padding:0 14px',
+            'background:#131416','border:none',
             'border-left:1px solid rgba(255,255,255,0.08)',
-            'user-select:none', 'transition:color .15s', 'flex-shrink:0'
+            'user-select:none','transition:background .15s','flex-shrink:0'
         ].join(';');
-        btn.textContent = '🗑️ 全部清除';
-        btn.title = '清除所有通知';
+        btn.textContent = '🗑️ 全部清除'; btn.title = '清除所有通知';
         btn.addEventListener('mouseover', () => btn.style.background = 'rgba(255,107,107,0.1)');
         btn.addEventListener('mouseout',  () => btn.style.background = '#131416');
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            e.preventDefault();
-            clearAllNotifications(dropdown, btn);
+        btn.addEventListener('click', async e => {
+            e.stopPropagation(); e.preventDefault();
+            const origText = btn.textContent;
+            btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none';
+            const items = Array.from(dropdown.querySelectorAll('li.list-item'));
+            let count = 0;
+            for (const li of items) {
+                hideLi(li);
+                count++;
+                btn.title = `🗑️ ${count}`;
+                const notifId = getNotifIdFromLi(li);
+                if (notifId) callNotifDeleteAPI(notifId);
+                await new Promise(r => setTimeout(r, 120));
+            }
+            btn.textContent = '✅ 清除完畢';
+            btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+            setTimeout(() => { btn.textContent = origText; btn.title = '清除所有通知'; }, 2000);
         });
-
         wrapper.appendChild(btn);
     }
 
-    function injectNotifClearIntoPage(notifPage) {
-        if (notifPage.querySelector('#d2r-notif-clear-page')) return;
-
-        const titleBar = notifPage.querySelector('.notification-title-container');
-        if (!titleBar) return;
-
-        const btn = document.createElement('span');
-        btn.id = 'd2r-notif-clear-page';
-        btn.style.cssText = 'cursor:pointer;color:#ff6b6b;font-size:13px;margin:0 8px;user-select:none;';
-        btn.textContent = '🗑️ 全部清除';
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            clearAllNotifications(notifPage, btn);
-        });
-
-        const nativeSpan = titleBar.querySelector('[aria-label="Clear all"]');
-        if (nativeSpan) nativeSpan.after(btn);
-        else titleBar.appendChild(btn);
-    }
-
     function setupNotificationObserver() {
-        // 通知頁不再注入（避免重複按鈕）
-        // 只處理下拉面板
+        hookFetchForAuth();
         const notifObserver = new MutationObserver(muts => {
             for (const m of muts) {
                 for (const node of m.addedNodes) {
                     if (node.nodeType !== 1) continue;
-                    if (node.classList?.contains('dropdown-menu') ||
-                        node.querySelector?.('.dropdown-menu')) {
-                        const dropdown = node.classList?.contains('dropdown-menu')
-                        ? node : node.querySelector('.dropdown-menu');
-                        if (dropdown) injectNotifClearIntoDropdown(dropdown);
+                    const dropdown = node.classList?.contains('dropdown-menu')
+                        ? node : node.querySelector?.('.dropdown-menu');
+                    if (dropdown && dropdown.querySelector('li.list-item, .notification-footer')) {
+                        injectNotifClearIntoDropdown(dropdown);
                     }
                 }
             }
         });
         notifObserver.observe(document.body, { childList: true, subtree: true });
     }
+
     // ── 自動編輯 ────────────────────────────────────────────────────────────
     const AE_DEBUG = false;
     function aeLog(...args) { if (AE_DEBUG) console.log('[D2R-AutoEdit]', ...args); }
@@ -929,45 +1106,23 @@
 
     // ── CSS ─────────────────────────────────────────────────────────────────
     gmStyle(`
-    /* [FIX] 篩選標籤文字截斷修復：允許標籤自動撐開，不裁切翻譯後的中文 */
-    [class*="filter"] [class*="chip"],
-    [class*="filter"] [class*="tag"],
-    [class*="filter"] [class*="badge"],
-    [class*="filter"] [class*="pill"],
-    [class*="selected"] [class*="chip"],
-    [class*="selected"] [class*="tag"],
-    .sc-bdVTJa,
-    [class*="filter-tag"],
-    [class*="filterTag"],
-    [class*="FilterTag"],
-    [class*="activeFilter"],
-    [class*="active-filter"] {
-        max-width: none !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-        white-space: nowrap !important;
-        width: auto !important;
-        min-width: 0 !important;
-        flex-shrink: 0 !important;
+    [class*="filter"] [class*="chip"],[class*="filter"] [class*="tag"],[class*="filter"] [class*="badge"],[class*="filter"] [class*="pill"],[class*="selected"] [class*="chip"],[class*="selected"] [class*="tag"],.sc-bdVTJa,[class*="filter-tag"],[class*="filterTag"],[class*="FilterTag"],[class*="activeFilter"],[class*="active-filter"]{max-width:none !important;overflow:visible !important;text-overflow:unset !important;white-space:nowrap !important;width:auto !important;min-width:0 !important;flex-shrink:0 !important;}
+    .listing-action-bar .app-btn{padding-left:10px !important;padding-right:10px !important;min-width:0 !important;}
+    [class*="filter"] [class*="tags"],[class*="filter"] [class*="chips"],[class*="selected-filters"],[class*="selectedFilters"],[class*="activeFilters"],[class*="active-filters"]{flex-wrap:wrap !important;overflow:visible !important;}
+    #d2r-batch-relist:hover{background:#2f9e44 !important;}
+    /* 假 badge 樣式（不需要額外 CSS，已用 inline style 設定） */
+    /* [FIX] 停用通知列表所有後代的 transition/animation
+       TR 可能用 react-transition-group 在子元素加 inline class，
+       用 * 選擇器加 !important 確保覆蓋，但 inline style 仍需 JS 處理 */
+    .notifications-list *, .notifications-list-page *,
+    .dropdown-menu .notifications-list *,
+    ul.notifications-list, ul.notifications-list-page {
+        transition: none !important;
+        animation: none !important;
+        animation-duration: 0s !important;
+        animation-delay: 0s !important;
     }
-    /* 修改個人清單的按鈕大小 */
-    .listing-action-bar .app-btn {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        min-width: 0 !important;
-    }
-    /* [FIX] 篩選標籤的容器也要允許換行，避免整排擠出去 */
-    [class*="filter"] [class*="tags"],
-    [class*="filter"] [class*="chips"],
-    [class*="selected-filters"],
-    [class*="selectedFilters"],
-    [class*="activeFilters"],
-    [class*="active-filters"] {
-        flex-wrap: wrap !important;
-        overflow: visible !important;
-    }
-    #d2r-batch-relist:hover { background: #2f9e44 !important; }
-    #d2r-batch-remove:hover { background: #c73b3b !important; }
+    #d2r-batch-remove:hover{background:#c73b3b !important;}
     #d2r-panel{position:fixed;bottom:78px;left:16px;z-index:99999;background:#120a24;border:1px solid #6a2fa0;border-radius:8px;padding:12px 14px;min-width:210px;box-shadow:0 4px 16px rgba(0,0,0,.7);color:#d4b0f0;font-size:13px;font-family:sans-serif;display:none;user-select:none;}
     #d2r-panel.open{display:block;}
     #d2r-panel h3{margin:0 0 10px;font-size:13px;color:#d4a0ff;border-bottom:1px solid #2d1456;padding-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
@@ -1027,8 +1182,8 @@
         document.getElementById('d2r-modal-overlay')?.remove();
         const btns = buttons || [{ txt: closeTxt, primary: true, onClick: onClose }];
         const footerHTML = btns.map((b, i) =>
-                                    `<button class="d2r-modal-btn${b.primary?' d2r-modal-btn-primary':''}${b.left?' d2r-modal-btn-left':''}" data-bi="${i}">${b.txt}</button>`
-                                   ).join('');
+            `<button class="d2r-modal-btn${b.primary?' d2r-modal-btn-primary':''}${b.left?' d2r-modal-btn-left':''}" data-bi="${i}">${b.txt}</button>`
+        ).join('');
         const overlay = document.createElement('div');
         overlay.id = 'd2r-modal-overlay';
         overlay.innerHTML = `<div id="d2r-modal"><div id="d2r-modal-title">${title}</div><div id="d2r-modal-body">${html}</div><div id="d2r-modal-footer">${footerHTML}</div></div>`;
@@ -1042,8 +1197,8 @@
     function showChangelogModal(force = false) {
         if (!CHANGELOG) return;
         const versions = Array.isArray(CHANGELOG.versions)
-        ? CHANGELOG.versions
-        : [{ version: CHANGELOG.version, title: CHANGELOG.title, content: CHANGELOG.content }];
+            ? CHANGELOG.versions
+            : [{ version: CHANGELOG.version, title: CHANGELOG.title, content: CHANGELOG.content }];
         const latestVer = CHANGELOG.latest || versions[0]?.version || '';
         if (!force && gmGet('d2r_seen_ver', '') === latestVer) return;
         const markSeen = () => gmSet('d2r_seen_ver', latestVer);
@@ -1093,6 +1248,8 @@
       <h3>⚔️ D2R 中文翻譯 <small>v${VERSION}</small></h3>
       <div class="d2r-row"><label for="d2r-en">啟用翻譯</label><label class="d2r-toggle"><input type="checkbox" id="d2r-en" ${CONFIG.enabled?'checked':''}><span class="d2r-slider"></span></label></div>
       <div class="d2r-row"><label for="d2r-eb" title="在 listings/wishlist 頁顯示快捷編輯按鈕">快捷編輯按鈕</label><label class="d2r-toggle"><input type="checkbox" id="d2r-eb" ${CONFIG.editBtn?'checked':''}><span class="d2r-slider"></span></label></div>
+      <div class="d2r-row"><label for="d2r-cs" title="收到訊息時播放音效（視窗未主控時）">聊天音效通知</label><label class="d2r-toggle"><input type="checkbox" id="d2r-cs" ${CONFIG.chatSound?'checked':''}><span class="d2r-slider"></span></label></div>
+
       <div class="d2r-row"><label for="d2r-lang-sel">語言</label>
         <select id="d2r-lang-sel" class="d2r-select">
           <option value="auto" ${CONFIG.lang==='auto'?'selected':''}>自動（${browserHint}）</option>
@@ -1107,6 +1264,7 @@
         <a class="d2r-panel-btn" id="d2r-btn-gh" href="https://github.com/awdrrawd/D2R-storehouse/" target="_blank"><img src="https://www.google.com/s2/favicons?domain=github.com&sz=16" width="14" height="14" style="vertical-align:middle;border-radius:2px"> GitHub</a>
       </div>`;
         document.body.appendChild(panel);
+
         const togglePanel = (e, anchorEl) => {
             e.stopPropagation();
             const opening = !panel.classList.contains('open');
@@ -1116,6 +1274,9 @@
         document.addEventListener('click', e => {
             if (!panel.contains(e.target) && !e.target.closest('#d2r-navbar-btn')) panel.classList.remove('open');
         });
+
+        const langStatus = panel.querySelector('#d2r-lang-status');
+
         panel.querySelector('#d2r-en').addEventListener('change', e => {
             CONFIG.enabled = e.target.checked; saveConfig();
             CONFIG.enabled ? processTree(document.body) : location.reload();
@@ -1123,7 +1284,10 @@
         panel.querySelector('#d2r-eb').addEventListener('change', e => {
             CONFIG.editBtn = e.target.checked; saveConfig(); syncEditPageClass();
         });
-        const langStatus = panel.querySelector('#d2r-lang-status');
+        panel.querySelector('#d2r-cs').addEventListener('change', e => {
+            CONFIG.chatSound = e.target.checked; saveConfig(); maybeSetupChatObserver();
+        });
+
         panel.querySelector('#d2r-lang-sel').addEventListener('change', async e => {
             CONFIG.lang = e.target.value; saveConfig();
             if (detectLang() === 'zh-CN') {
@@ -1162,8 +1326,8 @@
     }
 
     // ── MutationObserver + 排程 ──────────────────────────────────────────────
-    let routeChangeTimer   = null;
-    let lastPath           = location.pathname + location.search;
+    let routeChangeTimer     = null;
+    let lastPath             = location.pathname + location.search;
     let listingDebounceTimer = null;
 
     function onRouteChange() {
@@ -1180,6 +1344,7 @@
             setTimeout(() => {
                 if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
                 startAutoEdit();
+                maybeSetupChatObserver();
             }, 500);
         }, 50);
     }
@@ -1190,54 +1355,35 @@
     });
     window.addEventListener('popstate', onRouteChange);
 
-    // ── 找到節點所屬的最近 listing 卡片根元素 ─────────────────────────────────
-    // listing 卡片的根是 .col-xs-12.listing-row 或 .sc-eqUAAy，用這個縮小翻譯範圍。
     function getListingRoot(node) {
         const el = node.nodeType === 1 ? node : node.parentElement;
         if (!el) return null;
-        // 如果節點本身就是 listing card 或其祖先是，回傳那個 card
-        const card = el.closest('.listing-row, [id^="100"]');
-        if (card) return card;
-        // 非卡片區域（navbar、filter bar 等）回傳 null，讓呼叫方用原始節點
-        return null;
+        return el.closest('.listing-row, [id^="100"]') || null;
     }
 
-    const pending    = new Set();   // 待處理根節點 Set（自動去重）
-    let   rafId      = null;
+    const pending = new Set();
+    let   rafId   = null;
 
     function scheduleProcess() {
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
             rafId = null;
             if (translationPaused) { pending.clear(); return; }
-
-            const batch = [...pending]; pending.clear();
+            const batch  = [...pending]; pending.clear();
             const doEdit = CONFIG.editBtn && isListingsOrWishlist();
-
-            // [PERF] 如果待處理節點太多，不要 fallback 整個 body，
-            // 而是先把它們 dedupe 到 listing card 層級再處理。
-            // 這樣 50 張卡更新 → 最多只跑 50 次 processTree(card)，不跑 body。
             if (batch.length > 80) {
-                // 收集受影響的 listing card
-                const roots = new Set();
-                let hasNonCard = false;
+                const roots = new Set(); let hasNonCard = false;
                 for (const node of batch) {
                     const root = getListingRoot(node);
-                    if (root) roots.add(root);
-                    else hasNonCard = true;
+                    if (root) roots.add(root); else hasNonCard = true;
                 }
                 if (CONFIG.enabled) {
-                    // 非卡片節點（如 navbar）才需要掃整個 body，卡片各掃各的
                     if (hasNonCard) processTree(document.body);
                     else roots.forEach(r => processTree(r));
                 }
                 if (doEdit) addEditButtons();
-                if (cardObserver && node.nodeType === 1) {
-                    node.querySelectorAll?.('.listing-row').forEach(card => cardObserver.observe(card));
-                }
                 return;
             }
-
             for (const node of batch) {
                 if (node.nodeType === 1) {
                     if (CONFIG.enabled) processTree(node);
@@ -1254,69 +1400,46 @@
         const doEditBtn   = CONFIG.editBtn && isListingsOrWishlist();
         if (!doTranslate && !doEditBtn) return;
         if (translationPaused) return;
-
         for (const m of muts) {
             if (doTranslate && m.type === 'characterData') {
                 if (writingSet.has(m.target)) continue;
                 if (isPropertyRangeNode(m.target)) continue;
                 nodeCache.delete(m.target);
-                // [PERF] characterData 變動：改成加入 listing card 根，不加裸 TextNode
-                // 這樣同一張卡的多次 characterData 會被 Set 自動合併成一次處理
-                const root = getListingRoot(m.target);
-                pending.add(root || m.target);
+                pending.add(getListingRoot(m.target) || m.target);
             }
             for (const node of m.addedNodes) {
                 const el = node.nodeType === 1 ? node : node.parentElement;
                 if (el === overlayInput) continue;
                 if (el && (isPropertyRangeInput(el) || el.closest?.('.min-max-filter-info'))) continue;
-                // [PERF] 加入 listing card 根，自動合併同卡多個子節點
-                const root = getListingRoot(node);
-                pending.add(root || node);
+                pending.add(getListingRoot(node) || node);
             }
         }
         if (pending.size) scheduleProcess();
     });
 
-    // [PERF] fallback：改用 requestIdleCallback + 只掃未翻譯的卡片，不輪詢整個 body
     let fallbackTimer = null;
-
     function scheduleFallback() {
         const idleFn = () => {
             if (!translationPaused && CONFIG.enabled) {
-                // 只找還沒翻譯完的卡片（沒有 data-d2r-affix-translated 子元素的）
-                const untranslated = document.querySelectorAll(
-                    '.listing-row:not([data-d2r-done]) .listing-num-properties > span:not([data-d2r-affix-translated])'
-                );
+                const untranslated = document.querySelectorAll('.listing-row:not([data-d2r-done]) .listing-num-properties > span:not([data-d2r-affix-translated])');
                 if (untranslated.length) {
-                    // 找到包含這些 span 的 listing card，各自 processTree
                     const cards = new Set();
-                    untranslated.forEach(span => {
-                        const card = span.closest('.listing-row');
-                        if (card) cards.add(card);
-                    });
+                    untranslated.forEach(span => { const card = span.closest('.listing-row'); if (card) cards.add(card); });
                     cards.forEach(card => processTree(card));
                 }
-                // 同時補翻非卡片靜態 UI（數量少，成本低）
-                const staticRoots = document.querySelectorAll(
-                    '#nav-container, .search-filters, .listing-header, [class*="breadcrumb"]'
-                );
-                staticRoots.forEach(el => processTree(el));
+                document.querySelectorAll('#nav-container, .search-filters, .listing-header, [class*="breadcrumb"]').forEach(el => processTree(el));
             }
             if (CONFIG.editBtn && isListingsOrWishlist()) {
                 addEditButtons();
-                addRelistAllButton();
-                // [FIX] React re-render 後補注入
                 setTimeout(() => addEditButtons(), 1000);
                 setTimeout(() => addEditButtons(), 3000);
             }
             fallbackTimer = setTimeout(scheduleFallback, 3000);
         };
-
-        if (typeof requestIdleCallback !== 'undefined') {
+        if (typeof requestIdleCallback !== 'undefined')
             fallbackTimer = setTimeout(() => requestIdleCallback(idleFn, { timeout: 2000 }), 1000);
-        } else {
+        else
             fallbackTimer = setTimeout(idleFn, 1500);
-        }
     }
 
     window.addEventListener('pagehide', () => {
@@ -1324,23 +1447,22 @@
         clearTimeout(zhSearchTimer); clearTimeout(autoEditTimer);
         clearTimeout(listingDebounceTimer); clearTimeout(resumeTimer);
         autoEditObserver?.disconnect(); observer.disconnect();
+        chatMsgObserver?.disconnect(); badgeObserver?.disconnect();
     });
-    // ── IntersectionObserver：只翻譯進入視口的卡片 ─────────────────────────────
-    let cardObserver = null;
 
+    let cardObserver = null;
     function setupCardObserver() {
         if (cardObserver) cardObserver.disconnect();
         cardObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting || !CONFIG.enabled) return;
                 processTree(entry.target);
-                cardObserver.unobserve(entry.target); // 翻完就不再觀察
+                cardObserver.unobserve(entry.target);
             });
-        }, { rootMargin: '300px' }); // 提前 300px 預翻，滾動時不閃
-
-        // 套用到目前所有卡片
+        }, { rootMargin: '300px' });
         document.querySelectorAll('.listing-row').forEach(card => cardObserver.observe(card));
     }
+
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {
         if (detectLang() === 'zh-CN') { const ok = await loadOpenCC(); await loadOpenCCReverse(); openccReady = ok; }
@@ -1349,7 +1471,7 @@
             const firstScan = () => {
                 processTree(document.body);
                 document.title = applyLang(translate(document.title));
-                setupCardObserver(); // ← 第一次掃完後，啟動 IntersectionObserver
+                setupCardObserver();
                 setupNotificationObserver();
             };
             if (typeof requestIdleCallback !== 'undefined')
@@ -1359,6 +1481,7 @@
         }
         observer.observe(document.body, { childList: true, subtree: true, characterData: true });
         scheduleFallback();
+        maybeSetupChatObserver();
         setTimeout(() => showChangelogModal(), 1200);
     }
     init();
