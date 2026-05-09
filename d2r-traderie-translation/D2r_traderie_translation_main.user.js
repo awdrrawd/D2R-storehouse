@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.0
+// @version            2.5.1
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -47,7 +47,7 @@
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    const VERSION = '2.5.0';
+    const VERSION = '2.5.1';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -746,8 +746,13 @@
         });
     }
 
+    // ── 聊天通知（簡化版）────────────────────────────────────────────────────
+    // 策略：只在 TR 不是主控視窗時播放音效，不發系統通知，不做假 badge
+    // 偵測來源：
+    //   1. setupChatMsgObserver：同一聊天頁面，對方發新訊息
+    //   2. badge observer：跨聊天室的新通知（badge 0→有值）
+    // 條件：document.hidden || !document.hasFocus()
 
-    // ── 聊天通知 ────────────────────────────────────────────────────
     let chatMsgObserver = null;
     let badgeObserver   = null;
     let notifAudio      = null;
@@ -927,7 +932,19 @@
     }
 
 
-    // ── 通知面板注入──────────────────────────────────────────────
+    // ── 通知面板注入 & 全部清除 ──────────────────────────────────────────────
+    // 核心策略：完全不觸發 React re-render
+    //
+    // 「刪一隱一」的根本原因是 TR 的 React re-render（含 react-transition-group）
+    // 觸發 re-render 的方式：點 TR 的刪除按鈕 → React setState → re-render → bug
+    //
+    // 解法：
+    //   1. 我們自己把 li 視覺隱藏（li.style.display='none'）
+    //      → React 不知道 DOM 變了，不觸發 re-render，不會「隱藏一筆」
+    //   2. 背景呼叫 TR 的 delete API（不觸發 React）
+    //      → 伺服器真正刪除，關掉重開 dropdown 後資料正確
+    //   3. auth token：hook PAGE.fetch 攔截 TR 自己發的認證請求自動捕獲
+
     let capturedAuthHeader = null;
 
     function hookFetchForAuth() {
@@ -1049,6 +1066,218 @@
         });
         notifObserver.observe(document.body, { childList: true, subtree: true });
     }
+
+
+    // ── 信封快速發信功能 ──────────────────────────────────────────────────────
+    // 在 listing 頁面賣家欄位的 Report tooltip 後注入信封 SVG 按鈕
+    // 點擊後開啟仿 TR 原生的 chat request modal（sc-fhzFiK ePiMpt modal-content）
+    // 使用者 ID 從 #listing-seller-profile-link 的 href /profile/{id}/ 取得
+
+    // 登入用戶 ID 快取（從 TR 導航欄的 profile 連結取得）
+    let _myUserId = null;
+
+    function getMyUserId(excludeId) {
+        if (_myUserId) return _myUserId;
+        // 從 TR 導航欄找「我的 profile」連結（排除賣家連結）
+        for (const link of document.querySelectorAll('a[href*="/profile/"]')) {
+            if (link.closest('[id="listing-seller-profile-link"], .notification-table, .sc-bpUBKd')) continue;
+            const m = link.getAttribute('href')?.match(/\/profile\/(\d+)/);
+            if (m && m[1] !== String(excludeId)) {
+                _myUserId = m[1];
+                return _myUserId;
+            }
+        }
+        return null;
+    }
+
+    function openChatRequestModal(userId, username) {
+        document.getElementById('d2r-chat-overlay')?.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'd2r-chat-overlay';
+        overlay.className = 'modal-container slowFade';
+        overlay.style.cssText = [
+            'position:fixed','top:0','left:0','width:100%','height:100vh',
+            'display:flex','justify-content:center','align-items:center',
+            'background:rgba(0,0,0,.5)','z-index:9999999'
+        ].join(';');
+
+        // 完全仿 TR 原生 modal 結構
+        overlay.innerHTML = `
+        <div class="sc-fhzFiK ePiMpt modal-content" style="width:600px;max-width:90vw;background:#1e1e24;color:#e8e8e8;border:1px solid rgba(255,255,255,0.1);">
+          <div class="sc-jxOSlx kpRtYY" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:nowrap;">
+            <div style="font-size:20px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Request to Start A Chat with ${username}</div>
+            <div id="d2r-close-chat" class="sc-lcIPJg jNEYB" style="cursor:pointer;flex-shrink:0;margin-left:12px;">
+              <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 352 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                <path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/>
+              </svg>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div>
+              <div style="color:#aaa;font-size:13px;">If you have previously chatted with the user, the chat will automatically be opened. If it's your first time chatting this user, you will have to wait for the other user to approve your chat request.</div>
+              <div style="margin-top:12px;font-size:13px;">Message (optional)</div>
+              <textarea id="d2r-chat-msg" rows="4" maxlength="500" class="role-input"
+                style="width:100%;box-sizing:border-box;margin-top:6px;background:#131416;color:#e8e8e8;border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:8px;resize:vertical;"></textarea>
+            </div>
+          </div>
+          <div class="modal-btn-bar">
+            <div style="display:flex;">
+              <button id="d2r-chat-send" class="app-btn confirm-btn">Send Request</button>
+            </div>
+            <div id="d2r-chat-cancel" class="sc-dhKdcB gFiwtp" style="cursor:pointer;">Cancel</div>
+          </div>
+        </div>`;
+
+        document.body.appendChild(overlay);
+
+        const close = () => overlay.remove();
+        overlay.querySelector('#d2r-close-chat').addEventListener('click', close);
+        overlay.querySelector('#d2r-chat-cancel').addEventListener('click', close);
+        overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+        overlay.querySelector('#d2r-chat-send').addEventListener('click', async () => {
+            const message = overlay.querySelector('#d2r-chat-msg').value.trim();
+            const sendBtn = overlay.querySelector('#d2r-chat-send');
+            sendBtn.disabled = true; sendBtn.textContent = '傳送中...';
+
+            const headers = { 'Content-Type': 'application/json' };
+            if (capturedAuthHeader) headers['Authorization'] = capturedAuthHeader;
+
+            // TR 正確 body 格式（從網路攔截確認）：
+            //   id = targetUserId + myUserId（字串串接）
+            //   toUsername = 對方的帳號名稱
+            //   message = 可選訊息
+            const myId = getMyUserId(userId);
+            const body = { toUsername: username };
+            if (myId) body.id = `${userId}${myId}`;
+            if (message) body.message = message;
+
+            const res = await PAGE.fetch('/api/diablo2resurrected/conversations/request', {
+                method: 'PUT',
+                credentials: 'include',
+                headers,
+                body: JSON.stringify(body)
+            }).catch(() => null);
+            const data = await res?.json().catch(() => ({}));
+
+            if (res?.ok) {
+                // 成功：顯示成功訊息，不跳轉（跳轉後 TR 會出現「對話已關閉」提示）
+                const chatTarget = _myUserId || getMyUserId(userId);
+                const chatUrl = chatTarget ? `/diablo2resurrected/chat/${chatTarget}` : null;
+                overlay.querySelector('.modal-body').innerHTML = `
+                    <div style="text-align:center;padding:16px 0;">
+                        <div style="font-size:30px;margin-bottom:12px;">✅</div>
+                        <div style="font-size:15px;margin-bottom:8px;">傳送成功！</div>
+                        <div style="font-size:13px;color:#aaa;line-height:1.5;">
+                            若是第一次傳訊，需等待對方接受後才能繼續聊天。
+                        </div>
+                        ${chatUrl ? `<div style="margin-top:16px;">
+                            <a href="${chatUrl}" target="_blank"
+                               style="color:#9b6dca;font-size:13px;text-decoration:underline;cursor:pointer;">
+                               在新分頁查看聊天記錄 →
+                            </a>
+                        </div>` : ''}
+                    </div>`;
+                // 把按鈕列換成只有「關閉」
+                const bar = overlay.querySelector('.modal-btn-bar');
+                bar.innerHTML = '';
+                const closeBtn2 = document.createElement('div');
+                closeBtn2.textContent = '關閉';
+                closeBtn2.className = 'sc-dhKdcB gFiwtp';
+                closeBtn2.style.cssText = 'cursor:pointer;margin-left:auto;';
+                closeBtn2.addEventListener('click', close);
+                bar.appendChild(closeBtn2);
+            } else {
+                // API 失敗：在 modal 內顯示錯誤，不做頁面跳轉
+                sendBtn.disabled = false; sendBtn.textContent = 'Send Request';
+                let errBox = overlay.querySelector('#d2r-chat-err');
+                if (!errBox) {
+                    errBox = document.createElement('div');
+                    errBox.id = 'd2r-chat-err';
+                    errBox.style.cssText = 'color:#ff6b6b;font-size:13px;margin-top:8px;';
+                    sendBtn.closest('.modal-btn-bar').before(errBox);
+                }
+                const status = res?.status || '？';
+                errBox.textContent = `傳送失敗（${status}）。請確認已登入，或直接前往 `;
+                const link = document.createElement('a');
+                link.href = `/diablo2resurrected/profile/${userId}/listings`;
+                link.textContent = `${username} 的頁面`;
+                link.style.color = '#9b6dca';
+                errBox.appendChild(link);
+                errBox.appendChild(document.createTextNode(' 點擊 Message。'));
+            }
+        });
+
+        // 自動 focus textarea
+        setTimeout(() => overlay.querySelector('#d2r-chat-msg')?.focus(), 50);
+    }
+
+    function addListingChatButtons() {
+        // 只在 listing detail 頁面注入（/listing/{id}）
+        if (!/\/diablo2resurrected\/listing\/\d+/.test(location.pathname)) return;
+
+        const sellerLinks = document.querySelectorAll(
+            '[id="listing-seller-profile-link"]:not([data-d2r-chat-injected])'
+        );
+        sellerLinks.forEach(sellerLink => {
+            sellerLink.dataset.d2rChatInjected = '1';
+
+            // 取得賣家 ID 和名稱
+            const href     = sellerLink.getAttribute('href') || '';
+            const userId   = href.match(/\/profile\/(\d+)/)?.[1];
+            const username = sellerLink.getAttribute('aria-label')
+                          || sellerLink.querySelector('div[style*="overflow"]')?.textContent?.trim()
+                          || '';
+            if (!userId) return;
+
+            // 找到 Report tooltip 的父容器
+            const container = sellerLink.closest('div[style*="display: flex"], div[style*="display:flex"]')
+                           || sellerLink.parentElement;
+            const reportWrap = container?.querySelector('svg.listing-report-icon')?.closest('div > div.tooltip')?.parentElement;
+            if (!reportWrap) return;
+
+            // 建立信封按鈕（仿 TR 的 tooltip 結構）
+            const envWrap = document.createElement('div');
+            envWrap.style.cssText = 'display:inline-flex;align-items:center;';
+            envWrap.innerHTML = `
+            <div class="tooltip" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center;margin-left:2px;width:20px;height:35px;">
+                <svg stroke="currentColor" fill="none" stroke-width="10"
+                     viewBox="0 0 200 140" height="20" width="20"
+                     preserveAspectRatio="xMidYMid meet"
+                     xmlns="http://www.w3.org/2000/svg"
+                     class="listing-report-icon"
+                     style="transition:color .15s;display:block;">
+                    <rect x="10" y="20" width="180" height="100" rx="8" ry="8"
+                          stroke="currentColor" stroke-width="12"/>
+                    <path d="M10 30 L100 85 L190 30"
+                          stroke="currentColor" stroke-width="12"/>
+                    <path d="M10 120 L75 70"
+                          stroke="currentColor" stroke-width="12"/>
+                    <path d="M190 120 L125 70"
+                          stroke="currentColor" stroke-width="12"/>
+                </svg>
+                <div class="tooltiptext" style="padding:5px 10px;width:auto;white-space:nowrap;">
+                    傳送訊息給 ${username}
+                </div>
+            </div>`;
+
+            const tooltipDiv = envWrap.querySelector('.tooltip');
+            tooltipDiv.addEventListener('mouseenter', () => {
+                tooltipDiv.querySelector('svg').style.color = 'var(--color-theme-listing-props, #7e9bd1)';
+            });
+            tooltipDiv.addEventListener('mouseleave', () => {
+                tooltipDiv.querySelector('svg').style.color = '';
+            });
+            tooltipDiv.addEventListener('click', e => {
+                e.stopPropagation(); e.preventDefault();
+                openChatRequestModal(userId, username);
+            });
+
+            reportWrap.after(envWrap);
+        });
+    }
+
 
     // ── 自動編輯 ────────────────────────────────────────────────────────────
     const AE_DEBUG = false;
@@ -1345,6 +1574,7 @@
                 if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
                 startAutoEdit();
                 maybeSetupChatObserver();
+                addListingChatButtons();
             }, 500);
         }, 50);
     }
@@ -1434,6 +1664,7 @@
                 setTimeout(() => addEditButtons(), 1000);
                 setTimeout(() => addEditButtons(), 3000);
             }
+            addListingChatButtons();
             fallbackTimer = setTimeout(scheduleFallback, 3000);
         };
         if (typeof requestIdleCallback !== 'undefined')
@@ -1473,6 +1704,7 @@
                 document.title = applyLang(translate(document.title));
                 setupCardObserver();
                 setupNotificationObserver();
+                addListingChatButtons();
             };
             if (typeof requestIdleCallback !== 'undefined')
                 requestIdleCallback(firstScan, { timeout: 3000 });
