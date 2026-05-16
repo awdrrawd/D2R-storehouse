@@ -714,5 +714,5 @@ window.D2R_ITEMS = {
   "Amulet":                          "護身符",
   "Jewel":                           "珠寶",
   "Ring":                            "戒指",
-  "Gold":                            "金幣",
+  "Gold":                            "金幣"
 };
