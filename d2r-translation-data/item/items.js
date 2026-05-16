@@ -711,9 +711,9 @@ window.D2R_ITEMS = {
   "Western Worldstone Shard":        "西方的世界之石碎片",
   "Rejuvenation Potion":             "普通活力",
   "Full Rejuvenation Potion":        "全效活力",
-  "Amulet Variant":                  "護身符變體",
-  "Jewel Variant":                   "珠寶變體",
-  "Ring Variant":                    "戒指變體",
+  "Amulet":                          "護身符",
+  "Amulet":                          "護身符",
+  "Jewel":                           "珠寶",
+  "Ring":                            "戒指",
   "Gold":                            "金幣",
-
 };
