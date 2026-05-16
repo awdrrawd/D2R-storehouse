@@ -712,7 +712,6 @@ window.D2R_ITEMS = {
   "Rejuvenation Potion":             "普通活力",
   "Full Rejuvenation Potion":        "全效活力",
   "Amulet":                          "護身符",
-  "Amulet":                          "護身符",
   "Jewel":                           "珠寶",
   "Ring":                            "戒指",
   "Gold":                            "金幣",
