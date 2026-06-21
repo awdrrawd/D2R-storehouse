@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.1
+// @version            2.5.2
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -24,6 +24,9 @@
 
 (async function () {
     'use strict';
+    if (typeof unsafeWindow.D2R_Traderie_CNTranslator !== 'undefined') return;
+    unsafeWindow.D2R_Traderie_CNTranslator = true;
+    const VERSION = '2.5.2';
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
@@ -46,8 +49,6 @@
         }
     }
     // ────────────────────────────────────────────────────────────────────────
-
-    const VERSION = '2.5.1';
 
     const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
     const CDN_BASES = [
@@ -266,13 +267,29 @@
     let nodeCache  = new WeakMap();
     const writingSet = new WeakSet();
 
+    // 翻譯結果記憶化：React 重繪會把翻好的中文打回英文，重譯時直接命中快取（一次查表），
+    // 因此不必在輸入時暫停翻譯。鍵為原始英文字串、語言中性（applyLang 在外層另外處理簡繁）。
+    const TRANSLATE_CACHE = new Map();
+    const AFFIX_CACHE     = new Map();
+    const CACHE_MAX = 6000;
+    function cacheSet(cache, key, val) {
+        if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value); // FIFO 淘汰最舊
+        cache.set(key, val);
+        return val;
+    }
+
     function translateAffixes(text) {
+        const hit = AFFIX_CACHE.get(text);
+        if (hit !== undefined) return hit;
         let r = text;
-        for (const { re, tmpl } of AFFIX_PAT) {
-            re.lastIndex = 0;
-            if (re.test(r)) { re.lastIndex = 0; r = r.replace(re, tmpl); }
+        // 數值型詞綴翻譯後一定含數字；無數字的節點直接略過整輪正則掃描
+        if (/\d/.test(r)) {
+            for (const { re, tmpl } of AFFIX_PAT) {
+                re.lastIndex = 0;
+                if (re.test(r)) { re.lastIndex = 0; r = r.replace(re, tmpl); }
+            }
         }
-        return translateAffixesX(r);
+        return cacheSet(AFFIX_CACHE, text, translateAffixesX(r));
     }
 
     const MERGED_ENTRIES = [
@@ -286,24 +303,29 @@
         const [en, zh] = entry;
         const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const re  = new RegExp(`(?<![\\w'\\-])${esc}(?![\\w'\\-])`, 'gi');
-        return { entry, isItem, re };
+        return { entry, isItem, re, enLower: en.toLowerCase() };
     });
 
     function translate(text) {
         if (!text || !text.trim()) return text;
+        const hit = TRANSLATE_CACHE.get(text);
+        if (hit !== undefined) return hit;
         const slots = [];
         const SLOT  = /\x01(\d+)\x01/g;
         let r = translateAffixes(text);
-        for (const { entry, isItem, re } of MERGED_ENTRIES) {
+        let rLower = r.toLowerCase();           // 整個節點只轉一次小寫
+        for (const { entry, isItem, re, enLower } of MERGED_ENTRIES) {
+            if (rLower.indexOf(enLower) === -1) continue;
             const [en, zh] = entry;
-            if (r.toLowerCase().indexOf(en.toLowerCase()) === -1) continue;
             re.lastIndex = 0;
+            const before = r;
             r = r.replace(re, () => {
                 slots.push(isItem ? `${zh}(${en})` : zh);
                 return `\x01${slots.length - 1}\x01`;
             });
+            if (r !== before) rLower = r.toLowerCase();   // 只有真的替換才重算
         }
-        return r.replace(SLOT, (_, i) => slots[+i]);
+        return cacheSet(TRANSLATE_CACHE, text, r.replace(SLOT, (_, i) => slots[+i]));
     }
 
     function processNode(node) {
@@ -526,14 +548,9 @@
     window.addEventListener('scroll', syncOverlayPos, true);
     window.addEventListener('resize', syncOverlayPos);
 
-    document.addEventListener('focusin', e => {
-        const el = e.target;
-        if (el === overlayInput) return;
-        if (el.tagName === 'INPUT' && isPropertyRangeInput(el)) {
-            showOverlay(el);
-            requestAnimationFrame(() => { if (document.activeElement === el) el.blur(); });
-        }
-    }, true);
+    // 屬性 Min/Max 輸入框：不再攔截焦點、也不在輸入時暫停翻譯。
+    // 翻譯結果已記憶化（TRANSLATE_CACHE / AFFIX_CACHE），React 重繪後的重譯近乎零成本，
+    // 卡片會立即還原成中文而不會停在英文；Tab/Enter 跳格交回瀏覽器原生行為。
 
     // ── 中文搜尋 ────────────────────────────────────────────────────────────
     let activeIndex    = -1;
@@ -1573,6 +1590,7 @@
             setTimeout(() => {
                 if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
                 startAutoEdit();
+                injectBatchButtons();
                 maybeSetupChatObserver();
                 addListingChatButtons();
             }, 500);
@@ -1602,22 +1620,27 @@
             const batch  = [...pending]; pending.clear();
             const doEdit = CONFIG.editBtn && isListingsOrWishlist();
             if (batch.length > 80) {
-                const roots = new Set(); let hasNonCard = false;
+                const roots = new Set(); const others = [];
                 for (const node of batch) {
                     const root = getListingRoot(node);
-                    if (root) roots.add(root); else hasNonCard = true;
+                    if (root) roots.add(root); else others.push(node);
                 }
                 if (CONFIG.enabled) {
-                    if (hasNonCard) processTree(document.body);
-                    else roots.forEach(r => processTree(r));
+                    // 只處理實際變動到的節點，絕不退回全頁重掃（避免大列表主執行緒餓死）
+                    roots.forEach(r => processTree(r));
+                    for (const n of others) {
+                        if (n.nodeType === 1) processTree(n);
+                        else if (n.nodeType === 3) processNode(n);
+                    }
                 }
                 if (doEdit) addEditButtons();
+                injectBatchButtons();
                 return;
             }
             for (const node of batch) {
                 if (node.nodeType === 1) {
                     if (CONFIG.enabled) processTree(node);
-                    if (doEdit) addEditButtons();
+                    if (doEdit) addEditButtons(); injectBatchButtons();
                 } else if (node.nodeType === 3 && CONFIG.enabled) {
                     processNode(node);
                 }
@@ -1703,6 +1726,7 @@
                 processTree(document.body);
                 document.title = applyLang(translate(document.title));
                 setupCardObserver();
+                injectBatchButtons();
                 setupNotificationObserver();
                 addListingChatButtons();
             };
