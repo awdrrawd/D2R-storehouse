@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.2
+// @version            2.5.2-1
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -24,8 +24,6 @@
 
 (async function () {
     'use strict';
-    if (typeof unsafeWindow.D2R_Traderie_CNTranslator !== 'undefined') return;
-    unsafeWindow.D2R_Traderie_CNTranslator = true;
     const VERSION = '2.5.2';
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
