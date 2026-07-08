@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.2-1
+// @version            2.5.3
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -24,7 +24,10 @@
 
 (async function () {
     'use strict';
-    const VERSION = '2.5.2';
+    if (typeof unsafeWindow.D2R_Traderie_CNTranslator !== 'undefined') return;
+    unsafeWindow.D2R_Traderie_CNTranslator = true;
+    const VERSION = '2.5.3';
+    const Permissions = 0;
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
     const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
@@ -214,12 +217,17 @@
         return r;
     }
 
-    function isCreateListingCtx(node) {
-        const el = node.nodeType === 3 ? node.parentElement : node;
-        if (!el) return false;
-        return !!el.closest('.create-listing-section, .create-listing-properties, [class*="create-listing"], [id*="create-listing"]');
-    }
-
+    // [FIX v2.5.3] 舊版用 el.closest('.create-listing-section, ...') 判斷「是否在建立/編輯清單情境」，
+    // 藉此決定要不要嘗試 translateStripped()（處理「屬性描述沒帶數值」的下拉選單文字）。
+    // 問題：Traderie 的屬性下拉選單(react-select)一律帶 menuPortalTarget: document.body，
+    // 選單本體用 ReactDOM.createPortal 直接掛在 <body> 下，跟 .create-listing-section 是平行關係，
+    // closest() 永遠找不到祖先。更糟的是「編輯清單 → Edit Item Properties」彈窗本身也是整個
+    // 用 createPortal 掛到 document.body（見 Wt 元件），所以就連 select 的輸入框本身也不在
+    // .create-listing-section 底下，光靠 DOM 結構完全無法判斷情境。
+    // 新做法：不再依賴 DOM 祖先關係，改成內容判斷 —— translateStripped() 的比對是「整段文字
+    // 完全比對」（規則已用 ^...$ 錨定），不會誤傷其他句子，因此直接讓它變成全站通用的 fallback，
+    // 對任何「翻譯完仍是英文、且不含數字」的節點都嘗試比對一次即可，不必知道它是否身處
+    // create-listing 容器或被 Portal 傳送到哪裡去。
     const TEXT_STRIP_RE = /^([\s+\-\d.,]*%?\s*)([\s\S]*)$/;
     function translateStripped(text) {
         const m = text.match(TEXT_STRIP_RE);
@@ -337,16 +345,18 @@
         if (!cur || !cur.trim()) return;
         if (hasChinese(cur)) return;
 
-        let result;
-        if (isCreateListingCtx(node)) {
-            const affixResult = applyLang(translateAffixes(cur));
-            if (affixResult !== cur) { result = affixResult; }
-            else {
-                const strippedResult = applyLang(translateStripped(cur));
-                result = strippedResult !== cur ? strippedResult : applyLang(translate(cur));
-            }
-        } else {
-            result = applyLang(translate(cur));
+        // translate() 內部已經會先跑 translateAffixes()（帶數值的詞綴），
+        // 再疊加道具/介面字典比對，所以這裡不需要再分兩條路走。
+        let result = applyLang(translate(cur));
+        if (result === cur && !/\d/.test(cur)) {
+            // 一般字典沒翻到、且整段文字不含數字 → 可能是屬性下拉選單裡「尚未輸入數值」
+            // 的詞綴描述（例如新增/編輯清單屬性選單、Edit Item Properties 彈窗選項列表等）。
+            // 這類選單在 Traderie 前端一律透過 react-select 的 menuPortalTarget 或 modal 的
+            // ReactDOM.createPortal 掛到 document.body 之外，DOM 祖先鏈跟原本頁面容器脫勾，
+            // 所以不用 closest() 判斷情境，而是直接嘗試「去除開頭數值/百分比後完整比對」，
+            // 對其餘一般文字影響極小（AFFIX_STRIPPED_PAT 的規則都用 ^...$ 錨定整段字串）。
+            const strippedResult = applyLang(translateStripped(cur));
+            if (strippedResult !== cur) result = strippedResult;
         }
 
         const cached = nodeCache.get(node);
@@ -760,6 +770,110 @@
             card.appendChild(btn);
         });
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+    function getCurrentTab() {
+        const path = location.pathname;
+        if (/\/wishlist/.test(path)) return 'wishlist';
+        if (/\/listings/.test(path)) return 'listings';
+        return null;
+    }
+
+    function getTabCards() {
+        if (!getCurrentTab()) return [];
+        return Array.from(document.querySelectorAll('.listing-row[id]'))
+            .filter(el => el.offsetParent !== null);
+    }
+
+    function injectBatchButtons() {
+        if (Permissions !== 1) return;
+        if (!isListingsOrWishlist()) return;
+        const actionsBar = document.querySelector('.listings-actions');
+        if (!actionsBar) return;
+        if (actionsBar.querySelector('#d2r-batch-relist, #d2r-batch-remove')) return;
+        actionsBar.querySelectorAll('.listing-action-relist, .listing-action-remove').forEach(btn => {
+            btn.style.display = 'none'; btn.dataset.d2rHidden = 'true';
+        });
+        const relistBtn = document.createElement('button');
+        relistBtn.id = 'd2r-batch-relist'; relistBtn.className = 'app-btn'; relistBtn.type = 'button';
+        relistBtn.title = '全部重新上架';
+        relistBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:4px;font-size:16px;background:#2f9e44;border-color:#2f9e44;color:#ededed;';
+        relistBtn.textContent = '🔄上架';
+        relistBtn.addEventListener('click', () => batchAction('relist', relistBtn));
+        const removeBtn = document.createElement('button');
+        removeBtn.id = 'd2r-batch-remove'; removeBtn.className = 'app-btn'; removeBtn.type = 'button';
+        removeBtn.title = '全部移除';
+        removeBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:4px;font-size:16px;background:#c73b3b;border-color:#c73b3b;color:#ededed;';
+        removeBtn.textContent = '🗑️刪除';
+        removeBtn.addEventListener('click', () => batchAction('remove', removeBtn));
+        const applyAll = actionsBar.querySelector('.listing-apply-all-properties');
+        if (applyAll) { actionsBar.insertBefore(relistBtn, applyAll); actionsBar.insertBefore(removeBtn, applyAll); }
+        else { actionsBar.appendChild(relistBtn); actionsBar.appendChild(removeBtn); }
+    }
+
+    async function loadAllItems(triggerBtn) {
+        let rounds = 0;
+        while (rounds < 30) {
+            const btn = document.querySelector('.see-all-btn-bar button[aria-label="Load More"], .see-all-btn-bar button');
+            if (!btn || btn.disabled) break;
+            if (triggerBtn) triggerBtn.textContent = `⏳ 展開 ${rounds + 1}`;
+            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            rounds++;
+            await new Promise(r => setTimeout(r, 1500));
+        }
+    }
+
+    async function batchAction(type, triggerBtn) {
+        const btnSel = type === 'relist' ? '.listing-action-relist' : '.remove-listing';
+        const loadMoreExists = !!document.querySelector('.see-all-btn-bar button[aria-label="Load More"], .see-all-btn-bar button');
+        if (loadMoreExists) {
+            const choice = await new Promise(resolve => {
+                showModal({
+                    title: '📦 偵測到「載入更多」',
+                    html: `目前清單尚未完全展開。<br><br>建議先<strong style="color:#d4a0ff">展開全部</strong>再執行批次操作，<br>否則只會操作目前已顯示的物品。`,
+                    buttons: [
+                        { txt: '只操作已顯示', onClick: () => resolve('partial') },
+                        { txt: '展開全部再操作', primary: true, onClick: () => resolve('load') }
+                    ]
+                });
+            });
+            if (choice === 'load') {
+                const origText = triggerBtn.textContent;
+                triggerBtn.style.opacity = '0.5'; triggerBtn.style.pointerEvents = 'none';
+                await loadAllItems(triggerBtn);
+                triggerBtn.textContent = origText; triggerBtn.style.opacity = '1'; triggerBtn.style.pointerEvents = 'auto';
+            }
+        }
+        const targets = getTabCards().map(card => card.querySelector(btnSel)).filter(Boolean);
+        if (!targets.length) {
+            showModal({ title: type === 'relist' ? '🔄 重新上架' : '🗑️ 全部移除', html: '找不到可操作的物品。', buttons: [{ txt: '關閉', primary: true }] });
+            return;
+        }
+        const tab = getCurrentTab() === 'wishlist' ? '願望清單' : '販售清單';
+        const actionZH = type === 'relist' ? '重新上架' : '移除';
+        const emoji = type === 'relist' ? '🔄' : '🗑️';
+        const confirmed = await new Promise(resolve => {
+            showModal({
+                title: `${emoji} 全部${actionZH}`,
+                html: `確定要對 <strong style="color:#d4a0ff">${tab}</strong> 中的 <strong style="color:#d4a0ff">${targets.length}</strong> 筆物品全部${actionZH}嗎？${type === 'remove' ? '<br><br><span style="color:#ff6b6b;font-size:12px">⚠️ 此操作無法復原！</span>' : '<br><br><span style="font-size:12px;color:#7a5a9a">每筆間隔 0.8 秒，避免請求過快。</span>'}`,
+                buttons: [{ txt: '取消', onClick: () => resolve(false) }, { txt: `確定${actionZH}`, primary: true, onClick: () => resolve(true) }]
+            });
+        });
+        if (!confirmed) return;
+        const origText = triggerBtn.textContent;
+        triggerBtn.style.opacity = '0.5'; triggerBtn.style.pointerEvents = 'none';
+        for (let i = 0; i < targets.length; i++) {
+            const btn = targets[i];
+            if (!document.contains(btn)) continue;
+            btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+            triggerBtn.title = `${emoji} ${i + 1} / ${targets.length}`;
+            await new Promise(r => setTimeout(r, 800));
+        }
+        triggerBtn.textContent = '✅'; triggerBtn.title = `完成 ${targets.length} 筆`;
+        triggerBtn.style.opacity = '1'; triggerBtn.style.pointerEvents = 'auto';
+        setTimeout(() => { triggerBtn.textContent = origText; triggerBtn.title = type === 'relist' ? '全部重新上架' : '全部移除'; }, 3000);
+    }
+    // ════════════════════════════════════════════════════════════════════════
 
     // ── 聊天通知（簡化版）────────────────────────────────────────────────────
     // 策略：只在 TR 不是主控視窗時播放音效，不發系統通知，不做假 badge
