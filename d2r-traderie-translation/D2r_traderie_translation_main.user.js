@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.4
+// @version            2.5.7
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -17,20 +17,60 @@
 // @grant              GM_getValue
 // @grant              GM_setValue
 // @grant              unsafeWindow
+// @grant              GM.xmlHttpRequest
+// @grant              GM_xmlhttpRequest
+// @connect            raw.githubusercontent.com
+// @connect            cdn.jsdelivr.net
+// @connect            github.com
 // @run-at             document-idle
 // @downloadURL        https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search1.user.js
 // @updateURL          https://update.greasyfork.org/scripts/570784/Traderie%20D2R%20Chinese%20Translator%20%2B%20Chinese%20search1.meta.js
 // ==/UserScript==
 
+// 手機版沒有 console。除錯畫面預設隱藏；開啟方式：面板內「除錯訊息」開關，或網址加 ?d2rdebug=1
+function __d2rDebugOn() {
+    try {
+        return /[?&]d2rdebug=1/.test(location.search) || localStorage.getItem('d2r_debug') === '1';
+    } catch (_) { return false; }
+}
+function __d2rDiag(t) {
+    try {
+        if (!__d2rDebugOn()) return;
+        let box = document.getElementById('d2r-diag');
+        if (!box) {
+            box = document.createElement('div'); box.id = 'd2r-diag';
+            box.style.cssText = 'position:fixed;left:0;bottom:0;z-index:2147483647;max-width:100%;background:rgba(0,0,0,.85);color:#9f9;font:11px/1.35 monospace;padding:4px 6px;white-space:pre-wrap;word-break:break-all';
+            box.onclick = () => box.remove();
+            (document.body || document.documentElement).appendChild(box);
+        }
+        box.textContent += t + '\n';
+    } catch (_) {}
+}
+
+function __d2rShowError(e) {
+    try {
+        const msg = '[D2R 翻譯] ' + (e && (e.stack || e.message) || e);
+        console.error(msg);
+        if (!__d2rDebugOn()) return;
+        const d = document.createElement('div');
+        d.textContent = msg.slice(0, 400);
+        d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#b00020;color:#fff;font:12px/1.4 monospace;padding:6px 10px;white-space:pre-wrap;word-break:break-all';
+        d.onclick = () => d.remove();
+        (document.body || document.documentElement).appendChild(d);
+    } catch (_) {}
+}
+
 (async function () {
     'use strict';
-    if (typeof unsafeWindow.D2R_Traderie_CNTranslator !== 'undefined') return;
-    unsafeWindow.D2R_Traderie_CNTranslator = true;
-    const VERSION = '2.5.3';
+    // iOS Userscripts 沒有 unsafeWindow，直接存取會 ReferenceError 導致整支腳本靜默中止
+    const PAGE = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
+    __d2rDiag('[main] 啟動 v2.5.6 unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
+    if (PAGE.D2R_Traderie_CNTranslator) { __d2rDiag('[main] 已執行過，略過（重複載入）'); return; }
+    PAGE.D2R_Traderie_CNTranslator = true;
+    const VERSION = '2.5.7';
     const Permissions = 0;
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
-    const PAGE = (typeof unsafeWindow !== 'undefined') ? unsafeWindow : window;
 
     function gmGet(key, def) {
         try { return GM_getValue(key, def); } catch (_) {
@@ -57,10 +97,33 @@
         'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/',
     ];
 
+
+    // fetch 被頁面 CSP / CORS 擋住時，改用 GM.xmlHttpRequest（Userscripts / Tampermonkey 皆支援，不受頁面 CSP 限制）
+    function gmFetchText(url) {
+        return new Promise((resolve, reject) => {
+            const x = (typeof GM !== 'undefined' && GM.xmlHttpRequest) ? GM.xmlHttpRequest.bind(GM)
+                    : (typeof GM_xmlhttpRequest !== 'undefined' ? GM_xmlhttpRequest : null);
+            if (!x) return reject(new Error('no GM xhr'));
+            try {
+                x({ method: 'GET', url, timeout: 15000,
+                    onload: r => (r.status >= 200 && r.status < 300) ? resolve(r.responseText) : reject(new Error('HTTP ' + r.status)),
+                    onerror: () => reject(new Error('xhr error')),
+                    ontimeout: () => reject(new Error('xhr timeout')) });
+            } catch (e) { reject(e); }
+        });
+    }
+    async function fetchText(url) {
+        try {
+            const res = await fetch(url, { cache: 'no-cache' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return await res.text();
+        } catch (e) {
+            return await gmFetchText(url);
+        }
+    }
+
     async function fetchJSON(url) {
-        const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-cache' });
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' ' + url);
-        const text = await res.text();
+        const text = await fetchText(url + '?t=' + Date.now());
         try { return JSON.parse(text); }
         catch (e) { console.error("JSON解析失敗：", text.slice(0, 100)); throw e; }
     }
@@ -78,14 +141,17 @@
         [ITEM_NAMES, AFFIXES_TR, UI_NAMES] = await Promise.all(FILE_PATHS.map(loadWithFallback));
     } catch (e) {
         console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
+        __d2rShowError('字典載入失敗：' + e.message);
         return;
     }
 
     if (!ITEM_NAMES || !Object.keys(ITEM_NAMES).length) {
         console.warn('[D2R] items.json 資料為空，翻譯停用');
+        __d2rShowError('items.json 為空');
         return;
     }
 
+    __d2rDiag('[main] 字典載入成功 items=' + Object.keys(ITEM_NAMES).length);
     let CHANGELOG = null;
     try { CHANGELOG = await loadWithFallback('Platform/tr_changelog.json'); } catch (_) {}
 
@@ -1606,6 +1672,7 @@
       <h3>⚔️ D2R 中文翻譯 <small>v${VERSION}</small></h3>
       <div class="d2r-row"><label for="d2r-en">啟用翻譯</label><label class="d2r-toggle"><input type="checkbox" id="d2r-en" ${CONFIG.enabled?'checked':''}><span class="d2r-slider"></span></label></div>
       <div class="d2r-row"><label for="d2r-eb" title="在 listings/wishlist 頁顯示快捷編輯按鈕">快捷編輯按鈕</label><label class="d2r-toggle"><input type="checkbox" id="d2r-eb" ${CONFIG.editBtn?'checked':''}><span class="d2r-slider"></span></label></div>
+      <div class="d2r-row"><label for="d2r-dbg" title="手機版排錯用：下次載入頁面時，在畫面上顯示執行步驟與錯誤">除錯訊息</label><label class="d2r-toggle"><input type="checkbox" id="d2r-dbg" ${__d2rDebugOn()?'checked':''}><span class="d2r-slider"></span></label></div>
       <div class="d2r-row"><label for="d2r-cs" title="收到訊息時播放音效（視窗未主控時）">聊天音效通知</label><label class="d2r-toggle"><input type="checkbox" id="d2r-cs" ${CONFIG.chatSound?'checked':''}><span class="d2r-slider"></span></label></div>
 
       <div class="d2r-row"><label for="d2r-lang-sel">語言</label>
@@ -1642,6 +1709,9 @@
         panel.querySelector('#d2r-eb').addEventListener('change', e => {
             CONFIG.editBtn = e.target.checked; saveConfig(); syncEditPageClass();
         });
+        panel.querySelector('#d2r-dbg').addEventListener('change', e => {
+            try { localStorage.setItem('d2r_debug', e.target.checked ? '1' : '0'); } catch (_) {}
+        });
         panel.querySelector('#d2r-cs').addEventListener('change', e => {
             CONFIG.chatSound = e.target.checked; saveConfig(); maybeSetupChatObserver();
         });
@@ -1677,6 +1747,19 @@
             if (logoBlock?.parentElement) logoBlock.parentElement.insertBefore(btn, logoBlock.nextSibling);
             else navRight.appendChild(btn);
         };
+        // 手機版 .nav-right 可能被隱藏或改名 → 一段時間後仍沒插入，就改放一個浮動按鈕
+        setTimeout(() => {
+            if (injected) { __d2rDiag('[main] 導覽列按鈕已插入'); return; }
+            const nr = document.querySelector('.nav-right');
+            __d2rDiag('[main] 導覽列按鈕未插入：.nav-right ' + (nr ? ('存在, 可見=' + (nr.offsetParent !== null)) : '不存在') + '，改用浮動按鈕');
+            if (document.getElementById('d2r-navbar-btn')) return;
+            const fab = document.createElement('div');
+            fab.id = 'd2r-navbar-btn';
+            fab.innerHTML = '⚔️ <span style="font-size:12px">翻譯</span>';
+            fab.style.cssText = 'position:fixed;right:12px;bottom:70px;z-index:99998;margin:0;padding:8px 12px;background:#120a24;color:#d4b0f0;box-shadow:0 2px 10px rgba(0,0,0,.6);';
+            fab.addEventListener('click', e => onToggle(e, null));
+            (document.body || document.documentElement).appendChild(fab);
+        }, 5000);
         tryInject();
         const navObs = new MutationObserver(() => { if (injected) { navObs.disconnect(); return; } tryInject(); });
         navObs.observe(document.body, { childList: true, subtree: true });
@@ -1761,6 +1844,7 @@
     }
 
     const observer = new MutationObserver(muts => {
+        onRouteChange();
         const doTranslate = CONFIG.enabled;
         const doEditBtn   = CONFIG.editBtn && isListingsOrWishlist();
         if (!doTranslate && !doEditBtn) return;
@@ -1785,6 +1869,7 @@
     let fallbackTimer = null;
     function scheduleFallback() {
         const idleFn = () => {
+            onRouteChange();
             if (!translationPaused && CONFIG.enabled) {
                 const untranslated = document.querySelectorAll('.listing-row:not([data-d2r-done]) .listing-num-properties > span:not([data-d2r-affix-translated])');
                 if (untranslated.length) {
@@ -1830,9 +1915,23 @@
     }
 
     // ── Init ─────────────────────────────────────────────────────────────────
+    // 等頁面載入完並多等一下，避免在 React hydration 期間改 DOM（會觸發 #418/#423）
+    async function waitForHydration() {
+        if (document.readyState !== 'complete') {
+            await Promise.race([
+                new Promise(r => window.addEventListener('load', r, { once: true })),
+                new Promise(r => setTimeout(r, 6000)),
+            ]);
+        }
+        await new Promise(r => setTimeout(r, 1500));
+    }
+
     async function init() {
+        __d2rDiag('[main] init 開始，等待 hydration');
+        await waitForHydration();
+        __d2rDiag('[main] 等待結束 rs=' + document.readyState);
         if (detectLang() === 'zh-CN') { const ok = await loadOpenCC(); await loadOpenCCReverse(); openccReady = ok; }
-        createPanel(); syncEditPageClass(); addEditButtons(); startAutoEdit();
+        createPanel(); __d2rDiag('[main] 面板已建立'); syncEditPageClass(); addEditButtons(); startAutoEdit();
         if (CONFIG.enabled) {
             const firstScan = () => {
                 processTree(document.body);
@@ -1841,6 +1940,7 @@
                 injectBatchButtons();
                 setupNotificationObserver();
                 addListingChatButtons();
+                setTimeout(() => __d2rDiag('[main] 首次翻譯後 頁面含中文=' + /[\u4e00-\u9fa5]/.test(document.body.innerText) + ' 詞綴節點=' + document.querySelectorAll('[data-d2r-affix-translated]').length), 2500);
             };
             if (typeof requestIdleCallback !== 'undefined')
                 requestIdleCallback(firstScan, { timeout: 3000 });
@@ -1853,4 +1953,4 @@
         setTimeout(() => showChangelogModal(), 1200);
     }
     init();
-})();
+})().catch(__d2rShowError);
