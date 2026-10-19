@@ -2,7 +2,7 @@
 // @name         D2R Traderie Chinese Translator
 // @name:zh-TW   D2R Traderie 中文翻譯
 // @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      1.0.4
+// @version      1.0.2
 // @description  D2R Traderie 繁體中文翻譯 + 中文搜尋（自動更新載入器）
 // @author       瀧月瀨
 // @license      CC BY-ND 4.0
