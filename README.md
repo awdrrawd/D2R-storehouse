@@ -13,27 +13,26 @@
 ```
 D2R-storehouse/
 │
-├── d2r-translation-data/               # 通用翻譯資料（各平台共用，純 JSON）
-│   ├── item/
-│   │   └── items.json                  # 道具、符文、技能名稱字典
+├── d2r-translation-data/               # 通用翻譯資料（純 JSON，各平台共用）【人工維護】
+│   ├── item/items.json                 # 道具、符文、技能名稱字典
 │   ├── Platform/
-│   │   ├── tr_affixes.json             # 屬性詞綴字典（含 {{value}} 等占位符）
+│   │   ├── tr_affixes.json             # 屬性詞綴字典（遊戲通用，含 {{value}} 等占位符）
 │   │   ├── tr_ui.json                  # Traderie 平台介面翻譯
 │   │   └── tr_changelog.json           # 更新歷程（腳本內「📋 更新」顯示）
-│   └── dist/
-│       └── traderie.bundle.json        # ⚙️ 自動產生：上述四份打包成單一檔案（腳本只載入這一份）
+│   ├── platforms.json                  # 打包設定（顯示格式、各平台的 UI 來源與輸出位置）
+│   ├── README.md                       # 字典格式說明（給其他網站／專案的整合者）
+│   └── LICENSE                         # 字典授權：MIT
 │
 ├── d2r-traderie-translation/           # Traderie 平台腳本
 │   ├── D2r_traderie_translation_main.user.js        # 主體腳本（Greasy Fork 發佈的就是這份）
-│   └── D2r traderie translate cn loader.user.js     # 進階：GitHub 載入器（選用）
+│   ├── D2r traderie translate cn loader.user.js     # 進階：GitHub 載入器（選用）
+│   ├── traderie.bundle.json            # ⚙️ 自動產生：通用字典 + Traderie UI + 更新歷程，合成單一檔案
+│   └── LICENSE                         # 腳本授權：CC BY-ND 4.0
 │
-├── scripts/
-│   └── build-bundle.mjs                # 驗證字典並打包（Node 18+，無外部依賴）
-│
-├── .github/workflows/
-│   └── build-bundle.yml                # 字典有變動時自動驗證 + 重新打包
-│
-└── other/                              # 其他獨立的小腳本（與 Traderie 翻譯無關）
+├── scripts/build-bundle.mjs            # 驗證字典並打包（Node 18+，無外部依賴）
+├── .github/workflows/build-bundle.yml  # 字典有變動時自動驗證 + 重新打包
+├── other/                              # 其他獨立的小腳本（與 Traderie 翻譯無關）
+└── LICENSE.md                          # 授權總覽
 ```
 
 ---
@@ -79,47 +78,44 @@ D2R-storehouse/
 |------|---------|
 | 主體腳本（Greasy Fork 版） | Tampermonkey 依 Greasy Fork 的版本自動偵測並提示更新 |
 | 主體腳本（載入器版） | 每次開頁面從 GitHub 抓取；失敗時使用上次成功的快取 |
-| 字典資料 | 每次開頁面載入單一打包檔 `traderie.bundle.json`（網路優先；離線或 GitHub 異常時使用本機快取）。commit 後由 CI 重新打包，GitHub 的 raw 快取約數分鐘內生效 |
+| 字典資料 | 每次開頁面載入單一打包檔 `traderie.bundle.json`（網路優先；離線或 GitHub 異常時使用本機快取）。修改原始字典後由 CI 自動重新打包，GitHub 的 raw 快取約數分鐘內生效 |
 
 ---
 
 ## 翻譯資料說明
 
-所有字典皆為純 JSON，與平台無關，可直接用於其他專案。
+字典分成「**通用層**」（道具、詞綴，與平台無關）與「**平台層**」（各網站自己的介面文字），皆為純 JSON、授權 MIT，可被其他網站或專案直接使用。
+**完整的格式約定、占位符規則、如何新增平台，請見 [`d2r-translation-data/README.md`](d2r-translation-data/README.md)。**
 
-### `d2r-translation-data/item/items.json`
-- 格式：`{ "English Name": "中文名" }`
-- 內容：所有道具名稱、符文、符文之語、套裝、獨特裝備、技能名稱（約 1,500 條）
-- 顯示格式：`中文名(English Name)`
+| 檔案 | 內容 | 規模 |
+|------|------|------|
+| `item/items.json` | 道具、符文、符文之語、套裝、獨特裝備、技能名稱 | 約 1,500 條 |
+| `Platform/tr_affixes.json` | 屬性詞綴（來源：[d2r.world](https://d2r.world) EN/ZH 配對） | 約 630 條 |
+| `Platform/tr_ui.json` | Traderie 介面文字 | 約 630 條 |
 
-### `d2r-translation-data/Platform/tr_affixes.json`
-- 格式：`{ "+{{value}} To All Skills": "+{{value}} 所有技能" }`
-- 內容：屬性詞綴對照表，來源為 [d2r.world](https://d2r.world) EN/ZH 頁面自動配對（約 630 條）
-- 占位符：`{{value}}`、`{{level}}`、`{{charges}}`、`{{duration}}`，會被轉成數字捕獲群組
+**單檔 bundle**：`d2r-traderie-translation/traderie.bundle.json` 由 CI 把以上字典合併成一份，三個區塊（`items` / `affixes` / `ui`）**分開存放、不攤平**，並在 `meta.display` 記錄顯示約定：
 
-### `d2r-translation-data/Platform/tr_ui.json`
-- 格式：`{ "English UI text": "中文介面文字" }`
-- 內容：Traderie 網站介面文字，包含導覽列、交易介面、設定頁面、通知、篩選器等（約 630 條）
-- 比對**不分大小寫**；少數鍵刻意帶前後空白，用於比對被拆成兩段的句子片段
+| 區塊 | 顯示 | 範例 |
+|------|------|------|
+| 道具 `items` | 中文(English) | `諧角之冠(Harlequin Crest)` |
+| 詞綴 `affixes` | 純中文 | `+2 所有技能` |
+| 平台介面 `ui` | 純中文 | `登出` |
 
-### `d2r-translation-data/dist/traderie.bundle.json`（自動產生，請勿手動編輯）
-- 上面三份字典 + `tr_changelog.json` 合併成的單一檔案，腳本只需一次請求
-- 內容為決定性輸出（不含時間戳）：資料沒變，檔案就不變
-- 含 `schema`（格式版本）與 `hash`（字典內容雜湊，用於快取判斷）
+字典資料本身只放中文，不含括號英文；顯示格式由使用端依 `meta.display` 決定。
 
 ---
 
 ## 參與維護字典
 
-1. 只編輯 `item/items.json`、`Platform/tr_affixes.json`、`Platform/tr_ui.json`（以及發版時的 `tr_changelog.json`），**不要**手動改 `dist/`。
+1. 只編輯 `d2r-translation-data/` 底下的原始 JSON（`item/items.json`、`Platform/tr_affixes.json`、`Platform/tr_ui.json`，發版時加上 `tr_changelog.json`），**不要**手動改任何 `*.bundle.json`。
 2. 本機可先驗證 + 打包：
 
    ```bash
-   node scripts/build-bundle.mjs          # 驗證並產生 dist/traderie.bundle.json
+   node scripts/build-bundle.mjs          # 驗證並產生所有平台的 bundle
    node scripts/build-bundle.mjs --check  # 只驗證，並確認 bundle 是最新的（不寫檔）
    ```
 
-3. 驗證會檢查：JSON 語法、**重複的鍵**（`JSON.parse` 會靜默覆蓋，所以另外掃描）、空白譯文、詞綴占位符是否一致、詞綴能否編譯成正則、changelog 格式；以及警告大小寫重複、前後空白、同名道具。
+3. 驗證會檢查：JSON 語法、**重複的鍵**（`JSON.parse` 會靜默覆蓋，所以另外掃描）、空白譯文、詞綴占位符的**順序是否與英文一致**、詞綴能否編譯成正則、更新日誌格式；並警告大小寫重複、前後空白、同名道具。
 4. 推送到 `main` 後，GitHub Actions 會自動驗證並在 bundle 有變動時 commit 更新；Pull Request 則只做驗證與「bundle 是否最新」檢查。
 
 ---
@@ -146,16 +142,15 @@ D2R-storehouse/
 
 Copyright © 2024 awdrrawd.
 
-本專案腳本與翻譯內容（字典、詞綴對照表、介面文字）依 [CC BY-ND 4.0](https://creativecommons.org/licenses/by-nd/4.0/) 授權釋出。
+本倉庫依內容分為兩種授權，詳見 [LICENSE.md](LICENSE.md)：
 
-您可以自由：
-- **分享** — 以任何媒介或格式重製及散布本專案內容
+- **翻譯字典資料**（`d2r-translation-data/` 及由它自動產生的 `*.bundle.json`）：[MIT](d2r-translation-data/LICENSE)，可自由使用、修改、整合到其他網站或專案。
+- **其餘內容**（使用者腳本、建置腳本等）：[CC BY-ND 4.0](https://creativecommons.org/licenses/by-nd/4.0/)。
+  - **分享** — 以任何媒介或格式重製及散布
+  - **姓名標示** — 須適當標示原作者（likolisu）及來源連結
+  - **禁止改作** — 不得修改、重混或基於本內容建立衍生著作後再行散布
 
-但須遵守以下條件：
-- **姓名標示** — 須適當標示原作者（likolisu）及來源連結
-- **禁止改作** — 不得修改、重混或基於本內容建立衍生著作後再行散布
-
-> 簡單來說：可以轉載或分享，但**不可修改後重新發布**。若有合作或特殊授權需求，請透過 Issues 聯繫。
+> 簡單來說：字典可以自由使用；腳本可以轉載或分享，但**不可修改後重新發布**。若有合作或特殊授權需求，請透過 Issues 聯繫。
 
 ---
 
