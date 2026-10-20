@@ -1,22 +1,22 @@
-name: Build Traderie bundle
+name: Build dictionary bundles
 
-# 字典來源（items / affixes / ui / changelog）有變動時：驗證資料 → 重新產生 dist/traderie.bundle.json。
-# · push 到 main：驗證並在 bundle 有變動時由 github-actions 自動 commit（腳本只載入這一份檔案）
+# 原始字典（d2r-translation-data/ 底下的 JSON 與 platforms.json）有變動時：
+# 驗證資料 → 依 platforms.json 為每個平台重新產生 *.bundle.json（例如 d2r-traderie-translation/traderie.bundle.json）。
+# · push 到 main：驗證並在 bundle 有變動時由 github-actions 自動 commit（腳本只載入 bundle 這一份）
 # · Pull Request：只驗證 + 確認 bundle 是最新的（fork 的 PR 沒有寫入權限，不自動 commit）
+# 注意：push 的 paths 不含 *.bundle.json，bot 的 commit 不會再次觸發本流程（避免無限迴圈）。
 
 on:
   push:
     branches: [main]
     paths:
-      - 'd2r-translation-data/item/**'
-      - 'd2r-translation-data/Platform/**'
+      - 'd2r-translation-data/**'
       - 'scripts/build-bundle.mjs'
   pull_request:
     paths:
-      - 'd2r-translation-data/item/**'
-      - 'd2r-translation-data/Platform/**'
-      - 'd2r-translation-data/dist/**'
+      - 'd2r-translation-data/**'
       - 'scripts/build-bundle.mjs'
+      - '**/*.bundle.json'
   workflow_dispatch:
 
 permissions:
@@ -40,18 +40,18 @@ jobs:
         if: github.event_name == 'pull_request'
         run: node scripts/build-bundle.mjs --check
 
-      - name: Validate & build bundle (push)
+      - name: Validate & build bundles (push)
         if: github.event_name != 'pull_request'
         run: node scripts/build-bundle.mjs
 
-      - name: Commit updated bundle
+      - name: Commit updated bundles
         if: github.event_name != 'pull_request'
         run: |
-          if [ -n "$(git status --porcelain d2r-translation-data/dist)" ]; then
+          if [ -n "$(git status --porcelain -- '*.bundle.json')" ]; then
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add d2r-translation-data/dist/traderie.bundle.json
-            git commit -m "chore: rebuild traderie.bundle.json [skip ci]"
+            git add -- '*.bundle.json'
+            git commit -m "chore: rebuild dictionary bundles [skip ci]"
             git push
           else
             echo "bundle 無變動"

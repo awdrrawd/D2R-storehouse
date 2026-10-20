@@ -94,12 +94,13 @@ function __d2rShowError(e) {
     // ────────────────────────────────────────────────────────────────────────
 
     // 字典由 CI 把 items / affixes / ui / changelog 打包成「單一檔案」，只需一次請求。
-    // 來源：d2r-translation-data/dist/traderie.bundle.json（由 scripts/build-bundle.mjs 產生，勿手動編輯）
-    const BUNDLE_PATH   = 'dist/traderie.bundle.json';
+    // 來源：d2r-traderie-translation/traderie.bundle.json（由 scripts/build-bundle.mjs 依
+    // d2r-translation-data/platforms.json 產生，勿手動編輯；人工維護的原始字典在 d2r-translation-data/）
+    const BUNDLE_PATH   = 'traderie.bundle.json';
     const BUNDLE_SCHEMA = 1;
     const CDN_BASES = [
-        'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/',
-        'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/',
+        'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/',
+        'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-traderie-translation/',
     ];
 
     // fetch 被頁面 CSP / CORS 擋住時，改用 GM.xmlHttpRequest（Userscripts / Tampermonkey 皆支援，不受頁面 CSP 限制）
@@ -164,12 +165,15 @@ function __d2rShowError(e) {
     // 與字典下載並行等待 React hydration，縮短「看到英文閃現」的時間
     const hydrationReady = waitForHydration();
 
-    let ITEM_NAMES, AFFIXES_TR, UI_NAMES, CHANGELOG = null, BUNDLE_HASH = '';
+    let ITEM_NAMES, AFFIXES_TR, UI_NAMES, CHANGELOG = null, BUNDLE_HASH = '', ITEM_SHOW_EN = true;
     try {
         const bundle = await loadBundle();
         ({ items: ITEM_NAMES, affixes: AFFIXES_TR, ui: UI_NAMES } = bundle);
         CHANGELOG   = bundle.changelog || null;
         BUNDLE_HASH = bundle.hash || '';
+        // 顯示格式由 bundle 的 meta.display 宣告：items 為 "zh(en)" 時顯示「中文(English)」，否則純中文；
+        // affixes / ui 一律純中文。字典資料本身不含括號英文，格式交給消費端決定。
+        ITEM_SHOW_EN = (bundle.meta?.display?.items ?? 'zh(en)') === 'zh(en)';
     } catch (e) {
         console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
         __d2rShowError('字典載入失敗：' + e.message);
@@ -431,7 +435,7 @@ function __d2rShowError(e) {
             re.lastIndex = 0;
             const before = r;
             r = r.replace(re, (_, pre) => {
-                slots.push(isItem ? `${zh}(${en})` : zh);
+                slots.push(isItem && ITEM_SHOW_EN ? `${zh}(${en})` : zh);
                 return pre + `\x01${slots.length - 1}\x01`;
             });
             if (r !== before) rLower = r.toLowerCase();   // 只有真的替換才重算

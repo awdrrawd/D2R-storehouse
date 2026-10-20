@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "license": "MIT",
+  "core": {
+    "items":   "item/items.json",
+    "affixes": "Platform/tr_affixes.json"
+  },
+  "display": {
+    "items":   "zh(en)",
+    "affixes": "zh",
+    "ui":      "zh"
+  },
+  "platforms": [
+    {
+      "id": "traderie",
+      "ui": "Platform/tr_ui.json",
+      "changelog": "Platform/tr_changelog.json",
+      "allowBlankUi": ["Diablo II: Resurrected"],
+      "out": "d2r-traderie-translation/traderie.bundle.json"
+    }
+  ]
+}
