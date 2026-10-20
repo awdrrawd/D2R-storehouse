@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.5.5
+// @version            2.6.0
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -64,11 +64,13 @@ function __d2rShowError(e) {
     'use strict';
     // iOS Userscripts 沒有 unsafeWindow，直接存取會 ReferenceError 導致整支腳本靜默中止
     const PAGE = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
-    __d2rDiag('[main] 啟動 v2.5.6 unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
+    // 版本號只在這裡與上方 @version 兩處維護（發版時一起改）
+    const VERSION = '2.6.0';
+    __d2rDiag('[main] 啟動 v' + VERSION + ' unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
     if (PAGE.D2R_Traderie_CNTranslator) { __d2rDiag('[main] 已執行過，略過（重複載入）'); return; }
     PAGE.D2R_Traderie_CNTranslator = true;
-    const VERSION = '2.5.7';
-    const Permissions = 0;
+    // 批次「重新上架／移除」按鈕：實驗功能，目前停用（原 Permissions = 0）。要啟用請改為 true。
+    const ENABLE_BATCH_BUTTONS = false;
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
 
@@ -91,12 +93,14 @@ function __d2rShowError(e) {
     }
     // ────────────────────────────────────────────────────────────────────────
 
-    const FILE_PATHS = ['item/items.json','Platform/tr_affixes.json','Platform/tr_ui.json'];
+    // 字典由 CI 把 items / affixes / ui / changelog 打包成「單一檔案」，只需一次請求。
+    // 來源：d2r-translation-data/dist/traderie.bundle.json（由 scripts/build-bundle.mjs 產生，勿手動編輯）
+    const BUNDLE_PATH   = 'dist/traderie.bundle.json';
+    const BUNDLE_SCHEMA = 1;
     const CDN_BASES = [
         'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-translation-data/',
         'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-translation-data/',
     ];
-
 
     // fetch 被頁面 CSP / CORS 擋住時，改用 GM.xmlHttpRequest（Userscripts / Tampermonkey 皆支援，不受頁面 CSP 限制）
     function gmFetchText(url) {
@@ -113,47 +117,65 @@ function __d2rShowError(e) {
         });
     }
     async function fetchText(url) {
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;   // 避免單一來源卡住整個啟動流程
         try {
-            const res = await fetch(url, { cache: 'no-cache' });
+            const res = await fetch(url, { cache: 'no-cache', signal: ctrl?.signal });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return await res.text();
         } catch (e) {
             return await gmFetchText(url);
-        }
+        } finally { if (timer) clearTimeout(timer); }
     }
 
-    async function fetchJSON(url) {
-        const text = await fetchText(url + '?t=' + Date.now());
-        try { return JSON.parse(text); }
-        catch (e) { console.error("JSON解析失敗：", text.slice(0, 100)); throw e; }
+    function isValidBundle(b) {
+        return !!b && b.schema === BUNDLE_SCHEMA
+            && b.items && b.affixes && b.ui
+            && Object.keys(b.items).length > 0;
     }
 
-    async function loadWithFallback(filePath) {
+    function readBundleCache() {
+        try {
+            const raw = gmGet('d2r_bundle_cache', '');
+            const b = raw ? JSON.parse(raw) : null;
+            return isValidBundle(b) ? b : null;
+        } catch (_) { return null; }
+    }
+
+    // 網路優先（確保字典更新即時生效），全部來源失敗才退回上次成功的本機快取（離線／GitHub 異常時仍可用）
+    async function loadBundle() {
         for (const base of CDN_BASES) {
-            try { return await fetchJSON(base + filePath); }
-            catch (e) { console.warn('[D2R] 來源失敗，嘗試備用：', e.message); }
+            try {
+                const text = await fetchText(base + BUNDLE_PATH + '?t=' + Date.now());
+                const b = JSON.parse(text);
+                if (!isValidBundle(b)) throw new Error('bundle 格式不符（schema ' + (b && b.schema) + '）');
+                if (gmGet('d2r_bundle_hash', '') !== b.hash) {      // 內容有變才寫入，避免每次載入都寫 ~250KB
+                    gmSet('d2r_bundle_cache', text);
+                    gmSet('d2r_bundle_hash', b.hash || '');
+                }
+                return b;
+            } catch (e) { console.warn('[D2R] 來源失敗，嘗試備用：', e.message); }
         }
-        throw new Error('所有來源均無法載入：' + filePath);
+        const cached = readBundleCache();
+        if (cached) { console.warn('[D2R] 所有來源失敗，改用本機快取字典 hash=' + cached.hash); return cached; }
+        throw new Error('所有來源均無法載入字典，且沒有本機快取');
     }
 
-    let ITEM_NAMES, AFFIXES_TR, UI_NAMES;
+    // 與字典下載並行等待 React hydration，縮短「看到英文閃現」的時間
+    const hydrationReady = waitForHydration();
+
+    let ITEM_NAMES, AFFIXES_TR, UI_NAMES, CHANGELOG = null, BUNDLE_HASH = '';
     try {
-        [ITEM_NAMES, AFFIXES_TR, UI_NAMES] = await Promise.all(FILE_PATHS.map(loadWithFallback));
+        const bundle = await loadBundle();
+        ({ items: ITEM_NAMES, affixes: AFFIXES_TR, ui: UI_NAMES } = bundle);
+        CHANGELOG   = bundle.changelog || null;
+        BUNDLE_HASH = bundle.hash || '';
     } catch (e) {
         console.warn('[D2R] 資料載入失敗，翻譯功能停用：', e.message);
         __d2rShowError('字典載入失敗：' + e.message);
         return;
     }
-
-    if (!ITEM_NAMES || !Object.keys(ITEM_NAMES).length) {
-        console.warn('[D2R] items.json 資料為空，翻譯停用');
-        __d2rShowError('items.json 為空');
-        return;
-    }
-
-    __d2rDiag('[main] 字典載入成功 items=' + Object.keys(ITEM_NAMES).length);
-    let CHANGELOG = null;
-    try { CHANGELOG = await loadWithFallback('Platform/tr_changelog.json'); } catch (_) {}
+    __d2rDiag('[main] 字典載入成功 items=' + Object.keys(ITEM_NAMES).length + ' hash=' + BUNDLE_HASH);
 
     // ── OpenCC ──────────────────────────────────────────────────────────────
     let simplifiedConverter = null;
@@ -198,18 +220,28 @@ function __d2rShowError(e) {
         return text;
     }
 
+    // ── 依賴 Traderie 雜湊類名的選擇器（styled-components，改版就會變）集中在這裡 ────────────
+    // 失效時只需改這一處；找不到時各功能會退回較寬鬆的備援，而不是整個壞掉。
+    const SEL = {
+        listingCard: '.sc-eqUAAy',            // listing 卡片內層容器（編輯按鈕掛載點）
+        navLogoBlock: '.sc-iHmpnF.dlcFuQ',    // 導覽列 logo 區塊（翻譯按鈕插在它後面）
+        navMyProfileExclude: '.sc-bpUBKd',    // 取得「我的 profile」連結時要排除的區塊
+    };
+
     // ── Config ──────────────────────────────────────────────────────────────
     const CONFIG = {
         enabled:   gmGet('d2r_enabled', true),
         editBtn:   gmGet('d2r_editbtn', true),
         lang:      gmGet('d2r_lang', 'auto'),
         chatSound: gmGet('d2r_chat_sound', false),
+        chatAutoRead: gmGet('d2r_chat_autoread', true),   // 音效後自動「全部標為已讀」（沿用舊行為，現在可關閉）
     };
     function saveConfig() {
         gmSet('d2r_enabled',    CONFIG.enabled);
         gmSet('d2r_editbtn',    CONFIG.editBtn);
         gmSet('d2r_lang',       CONFIG.lang);
         gmSet('d2r_chat_sound', CONFIG.chatSound);
+        gmSet('d2r_chat_autoread', CONFIG.chatAutoRead);
     }
 
     async function switchLang(lang) {
@@ -220,7 +252,10 @@ function __d2rShowError(e) {
         if (CONFIG.enabled) { processTree(document.body); document.title = applyLang(translate(document.title)); }
     }
 
-    function hasChinese(str) { return /[\u4e00-\u9fa5]/.test(str); }
+    function hasChinese(str) { return /[\u4e00-\u9fff]/.test(str); }
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
 
     // ── Translation data setup ───────────────────────────────────────────────
     const ITEM_ENTRIES = Object.entries(ITEM_NAMES).sort((a, b) => b[0].length - a[0].length);
@@ -308,10 +343,12 @@ function __d2rShowError(e) {
         return text;
     }
 
-    const ITEM_ZH_TO_EN = {};
+    // 中文 → 英文搜尋索引。不同道具可能共用同一個中文名（例如兩種斧頭），所以用陣列保留全部，
+    // 不再「同名只留第一個」，否則其中一個永遠搜不到。
+    const ITEM_SEARCH_LIST = [];
     for (const [en, zh] of Object.entries(ITEM_NAMES)) {
         const zhClean = zh.replace(/\(.*?\)/g, '').trim();
-        if (zhClean && !ITEM_ZH_TO_EN[zhClean]) ITEM_ZH_TO_EN[zhClean] = en;
+        if (zhClean) ITEM_SEARCH_LIST.push({ zh: zhClean, en });
     }
     const AFFIX_ZH_TO_EN = {};
     for (const [en, zh] of Object.entries(AFFIXES_TR)) {
@@ -321,6 +358,7 @@ function __d2rShowError(e) {
         if (zhDisplay && hasChinese(zhDisplay) && !AFFIX_ZH_TO_EN[zhDisplay]) AFFIX_ZH_TO_EN[zhDisplay] = enDisplay;
         if (zhKeyword.length >= 2 && hasChinese(zhKeyword) && !AFFIX_ZH_TO_EN[zhKeyword]) AFFIX_ZH_TO_EN[zhKeyword] = enDisplay;
     }
+    const AFFIX_SEARCH_LIST = Object.entries(AFFIX_ZH_TO_EN).map(([zh, en]) => ({ zh, en }));
 
     // ── 判斷是否為屬性 Min/Max 數值 input ───────────────────────────────────
     function isPropertyRangeInput(el) {
@@ -374,7 +412,8 @@ function __d2rShowError(e) {
     }).map(({ entry, isItem }) => {
         const [en, zh] = entry;
         const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const re  = new RegExp(`(?<![\\w'\\-])${esc}(?![\\w'\\-])`, 'gi');
+        // 不用 lookbehind（Safari < 16.4 不支援，會讓整支腳本在載入時 SyntaxError）：改捕獲前一個字元，替換時原樣補回
+        const re  = new RegExp(`(^|[^\\w'\\-])${esc}(?![\\w'\\-])`, 'gi');
         return { entry, isItem, re, enLower: en.toLowerCase() };
     });
 
@@ -391,9 +430,9 @@ function __d2rShowError(e) {
             const [en, zh] = entry;
             re.lastIndex = 0;
             const before = r;
-            r = r.replace(re, () => {
+            r = r.replace(re, (_, pre) => {
                 slots.push(isItem ? `${zh}(${en})` : zh);
-                return `\x01${slots.length - 1}\x01`;
+                return pre + `\x01${slots.length - 1}\x01`;
             });
             if (r !== before) rLower = r.toLowerCase();   // 只有真的替換才重算
         }
@@ -472,156 +511,6 @@ function __d2rShowError(e) {
         nodes.forEach(processNode);
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    // ── OVERLAY INPUT
-    // ════════════════════════════════════════════════════════════════════════
-
-    let translationPaused = false;
-    let resumeTimer       = null;
-
-    function pauseTranslation() {
-        translationPaused = true;
-        clearTimeout(resumeTimer);
-        resumeTimer = null;
-    }
-
-    function resumeTranslation(delay = 0) {
-        clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(() => {
-            translationPaused = false;
-            resumeTimer = null;
-            if (CONFIG.enabled) processTree(document.body);
-        }, delay);
-    }
-
-    const overlayInput = document.createElement('input');
-    overlayInput.type        = 'text';
-    overlayInput.id          = 'd2r-overlay-input';
-    overlayInput.inputMode   = 'numeric';
-    overlayInput.autocomplete = 'off';
-    overlayInput.style.cssText = [
-        'position:fixed', 'z-index:9999998', 'box-sizing:border-box',
-        'border:1px solid #ffffff', 'background:#000000', 'color:#fff',
-        'font-size:14px', 'padding:0 6px', 'margin:0', 'outline:none',
-        'border-radius:4px', 'display:none', 'pointer-events:auto'
-    ].join(';');
-    document.body.appendChild(overlayInput);
-
-    let overlayTarget    = null;
-    let overlayCommitted = false;
-
-    function syncOverlayPos() {
-        if (!overlayTarget) return;
-        const r = overlayTarget.getBoundingClientRect();
-        overlayInput.style.left   = r.left   + 'px';
-        overlayInput.style.top    = r.top    + 'px';
-        overlayInput.style.width  = r.width  + 'px';
-        overlayInput.style.height = r.height + 'px';
-    }
-
-    function showOverlay(targetEl) {
-        overlayTarget    = targetEl;
-        overlayCommitted = false;
-        overlayInput.value = targetEl.value;
-        syncOverlayPos();
-        overlayInput.style.display = 'block';
-        requestAnimationFrame(() => { overlayInput.focus(); overlayInput.select(); });
-        pauseTranslation();
-    }
-
-    function hideOverlay() {
-        overlayInput.style.display = 'none';
-        overlayTarget    = null;
-        overlayCommitted = false;
-    }
-
-    function commitOverlay() {
-        if (overlayCommitted || !overlayTarget) return;
-        overlayCommitted = true;
-        const val    = overlayInput.value;
-        const target = overlayTarget;
-        const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-        if (setter) setter.call(target, val);
-        target.dispatchEvent(new Event('input',  { bubbles: true }));
-        target.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    function getPropertyRangeInputs() {
-        return Array.from(
-            document.querySelectorAll('.min-max-filter-info input[placeholder="Min"], .min-max-filter-info input[placeholder="Max"]')
-        ).filter(el => {
-            const style = getComputedStyle(el);
-            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
-        });
-    }
-
-    function focusNextPropertyInput(currentTarget, reverse = false) {
-        const inputs = getPropertyRangeInputs();
-        if (!inputs.length) return false;
-        let idx = inputs.indexOf(currentTarget);
-        if (idx === -1) {
-            const rect = currentTarget.getBoundingClientRect();
-            let minDist = Infinity;
-            inputs.forEach((el, i) => {
-                const r = el.getBoundingClientRect();
-                const d = Math.abs(r.top - rect.top) + Math.abs(r.left - rect.left);
-                if (d < minDist) { minDist = d; idx = i; }
-            });
-        }
-        const nextIdx = idx + (reverse ? -1 : 1);
-        if (nextIdx < 0 || nextIdx >= inputs.length) return false;
-        inputs[nextIdx].focus();
-        return true;
-    }
-
-    overlayInput.addEventListener('blur', e => {
-        const next = e.relatedTarget;
-        commitOverlay();
-        if (next && isPropertyRangeInput(next)) {
-            hideOverlay();
-            showOverlay(next);
-        } else {
-            hideOverlay();
-            resumeTranslation(400);
-        }
-    });
-
-    overlayInput.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-            e.preventDefault();
-            e.stopPropagation();
-            commitOverlay();
-            const target = overlayTarget;
-            hideOverlay();
-            resumeTranslation(200);
-            setTimeout(() => {
-                const moved = focusNextPropertyInput(target, e.shiftKey);
-                if (!moved) {
-                    const applyBtn = document.getElementById('listings-apply-filters-btn')
-                    || document.querySelector('[aria-label="Apply Filters"]');
-                    if (applyBtn) applyBtn.focus();
-                }
-            }, 0);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            commitOverlay();
-            hideOverlay();
-            resumeTranslation(200);
-        } else if (e.key === 'Escape') {
-            hideOverlay();
-            resumeTranslation(200);
-        }
-    });
-
-    overlayInput.addEventListener('input', () => {
-        const v = overlayInput.value;
-        const c = v.replace(/[^\d.\-]/g, '');
-        if (c !== v) overlayInput.value = c;
-    });
-
-    window.addEventListener('scroll', syncOverlayPos, true);
-    window.addEventListener('resize', syncOverlayPos);
-
     // 屬性 Min/Max 輸入框：不再攔截焦點、也不在輸入時暫停翻譯。
     // 翻譯結果已記憶化（TRANSLATE_CACHE / AFFIX_CACHE），React 重繪後的重譯近乎零成本，
     // 卡片會立即還原成中文而不會停在英文；Tab/Enter 跳格交回瀏覽器原生行為。
@@ -631,7 +520,6 @@ function __d2rShowError(e) {
     let currentResults = [];
     let currentInput   = null;
     let zhSearchTimer  = null;
-    let openccReady    = false;
 
     const NAV_KEYS = ['ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'Tab'];
 
@@ -642,17 +530,22 @@ function __d2rShowError(e) {
             if (!toTWConverter) return [{ zh: '⏳ 轉換模組載入中...', en: '', loading: true }];
             q = toTWConverter(q);
         }
-        const source = mode === 'affix' ? AFFIX_ZH_TO_EN : ITEM_ZH_TO_EN;
-        const exact = [], startsWith = [], contains = [];
-        for (const [zh, en] of Object.entries(source)) {
-            if (zh === q)              exact.push({ zh, en });
-            else if (zh.startsWith(q)) startsWith.push({ zh, en });
-            else if (zh.includes(q))   contains.push({ zh, en });
-            if (exact.length + startsWith.length + contains.length >= 100) break;
+        // 先完整掃描再排序：舊版累積 100 筆就 break，字典後段的「完全相同」結果會被擠掉
+        const source = mode === 'affix' ? AFFIX_SEARCH_LIST : ITEM_SEARCH_LIST;
+        const hits = [];
+        for (const e of source) {
+            const i = e.zh.indexOf(q);
+            if (i === -1) continue;
+            hits.push({ e, rank: e.zh === q ? 0 : (i === 0 ? 1 : 2) });
         }
-        const seen = new Map();
-        for (const r of [...exact, ...startsWith, ...contains]) if (!seen.has(r.en)) seen.set(r.en, r);
-        return [...seen.values()].slice(0, 20);
+        hits.sort((x, y) => x.rank - y.rank || x.e.zh.length - y.e.zh.length);   // 穩定排序：同級維持字典順序
+        const seen = new Set(), out = [];
+        for (const { e } of hits) {
+            if (seen.has(e.en)) continue;
+            seen.add(e.en); out.push(e);
+            if (out.length >= 20) break;
+        }
+        return out;
     }
 
     function getFieldText(el) {
@@ -713,7 +606,7 @@ function __d2rShowError(e) {
         results.forEach(({ zh, en }) => {
             const item = document.createElement('div');
             item.className = 'd2r-item';
-            item.innerHTML = `<span class="zh">${zh}</span><span class="en">${en}</span>`;
+            item.innerHTML = `<span class="zh">${escapeHtml(applyLang(zh))}</span><span class="en">${escapeHtml(en)}</span>`;
             item.addEventListener('mousedown', e => { e.preventDefault(); applySelection(en, inputEl); });
             zhDropdown.appendChild(item);
         });
@@ -760,13 +653,25 @@ function __d2rShowError(e) {
         activeIndex = idx;
     }
 
+    // 只在「搜尋／篩選類」文字框啟用中文搜尋，避免干擾帳號、密碼、訊息、備註等一般輸入框
+    const NON_TEXT_INPUT_TYPES = new Set(['hidden','number','password','email','tel','url','file','checkbox','radio',
+        'range','date','datetime-local','month','week','time','color','submit','button','reset','image']);
+    function isSearchField(el) {
+        if (!el || el.tagName !== 'INPUT') return false;
+        if (NON_TEXT_INPUT_TYPES.has((el.type || '').toLowerCase())) return false;
+        if (isPropertyRangeInput(el)) return false;
+        if (/(username|password|email|tel|cc-)/.test((el.getAttribute('autocomplete') || '').toLowerCase())) return false;
+        if (el.getAttribute('role') === 'combobox' || el.hasAttribute('aria-autocomplete')) return true;   // react-select
+        if (/^react-select/.test(el.id || '') || el.type === 'search') return true;
+        if (el.closest('[class*="search" i], [class*="filter" i], [class*="select" i], [role="search"]')) return true;
+        return /search|搜尋|搜索|filter|篩選|option|stats|選項|屬性/i.test(getFieldText(el) || '');
+    }
+
     function handleZhInput(e) {
         if (!CONFIG.enabled) return;
         const el = e.target;
-        if (el === overlayInput) return;
-        if (el.tagName !== 'INPUT') return;
-        if (el.type === 'hidden' || el.type === 'number') return;
-        if (isPropertyRangeInput(el)) return;
+        if (!isSearchField(el)) return;
+        if (e.isComposing) return;              // 組字中（注音／拼音）不搜尋，等 compositionend 再處理
         if (NAV_KEYS.includes(e.key)) return;
         if (/^[\d\s.\-]*$/.test(el.value)) { zhDropdown.style.display = 'none'; return; }
         cacheOriginalPlaceholder(el);
@@ -783,6 +688,10 @@ function __d2rShowError(e) {
 
     document.addEventListener('keydown', e => {
         if (zhDropdown.style.display === 'none') return;
+        // 輸入法組字時的 Enter/方向鍵是在選字，不能攔截（keyCode 229 = IME 處理中）
+        if (e.isComposing || e.keyCode === 229) return;
+        // 焦點已離開搜尋框時，不要劫持其他元素的按鍵
+        if (currentInput && e.target !== currentInput) return;
         if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(activeIndex + 1, currentResults.length - 1)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
         else if (e.key === 'Enter') {
@@ -821,7 +730,7 @@ function __d2rShowError(e) {
         listings.forEach(listing => {
             const listingId = listing.id?.match(/(\d+)/)?.[1];
             if (!listingId) return;
-            const card = listing.querySelector('.sc-eqUAAy');
+            const card = listing.querySelector(SEL.listingCard) || listing;   // 雜湊類名失效時退回 listing 本身
             if (!card) return;
             const btn = document.createElement('div');
             btn.className = 'tr-edit-btn';
@@ -852,7 +761,7 @@ function __d2rShowError(e) {
     }
 
     function injectBatchButtons() {
-        if (Permissions !== 1) return;
+        if (!ENABLE_BATCH_BUTTONS) return;
         if (!isListingsOrWishlist()) return;
         const actionsBar = document.querySelector('.listings-actions');
         if (!actionsBar) return;
@@ -950,16 +859,28 @@ function __d2rShowError(e) {
 
     let chatMsgObserver = null;
     let badgeObserver   = null;
-    let notifAudio      = null;
+    let audioCtx        = null;
 
     function isChatFocused() { return !document.hidden && document.hasFocus(); }
 
-    function getNotifAudio() {
-        if (!notifAudio) { notifAudio = new Audio('https://cdn.nookazon.com/juntos.mp3'); notifAudio.volume = 1.0; }
-        return notifAudio;
-    }
+    // 提示音改用 Web Audio 即時合成（兩聲短音），不再依賴第三方網站的 mp3（對方失效／改檔／追蹤都與我們無關）
     function playMsgSound() {
-        try { const a = getNotifAudio(); a.currentTime = 0; a.play().catch(() => {}); } catch (_) {}
+        try {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            audioCtx = audioCtx || new AC();
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+            const t0 = audioCtx.currentTime;
+            [[880, 0], [1175, 0.16]].forEach(([freq, off]) => {
+                const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.0001, t0 + off);
+                gain.gain.exponentialRampToValueAtTime(0.25, t0 + off + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.22);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(t0 + off); osc.stop(t0 + off + 0.25);
+            });
+        } catch (_) {}
     }
 
     function fireNotif(sender, text) {
@@ -1060,6 +981,7 @@ function __d2rShowError(e) {
             if (val > lastBadgeVal) {
                 lastBadgeVal = val;
                 fireNotif('Traderie', '你有未讀訊息或通知');
+                if (!CONFIG.chatAutoRead) return;      // 不自動標已讀：保留 Traderie 原生未讀狀態
                 clearBadgePending = true;
                 setTimeout(async () => {
                     const res = await callNotifReadAllAPI();
@@ -1142,15 +1064,30 @@ function __d2rShowError(e) {
 
     let capturedAuthHeader = null;
 
+    // 讀取 Authorization（支援 plain object / Headers / 陣列 / Request 物件四種寫法）
+    function extractAuth(input, init) {
+        try {
+            const h = init && init.headers;
+            if (h) {
+                if (typeof h.get === 'function') return h.get('Authorization');
+                if (Array.isArray(h)) { const p = h.find(x => String(x[0]).toLowerCase() === 'authorization'); return p ? p[1] : null; }
+                return h.Authorization || h.authorization || null;
+            }
+            if (input && typeof input === 'object' && input.headers && typeof input.headers.get === 'function')
+                return input.headers.get('Authorization');
+        } catch (_) {}
+        return null;
+    }
+
     function hookFetchForAuth() {
         if (PAGE.__d2r_fetch_hooked) return;
         PAGE.__d2r_fetch_hooked = true;
         const origFetch = PAGE.fetch;
-        PAGE.fetch = function (input, init = {}) {
-            // 攔截 TR 自己發出的含 Authorization header 的請求，偷走 token
-            const auth = init?.headers?.Authorization || init?.headers?.authorization;
-            if (auth && !capturedAuthHeader) capturedAuthHeader = auth;
-            return origFetch.call(this, input, init);
+        PAGE.fetch = function (input, init) {
+            // 只讀取 TR 自己請求帶的 token（僅存記憶體，只用於呼叫 Traderie 同站 API，不外送）
+            const auth = extractAuth(input, init);
+            if (auth) capturedAuthHeader = auth;      // 每次更新，避免 token 換新後仍用舊值
+            return origFetch.apply(this, arguments);
         };
     }
 
@@ -1275,7 +1212,7 @@ function __d2rShowError(e) {
         if (_myUserId) return _myUserId;
         // 從 TR 導航欄找「我的 profile」連結（排除賣家連結）
         for (const link of document.querySelectorAll('a[href*="/profile/"]')) {
-            if (link.closest('[id="listing-seller-profile-link"], .notification-table, .sc-bpUBKd')) continue;
+            if (link.closest('[id="listing-seller-profile-link"], .notification-table, ' + SEL.navMyProfileExclude)) continue;
             const m = link.getAttribute('href')?.match(/\/profile\/(\d+)/);
             if (m && m[1] !== String(excludeId)) {
                 _myUserId = m[1];
@@ -1301,7 +1238,7 @@ function __d2rShowError(e) {
         overlay.innerHTML = `
         <div class="sc-fhzFiK ePiMpt modal-content" style="width:600px;max-width:90vw;background:#1e1e24;color:#e8e8e8;border:1px solid rgba(255,255,255,0.1);">
           <div class="sc-jxOSlx kpRtYY" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:nowrap;">
-            <div style="font-size:20px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Request to Start A Chat with ${username}</div>
+            <div style="font-size:20px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Request to Start A Chat with ${escapeHtml(username)}</div>
             <div id="d2r-close-chat" class="sc-lcIPJg jNEYB" style="cursor:pointer;flex-shrink:0;margin-left:12px;">
               <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 352 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
                 <path d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"/>
@@ -1453,7 +1390,7 @@ function __d2rShowError(e) {
                           stroke="currentColor" stroke-width="12"/>
                 </svg>
                 <div class="tooltiptext" style="padding:5px 10px;width:auto;white-space:nowrap;">
-                    傳送訊息給 ${username}
+                    傳送訊息給 ${escapeHtml(username)}
                 </div>
             </div>`;
 
@@ -1660,8 +1597,8 @@ function __d2rShowError(e) {
         const latestVer = CHANGELOG ? (CHANGELOG.latest || CHANGELOG.versions?.[0]?.version || CHANGELOG.version) : null;
         showModal({ title: '❓ 關於本插件', closeTxt: '關閉', html: `
           <div style="margin-bottom:10px"><strong style="color:#d4a0ff">⚔️ Traderie D2R 繁體中文翻譯　作者 瀧月瀨(likolisu)</strong><br><br><span style="color:#bf8cf3">功能：介面中文化 ／ 中文關鍵字搜尋 ／ 快捷編輯按鈕</span></div>
-          <div style="margin-bottom:10px;font-size:12px;color:#9a7ab0;line-height:1.8">已翻譯<br>道具名稱：${ITEM_ENTRIES.length} 條<br>屬性詞綴：${AFFIX_PAT.length} 條<br>介面文字：${UI_ENTRIES.length} 條<br>搜尋（道具）：${Object.keys(ITEM_ZH_TO_EN).length} 條<br>搜尋（屬性）：${Object.keys(AFFIX_ZH_TO_EN).length} 條</div>
-          <div style="font-size:12px;color:#7a5a9a"><a href="https://github.com/awdrrawd/D2R-storehouse/" target="_blank">⌨ GitHub</a><br><a href="https://greasyfork.org/zh-TW/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search" target="_blank">⌨ Greasy Fork</a>${latestVer?`<br><br><span style="color:#9a7ab0">當前版本：${latestVer}</span>`:''}</div>` });
+          <div style="margin-bottom:10px;font-size:12px;color:#9a7ab0;line-height:1.8">已翻譯<br>道具名稱：${ITEM_ENTRIES.length} 條<br>屬性詞綴：${AFFIX_PAT.length} 條<br>介面文字：${UI_ENTRIES.length} 條<br>搜尋（道具）：${ITEM_SEARCH_LIST.length} 條<br>搜尋（屬性）：${Object.keys(AFFIX_ZH_TO_EN).length} 條</div>
+          <div style="font-size:12px;color:#7a5a9a"><a href="https://github.com/awdrrawd/D2R-storehouse/" target="_blank">⌨ GitHub</a><br><a href="https://greasyfork.org/zh-TW/scripts/570784-traderie-d2r-chinese-translator-chinese-search" target="_blank">⌨ Greasy Fork</a><br><br><span style="color:#9a7ab0">腳本版本：v${VERSION}${latestVer?`　字典更新：${latestVer}`:''}${BUNDLE_HASH?`<br>字典雜湊：${BUNDLE_HASH}`:''}</span></div>` });
     }
 
     function createPanel() {
@@ -1674,6 +1611,7 @@ function __d2rShowError(e) {
       <div class="d2r-row"><label for="d2r-eb" title="在 listings/wishlist 頁顯示快捷編輯按鈕">快捷編輯按鈕</label><label class="d2r-toggle"><input type="checkbox" id="d2r-eb" ${CONFIG.editBtn?'checked':''}><span class="d2r-slider"></span></label></div>
       <div class="d2r-row"><label for="d2r-dbg" title="手機版排錯用：下次載入頁面時，在畫面上顯示執行步驟與錯誤">除錯訊息</label><label class="d2r-toggle"><input type="checkbox" id="d2r-dbg" ${__d2rDebugOn()?'checked':''}><span class="d2r-slider"></span></label></div>
       <div class="d2r-row"><label for="d2r-cs" title="收到訊息時播放音效（視窗未主控時）">聊天音效通知</label><label class="d2r-toggle"><input type="checkbox" id="d2r-cs" ${CONFIG.chatSound?'checked':''}><span class="d2r-slider"></span></label></div>
+      <div class="d2r-row"><label for="d2r-car" title="播放音效後，自動呼叫 Traderie 的「全部標為已讀」，並以腳本自己的紅點顯示未讀數。關閉則保留 Traderie 原生的未讀狀態">音效後自動標為已讀</label><label class="d2r-toggle"><input type="checkbox" id="d2r-car" ${CONFIG.chatAutoRead?'checked':''}><span class="d2r-slider"></span></label></div>
 
       <div class="d2r-row"><label for="d2r-lang-sel">語言</label>
         <select id="d2r-lang-sel" class="d2r-select">
@@ -1715,15 +1653,19 @@ function __d2rShowError(e) {
         panel.querySelector('#d2r-cs').addEventListener('change', e => {
             CONFIG.chatSound = e.target.checked; saveConfig(); maybeSetupChatObserver();
         });
+        panel.querySelector('#d2r-car').addEventListener('change', e => {
+            CONFIG.chatAutoRead = e.target.checked; saveConfig();
+            if (!CONFIG.chatAutoRead) removeFakeBadge();
+        });
 
         panel.querySelector('#d2r-lang-sel').addEventListener('change', async e => {
             CONFIG.lang = e.target.value; saveConfig();
             if (detectLang() === 'zh-CN') {
                 langStatus.textContent = '⏳ 載入簡體轉換模組...';
-                const ok = await loadOpenCC(); await loadOpenCCReverse(); openccReady = ok;
+                const ok = await loadOpenCC(); await loadOpenCCReverse();
                 langStatus.textContent = ok ? '✅ 簡體模組已就緒' : '⚠️ 載入失敗，保持繁體';
                 setTimeout(() => { langStatus.textContent = ''; }, 3000);
-            } else { openccReady = false; langStatus.textContent = ''; }
+            } else { langStatus.textContent = ''; }
             await switchLang(e.target.value);
         });
         panel.querySelector('#d2r-btn-about').addEventListener('click', () => { panel.classList.remove('open'); showAboutModal(); });
@@ -1743,7 +1685,7 @@ function __d2rShowError(e) {
             btn.id = 'd2r-navbar-btn'; btn.title = 'D2R 中文翻譯';
             btn.innerHTML = `⚔️ <span style="font-size:12px">翻譯</span>`;
             btn.addEventListener('click', e => onToggle(e, btn));
-            const logoBlock = document.querySelector('.sc-iHmpnF.dlcFuQ');
+            const logoBlock = document.querySelector(SEL.navLogoBlock);
             if (logoBlock?.parentElement) logoBlock.parentElement.insertBefore(btn, logoBlock.nextSibling);
             else navRight.appendChild(btn);
         };
@@ -1769,7 +1711,6 @@ function __d2rShowError(e) {
     // ── MutationObserver + 排程 ──────────────────────────────────────────────
     let routeChangeTimer     = null;
     let lastPath             = location.pathname + location.search;
-    let listingDebounceTimer = null;
 
     function onRouteChange() {
         const cur = location.pathname + location.search;
@@ -1777,7 +1718,6 @@ function __d2rShowError(e) {
         lastPath = cur;
         clearTimeout(zhSearchTimer);
         zhDropdown.style.display = 'none';
-        if (overlayInput.style.display === 'block') { commitOverlay(); hideOverlay(); }
         clearTimeout(routeChangeTimer);
         routeChangeTimer = setTimeout(() => {
             routeChangeTimer = null;
@@ -1792,10 +1732,18 @@ function __d2rShowError(e) {
         }, 50);
     }
 
-    ['pushState', 'replaceState'].forEach(m => {
-        const orig = history[m];
-        history[m] = function (...args) { orig.apply(this, args); onRouteChange(); };
-    });
+    // 打在頁面真正的 history 上（沙盒環境下 window.history 可能攔不到頁面自己的 pushState）；
+    // 即使攔不到，MutationObserver 與定時掃描仍會補位偵測路由變化。
+    try {
+        const H = PAGE.history || history;
+        if (!H.__d2rPatched) {
+            ['pushState', 'replaceState'].forEach(m => {
+                const orig = H[m];
+                H[m] = function (...args) { const r = orig.apply(this, args); onRouteChange(); return r; };
+            });
+            H.__d2rPatched = true;
+        }
+    } catch (e) { console.warn('[D2R] history patch 失敗，改靠 observer：', e.message); }
     window.addEventListener('popstate', onRouteChange);
 
     function getListingRoot(node) {
@@ -1811,7 +1759,6 @@ function __d2rShowError(e) {
         if (rafId) return;
         rafId = requestAnimationFrame(() => {
             rafId = null;
-            if (translationPaused) { pending.clear(); return; }
             const batch  = [...pending]; pending.clear();
             const doEdit = CONFIG.editBtn && isListingsOrWishlist();
             if (batch.length > 80) {
@@ -1848,7 +1795,6 @@ function __d2rShowError(e) {
         const doTranslate = CONFIG.enabled;
         const doEditBtn   = CONFIG.editBtn && isListingsOrWishlist();
         if (!doTranslate && !doEditBtn) return;
-        if (translationPaused) return;
         for (const m of muts) {
             if (doTranslate && m.type === 'characterData') {
                 if (writingSet.has(m.target)) continue;
@@ -1858,7 +1804,6 @@ function __d2rShowError(e) {
             }
             for (const node of m.addedNodes) {
                 const el = node.nodeType === 1 ? node : node.parentElement;
-                if (el === overlayInput) continue;
                 if (el && (isPropertyRangeInput(el) || el.closest?.('.min-max-filter-info'))) continue;
                 pending.add(getListingRoot(node) || node);
             }
@@ -1869,9 +1814,10 @@ function __d2rShowError(e) {
     let fallbackTimer = null;
     function scheduleFallback() {
         const idleFn = () => {
+            if (document.hidden) return;      // 背景分頁不輪詢；切回來時由 visibilitychange 重新啟動
             onRouteChange();
-            if (!translationPaused && CONFIG.enabled) {
-                const untranslated = document.querySelectorAll('.listing-row:not([data-d2r-done]) .listing-num-properties > span:not([data-d2r-affix-translated])');
+            if (CONFIG.enabled) {
+                const untranslated = document.querySelectorAll('.listing-row .listing-num-properties > span:not([data-d2r-affix-translated])');
                 if (untranslated.length) {
                     const cards = new Set();
                     untranslated.forEach(span => { const card = span.closest('.listing-row'); if (card) cards.add(card); });
@@ -1893,10 +1839,15 @@ function __d2rShowError(e) {
             fallbackTimer = setTimeout(idleFn, 1500);
     }
 
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) return;
+        clearTimeout(fallbackTimer);
+        scheduleFallback();
+    });
+
     window.addEventListener('pagehide', () => {
         clearTimeout(fallbackTimer); clearTimeout(routeChangeTimer);
         clearTimeout(zhSearchTimer); clearTimeout(autoEditTimer);
-        clearTimeout(listingDebounceTimer); clearTimeout(resumeTimer);
         autoEditObserver?.disconnect(); observer.disconnect();
         chatMsgObserver?.disconnect(); badgeObserver?.disconnect();
     });
@@ -1928,9 +1879,9 @@ function __d2rShowError(e) {
 
     async function init() {
         __d2rDiag('[main] init 開始，等待 hydration');
-        await waitForHydration();
+        await hydrationReady;
         __d2rDiag('[main] 等待結束 rs=' + document.readyState);
-        if (detectLang() === 'zh-CN') { const ok = await loadOpenCC(); await loadOpenCCReverse(); openccReady = ok; }
+        if (detectLang() === 'zh-CN') { const ok = await loadOpenCC(); await loadOpenCCReverse(); }
         createPanel(); __d2rDiag('[main] 面板已建立'); syncEditPageClass(); addEditButtons(); startAutoEdit();
         if (CONFIG.enabled) {
             const firstScan = () => {

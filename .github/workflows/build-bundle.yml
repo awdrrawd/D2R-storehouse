@@ -1,0 +1,58 @@
+name: Build Traderie bundle
+
+# 字典來源（items / affixes / ui / changelog）有變動時：驗證資料 → 重新產生 dist/traderie.bundle.json。
+# · push 到 main：驗證並在 bundle 有變動時由 github-actions 自動 commit（腳本只載入這一份檔案）
+# · Pull Request：只驗證 + 確認 bundle 是最新的（fork 的 PR 沒有寫入權限，不自動 commit）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'd2r-translation-data/item/**'
+      - 'd2r-translation-data/Platform/**'
+      - 'scripts/build-bundle.mjs'
+  pull_request:
+    paths:
+      - 'd2r-translation-data/item/**'
+      - 'd2r-translation-data/Platform/**'
+      - 'd2r-translation-data/dist/**'
+      - 'scripts/build-bundle.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-bundle-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate dictionaries (PR)
+        if: github.event_name == 'pull_request'
+        run: node scripts/build-bundle.mjs --check
+
+      - name: Validate & build bundle (push)
+        if: github.event_name != 'pull_request'
+        run: node scripts/build-bundle.mjs
+
+      - name: Commit updated bundle
+        if: github.event_name != 'pull_request'
+        run: |
+          if [ -n "$(git status --porcelain d2r-translation-data/dist)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add d2r-translation-data/dist/traderie.bundle.json
+            git commit -m "chore: rebuild traderie.bundle.json [skip ci]"
+            git push
+          else
+            echo "bundle 無變動"
+          fi
