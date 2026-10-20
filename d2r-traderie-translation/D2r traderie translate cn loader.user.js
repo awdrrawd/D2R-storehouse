@@ -2,7 +2,7 @@
 // @name         D2R Traderie Chinese Translator
 // @name:zh-TW   D2R Traderie 中文翻譯
 // @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      1.0.2
+// @version      1.1.0
 // @description  D2R Traderie 繁體中文翻譯 + 中文搜尋（自動更新載入器）
 // @author       瀧月瀨
 // @license      CC BY-ND 4.0
@@ -47,7 +47,12 @@
     }
     
     
-    __d2rDiag('[loader] 啟動 v1.0.3 unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
+    const LOADER_VERSION = '1.1.0';   // 與上方 @version 同步
+    const PAGE = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
+    __d2rDiag('[loader] 啟動 v' + LOADER_VERSION + ' unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
+
+    // 已經有主體腳本在執行（例如同時裝了 Greasy Fork 的主體版）→ 不重複下載、不重複執行
+    if (PAGE.D2R_Traderie_CNTranslator) { __d2rDiag('[loader] 主體已在執行，略過'); return; }
 
     // 手機版看不到 console，失敗時在畫面上方顯示錯誤（點一下關閉）
     function showError(msg) {
@@ -78,19 +83,36 @@
         });
     }
     async function fetchText(url) {
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
         try {
-            const res = await fetch(url, { cache: 'no-cache' });
+            const res = await fetch(url, { cache: 'no-cache', signal: ctrl?.signal });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return await res.text();
         } catch (e) {
             return await gmFetchText(url);
+        } finally { if (timer) clearTimeout(timer); }
+    }
+
+    // 最後一次成功下載的主體程式碼：所有來源都失敗（離線／GitHub 異常）時當備援
+    function cacheGet() {
+        try { return GM_getValue('d2r_loader_code', ''); } catch (_) {
+            try { return localStorage.getItem('d2r_loader_code') || ''; } catch (_) { return ''; }
+        }
+    }
+    function cacheSet(code) {
+        try { GM_setValue('d2r_loader_code', code); } catch (_) {
+            try { localStorage.setItem('d2r_loader_code', code); } catch (_) {}
         }
     }
 
     // ── 主體腳本 URL ──
+    // REF 預設跟著 main 分支（commit 後即生效）。想「鎖定版本」避免未審核的變更直接推給所有人，
+    // 可改成 release tag（例如 'v2.6.0'）或 commit SHA；branch / tag / SHA 這三種寫法 raw 與 jsDelivr 都吃。
+    const REF = 'main';
     const SOURCES = [
-        'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/D2r_traderie_translation_main.user.js',
-        'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-traderie-translation/D2r_traderie_translation_main.user.js',
+        `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/${REF}/d2r-traderie-translation/D2r_traderie_translation_main.user.js`,
+        `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@${REF}/d2r-traderie-translation/D2r_traderie_translation_main.user.js`,
     ];
 
     // ── 載入主體 ──
@@ -106,8 +128,17 @@
         }
     }
 
+    // 簡單完整性檢查：確實是主體腳本（避免把錯誤頁／空白頁當程式碼執行，並且只有通過才寫入快取）
+    const looksLikeMain = c => typeof c === 'string' && c.length > 20000 && c.includes('D2R_Traderie_CNTranslator');
+    if (code && !looksLikeMain(code)) { console.warn('[D2R Loader] ⚠️ 下載內容不像主體腳本，改用快取'); code = null; }
+    if (code) cacheSet(code);
+    else {
+        const cached = cacheGet();
+        if (looksLikeMain(cached)) { code = cached; __d2rDiag('[loader] 使用本機快取的主體'); }
+    }
+
     if (!code) {
-        showError('[D2R Loader] 所有來源均失敗，請確認網路連線（或頁面 CSP 擋住 fetch）');
+        showError('[D2R Loader] 所有來源均失敗，且沒有本機快取，請確認網路連線（或頁面 CSP 擋住 fetch）');
         return;
     }
 

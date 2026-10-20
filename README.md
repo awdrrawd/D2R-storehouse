@@ -13,16 +13,27 @@
 ```
 D2R-storehouse/
 │
-├── d2r-translation/            # 通用翻譯資料（各平台共用）
+├── d2r-translation-data/               # 通用翻譯資料（各平台共用，純 JSON）
 │   ├── item/
-│   │   ├── items.js            # 道具、符文、技能名稱字典
-│   │   └── affixes.js          # 屬性詞綴正則字典
-│   └── Platform/
-│       └── ui_traderie.js      # Traderie 平台介面翻譯
+│   │   └── items.json                  # 道具、符文、技能名稱字典
+│   ├── Platform/
+│   │   ├── tr_affixes.json             # 屬性詞綴字典（含 {{value}} 等占位符）
+│   │   ├── tr_ui.json                  # Traderie 平台介面翻譯
+│   │   └── tr_changelog.json           # 更新歷程（腳本內「📋 更新」顯示）
+│   └── dist/
+│       └── traderie.bundle.json        # ⚙️ 自動產生：上述四份打包成單一檔案（腳本只載入這一份）
 │
-└── d2r-traderie-translation/   # Traderie 平台腳本
-    ├── D2r_traderie_translation_main.user.js   # 主體腳本
-    └── D2R_Traderie_CN_Loader.user.js          # 載入器（使用者安裝此檔）
+├── d2r-traderie-translation/           # Traderie 平台腳本
+│   ├── D2r_traderie_translation_main.user.js        # 主體腳本（Greasy Fork 發佈的就是這份）
+│   └── D2r traderie translate cn loader.user.js     # 進階：GitHub 載入器（選用）
+│
+├── scripts/
+│   └── build-bundle.mjs                # 驗證字典並打包（Node 18+，無外部依賴）
+│
+├── .github/workflows/
+│   └── build-bundle.yml                # 字典有變動時自動驗證 + 重新打包
+│
+└── other/                              # 其他獨立的小腳本（與 Traderie 翻譯無關）
 ```
 
 ---
@@ -30,34 +41,35 @@ D2R-storehouse/
 ## 功能特色
 
 - 📖 **全頁面繁體中文翻譯**：道具名稱、屬性詞綴、介面文字
-- 🔍 **中文搜尋**：在 Search options / Search Stats / More Filters 欄位輸入中文，自動轉換為英文送出
+- 🔍 **中文搜尋**：在 Search options / Search Stats / More Filters 等搜尋欄位輸入中文，自動轉換為英文送出（支援注音、拼音等輸入法選字）
 - ✏️ **快速編輯**：在個人頁面的 列表 / 願望清單 內添加快速修改報價的按鈕
-- 🔔 **清除通知**：在通知頁面夏添加單筆刪除與全部刪除的快捷按鈕
-- 🔄 **自動更新**：透過載入器安裝，字典與腳本更新後**下次開頁面即生效**，無需重裝
+- 🔔 **清除通知**：在通知頁面中添加單筆刪除與全部刪除的快捷按鈕
+- 🔊 **聊天音效**：視窗未在前景時有新訊息會播放提示音；可自行決定是否「音效後自動標為已讀」
+- 🔄 **自動更新**：字典與腳本更新後下次開頁面即生效，字典離線時自動使用上次快取
 - 📱 **支援手機**：在支援 Userscripts App 的手機瀏覽器上也能使用
 
 ---
 
 ## 安裝方式（Traderie 平台中文化）
 
-> 以下安裝步驟適用於 **Traderie D2R 交易平台**的中文化腳本。
-> 只需安裝**載入器**，之後所有更新自動套用，無需重新安裝。
-
-### 1. 安裝 Tampermonkey
+### 1. 安裝使用者腳本管理器
 
 | 平台 | 連結 |
 |------|------|
-| Chrome / Edge | [Tampermonkey - Chrome Web Store](https://www.tampermonkey.net/) |
-| Firefox | [Tampermonkey - Firefox Add-ons](https://www.tampermonkey.net/) |
+| Chrome / Edge / Firefox | [Tampermonkey](https://www.tampermonkey.net/) |
 | iOS Safari | [Userscripts App](https://apps.apple.com/app/userscripts/id1463298887) |
 
-### 2. 安裝 Traderie 中文化載入器
+### 2. 安裝腳本（建議：Greasy Fork 主體版）
 
 點擊下方連結，在 Tampermonkey 確認安裝：
 
-**[💻 安裝 Traderie D2R 中文化腳本](https://greasyfork.org/zh-CN/scripts/570784-traderie-d2r-chinese-translator-supports-cn-search)**
+**[💻 從 Greasy Fork 安裝「Traderie D2R Chinese Translator + Chinese search」](https://greasyfork.org/zh-TW/scripts/570784-traderie-d2r-chinese-translator-chinese-search)**
 
 安裝完成後，前往 [Traderie D2R](https://traderie.com/diablo2resurrected) 即可看到繁體中文介面。
+
+- 這是**單檔的主體腳本**，由 Greasy Fork 負責版本更新；字典則在每次開頁面時自動從 GitHub 載入最新版，不需要為了字典更新而重裝腳本。
+- 進階使用者若希望「腳本本體」也直接跟著 GitHub `main` 分支走，可改裝 [載入器](https://github.com/awdrrawd/D2R-storehouse/raw/refs/heads/main/d2r-traderie-translation/D2r%20traderie%20translate%20cn%20loader.user.js)。
+- ⚠️ **兩者請擇一安裝，不要同時安裝**（同時安裝時載入器會自動略過，但沒有必要）。
 
 ---
 
@@ -65,28 +77,50 @@ D2R-storehouse/
 
 | 項目 | 更新方式 |
 |------|---------|
-| 載入器本身 | Tampermonkey 自動偵測版本，有更新時提示 |
-| 主體腳本 | 每次開頁面自動從 GitHub 抓取最新版 |
-| 字典資料 | 每次開頁面自動載入最新版，commit 後即時生效 |
+| 主體腳本（Greasy Fork 版） | Tampermonkey 依 Greasy Fork 的版本自動偵測並提示更新 |
+| 主體腳本（載入器版） | 每次開頁面從 GitHub 抓取；失敗時使用上次成功的快取 |
+| 字典資料 | 每次開頁面載入單一打包檔 `traderie.bundle.json`（網路優先；離線或 GitHub 異常時使用本機快取）。commit 後由 CI 重新打包，GitHub 的 raw 快取約數分鐘內生效 |
 
 ---
 
 ## 翻譯資料說明
 
-### `d2r-translation/item/items.js`
-- 全域變數：`window.D2R_ITEMS`
-- 內容：所有道具名稱、符文、符文之語、套裝、獨特裝備、技能名稱
+所有字典皆為純 JSON，與平台無關，可直接用於其他專案。
+
+### `d2r-translation-data/item/items.json`
+- 格式：`{ "English Name": "中文名" }`
+- 內容：所有道具名稱、符文、符文之語、套裝、獨特裝備、技能名稱（約 1,500 條）
 - 顯示格式：`中文名(English Name)`
 
-### `d2r-translation/item/affixes.js`
-- 全域變數：`window.D2R_AFFIXES`
-- 內容：屬性詞綴正則表達式對照表，來源為 [d2r.world](https://d2r.world) EN/ZH 頁面自動配對
-- 格式：`[正則, 中文模板]`，`$1 $2...` 對應捕獲群組
-- 包含：基礎屬性、技能加成、施法觸發、充能技能、抗性、傷害、依角色等級而定等 575+ 條
+### `d2r-translation-data/Platform/tr_affixes.json`
+- 格式：`{ "+{{value}} To All Skills": "+{{value}} 所有技能" }`
+- 內容：屬性詞綴對照表，來源為 [d2r.world](https://d2r.world) EN/ZH 頁面自動配對（約 630 條）
+- 占位符：`{{value}}`、`{{level}}`、`{{charges}}`、`{{duration}}`，會被轉成數字捕獲群組
 
-### `d2r-translation/Platform/ui_traderie.js`
-- 全域變數：`window.D2R_UI_TRADERIC`
-- 內容：Traderie 網站介面文字，包含導覽列、交易介面、設定頁面、通知、篩選器等 430+ 條
+### `d2r-translation-data/Platform/tr_ui.json`
+- 格式：`{ "English UI text": "中文介面文字" }`
+- 內容：Traderie 網站介面文字，包含導覽列、交易介面、設定頁面、通知、篩選器等（約 630 條）
+- 比對**不分大小寫**；少數鍵刻意帶前後空白，用於比對被拆成兩段的句子片段
+
+### `d2r-translation-data/dist/traderie.bundle.json`（自動產生，請勿手動編輯）
+- 上面三份字典 + `tr_changelog.json` 合併成的單一檔案，腳本只需一次請求
+- 內容為決定性輸出（不含時間戳）：資料沒變，檔案就不變
+- 含 `schema`（格式版本）與 `hash`（字典內容雜湊，用於快取判斷）
+
+---
+
+## 參與維護字典
+
+1. 只編輯 `item/items.json`、`Platform/tr_affixes.json`、`Platform/tr_ui.json`（以及發版時的 `tr_changelog.json`），**不要**手動改 `dist/`。
+2. 本機可先驗證 + 打包：
+
+   ```bash
+   node scripts/build-bundle.mjs          # 驗證並產生 dist/traderie.bundle.json
+   node scripts/build-bundle.mjs --check  # 只驗證，並確認 bundle 是最新的（不寫檔）
+   ```
+
+3. 驗證會檢查：JSON 語法、**重複的鍵**（`JSON.parse` 會靜默覆蓋，所以另外掃描）、空白譯文、詞綴占位符是否一致、詞綴能否編譯成正則、changelog 格式；以及警告大小寫重複、前後空白、同名道具。
+4. 推送到 `main` 後，GitHub Actions 會自動驗證並在 bundle 有變動時 commit 更新；Pull Request 則只做驗證與「bundle 是否最新」檢查。
 
 ---
 
