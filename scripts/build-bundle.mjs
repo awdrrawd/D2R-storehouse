@@ -120,7 +120,7 @@ checkItemCollisions(items);
 
 // ── 各平台 ────────────────────────────────────────────────────────────────
 const jobs = [];
-const seenIds = new Set(), seenOut = new Set();
+const seenIds = new Set(), seenOut = new Set(), seenBase = new Set();
 for (const p of manifest.platforms || []) {
   scope = `[${p.id || '?'}] `;
   if (!p.id || !/^[a-z0-9-]+$/.test(p.id)) { err('platform.id 必須是小寫英數與連字號'); continue; }
@@ -129,6 +129,8 @@ for (const p of manifest.platforms || []) {
   const rel = relative(REPO, out);
   if (!p.out || rel.startsWith('..') || isAbsolute(rel) || !/\.bundle\.json$/.test(out)) { err(`out 必須在倉庫內且檔名以 .bundle.json 結尾（CI 靠這個樣式 commit）：${p.out}`); continue; }
   if (seenOut.has(out)) { err('out 與其他平台重複'); continue; } seenOut.add(out);
+  const base = out.split(/[\\/]/).pop();
+  if (seenBase.has(base)) { err(`out 檔名 ${base} 與其他平台重複（GitHub Pages 以檔名平鋪發布，檔名必須唯一）`); continue; } seenBase.add(base);
 
   const ui = loadFlat('ui', p.ui || '');
   validateFlat('ui', ui, { allowBlank: p.allowBlankUi || [] });

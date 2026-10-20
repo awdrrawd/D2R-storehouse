@@ -1,10 +1,16 @@
-name: Build dictionary bundles
+name: Build & publish dictionary bundles
 
 # 原始字典（d2r-translation-data/ 底下的 JSON 與 platforms.json）有變動時：
-# 驗證資料 → 依 platforms.json 為每個平台重新產生 *.bundle.json（例如 d2r-traderie-translation/traderie.bundle.json）。
-# · push 到 main：驗證並在 bundle 有變動時由 github-actions 自動 commit（腳本只載入 bundle 這一份）
-# · Pull Request：只驗證 + 確認 bundle 是最新的（fork 的 PR 沒有寫入權限，不自動 commit）
+#   1. 驗證資料，依 platforms.json 為每個平台重新產生 *.bundle.json
+#   2. 有變動就由 github-actions 自動 commit 回 main（保留在倉庫中可檢視、可從 raw / jsDelivr 取得）
+#   3. 把 bundle 與主體腳本發布到 GitHub Pages（腳本的首選來源）：
+#        https://awdrrawd.github.io/D2R-storehouse/traderie.bundle.json
+#        https://awdrrawd.github.io/D2R-storehouse/D2r_traderie_translation_main.user.js
+# Pull Request 只驗證 + 確認 bundle 是最新的（fork 的 PR 沒有寫入權限，也不部署）。
+#
+# 前置設定（一次性）：Settings → Pages → Build and deployment → Source 選「GitHub Actions」。
 # 注意：push 的 paths 不含 *.bundle.json，bot 的 commit 不會再次觸發本流程（避免無限迴圈）。
+#       部署由本流程直接執行，不依賴 bot commit 去觸發 Pages 建置。
 
 on:
   push:
@@ -12,6 +18,8 @@ on:
     paths:
       - 'd2r-translation-data/**'
       - 'scripts/build-bundle.mjs'
+      - 'd2r-traderie-translation/*.user.js'
+      - '.github/workflows/build-bundle.yml'
   pull_request:
     paths:
       - 'd2r-translation-data/**'
@@ -20,15 +28,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: build-bundle-${{ github.ref }}
-  cancel-in-progress: true
+  contents: write      # 自動 commit bundle
+  pages: write         # 部署 Pages
+  id-token: write      # Pages 部署驗證
 
 jobs:
-  bundle:
+  build:
     runs-on: ubuntu-latest
+    concurrency:
+      group: build-bundle-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
 
@@ -56,3 +65,42 @@ jobs:
           else
             echo "bundle 無變動"
           fi
+
+      - name: Assemble Pages site
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p _site
+          # bundle 以檔名平鋪發布（build-bundle.mjs 已驗證檔名唯一）
+          find . -name '*.bundle.json' -not -path './_site/*' -not -path './node_modules/*' -exec cp {} _site/ \;
+          # 載入器（選用）會從 Pages 取得最新的主體腳本
+          cp d2r-traderie-translation/D2r_traderie_translation_main.user.js _site/
+          {
+            echo '<!doctype html><meta charset="utf-8"><title>D2R storehouse</title>'
+            echo '<h1>D2R storehouse — 靜態檔案</h1>'
+            echo '<p>供使用者腳本載入的字典與腳本，由 GitHub Actions 自動產生。原始碼與說明：'
+            echo '<a href="https://github.com/${{ github.repository }}">github.com/${{ github.repository }}</a></p><ul>'
+            for f in _site/*; do b=$(basename "$f"); [ "$b" = index.html ] || echo "<li><a href=\"$b\">$b</a></li>"; done
+            echo '</ul>'
+          } > _site/index.html
+          ls -la _site
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false      # 不中斷進行中的部署
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -14,9 +14,12 @@
 D2R-storehouse/
 │
 ├── d2r-translation-data/               # 通用翻譯資料（純 JSON，各平台共用）【人工維護】
-│   ├── item/items.json                 # 道具、符文、技能名稱字典
+│   ├── item/
+│   │   ├── items.js                    # 原始道具字典（window.D2R_ITEMS，保留）
+│   │   ├── affixes.js                  # 原始屬性詞綴字典（window.D2R_AFFIXES，正則格式，保留）
+│   │   └── items.json                  # 道具字典 — TR 特化版
 │   ├── Platform/
-│   │   ├── tr_affixes.json             # 屬性詞綴字典（遊戲通用，含 {{value}} 等占位符）
+│   │   ├── tr_affixes.json             # 屬性詞綴字典 — TR 特化版（正則改為 {{value}} 等占位符）
 │   │   ├── tr_ui.json                  # Traderie 平台介面翻譯
 │   │   └── tr_changelog.json           # 更新歷程（腳本內「📋 更新」顯示）
 │   ├── platforms.json                  # 打包設定（顯示格式、各平台的 UI 來源與輸出位置）
@@ -30,7 +33,7 @@ D2R-storehouse/
 │   └── LICENSE                         # 腳本授權：CC BY-ND 4.0
 │
 ├── scripts/build-bundle.mjs            # 驗證字典並打包（Node 18+，無外部依賴）
-├── .github/workflows/build-bundle.yml  # 字典有變動時自動驗證 + 重新打包
+├── .github/workflows/build-bundle.yml  # 字典有變動時：驗證 → 打包 → commit → 部署到 GitHub Pages
 ├── other/                              # 其他獨立的小腳本（與 Traderie 翻譯無關）
 └── LICENSE.md                          # 授權總覽
 ```
@@ -78,13 +81,16 @@ D2R-storehouse/
 |------|---------|
 | 主體腳本（Greasy Fork 版） | Tampermonkey 依 Greasy Fork 的版本自動偵測並提示更新 |
 | 主體腳本（載入器版） | 每次開頁面從 GitHub 抓取；失敗時使用上次成功的快取 |
-| 字典資料 | 每次開頁面載入單一打包檔 `traderie.bundle.json`（網路優先；離線或 GitHub 異常時使用本機快取）。修改原始字典後由 CI 自動重新打包，GitHub 的 raw 快取約數分鐘內生效 |
+| 字典資料 | 每次開頁面載入單一打包檔 `traderie.bundle.json`，來源依序為 **GitHub Pages → raw.githubusercontent.com → jsDelivr → 本機快取**（前者失敗才改用後者；離線或 GitHub 異常時仍可用上次的快取）。修改原始字典後由 CI 自動打包並部署，通常數分鐘內生效 |
 
 ---
 
 ## 翻譯資料說明
 
-字典分成「**通用層**」（道具、詞綴，與平台無關）與「**平台層**」（各網站自己的介面文字），皆為純 JSON、授權 MIT，可被其他網站或專案直接使用。
+字典分為「**原始字典**」與「**TR 特化版**」：
+
+- **原始字典**（`item/items.js`、`item/affixes.js`）保留不動，作為日後擴充與其他專案的起點；不參與打包，也不會自動與 JSON 同步。
+- **TR 特化版**（`items.json`、`tr_affixes.json`、`tr_ui.json`）是腳本與 CI 實際使用的純 JSON，授權 MIT，其他網站或專案也可直接使用。
 **完整的格式約定、占位符規則、如何新增平台，請見 [`d2r-translation-data/README.md`](d2r-translation-data/README.md)。**
 
 | 檔案 | 內容 | 規模 |
@@ -116,7 +122,10 @@ D2R-storehouse/
    ```
 
 3. 驗證會檢查：JSON 語法、**重複的鍵**（`JSON.parse` 會靜默覆蓋，所以另外掃描）、空白譯文、詞綴占位符的**順序是否與英文一致**、詞綴能否編譯成正則、更新日誌格式；並警告大小寫重複、前後空白、同名道具。
-4. 推送到 `main` 後，GitHub Actions 會自動驗證並在 bundle 有變動時 commit 更新；Pull Request 則只做驗證與「bundle 是否最新」檢查。
+4. 推送到 `main` 後，GitHub Actions 會自動驗證、在 bundle 有變動時 commit 更新，並把 bundle 與主體腳本**部署到 GitHub Pages**；Pull Request 則只做驗證與「bundle 是否最新」檢查。
+
+> **維護者一次性設定**：Settings → Pages → Build and deployment → Source 選 **GitHub Actions**。
+> 部署內容：`https://awdrrawd.github.io/D2R-storehouse/` 下的 `traderie.bundle.json`、`D2r_traderie_translation_main.user.js` 與一個索引頁。
 
 ---
 

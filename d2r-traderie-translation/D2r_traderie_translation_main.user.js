@@ -19,6 +19,7 @@
 // @grant              unsafeWindow
 // @grant              GM.xmlHttpRequest
 // @grant              GM_xmlhttpRequest
+// @connect            awdrrawd.github.io
 // @connect            raw.githubusercontent.com
 // @connect            cdn.jsdelivr.net
 // @connect            github.com
@@ -69,7 +70,7 @@ function __d2rShowError(e) {
     __d2rDiag('[main] 啟動 v' + VERSION + ' unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
     if (PAGE.D2R_Traderie_CNTranslator) { __d2rDiag('[main] 已執行過，略過（重複載入）'); return; }
     PAGE.D2R_Traderie_CNTranslator = true;
-    // 批次「重新上架／移除」按鈕：實驗功能，目前停用（原 Permissions = 0）。要啟用請改為 true。
+    // 批次「重新上架／移除」按鈕：實驗功能，啟用請改為 true。
     const ENABLE_BATCH_BUTTONS = false;
 
     // ── 必要宣告（最先定義，其他所有程式碼依賴這三個）────────────────────────
@@ -94,11 +95,14 @@ function __d2rShowError(e) {
     // ────────────────────────────────────────────────────────────────────────
 
     // 字典由 CI 把 items / affixes / ui / changelog 打包成「單一檔案」，只需一次請求。
-    // 來源：d2r-traderie-translation/traderie.bundle.json（由 scripts/build-bundle.mjs 依
-    // d2r-translation-data/platforms.json 產生，勿手動編輯；人工維護的原始字典在 d2r-translation-data/）
+    // 由 scripts/build-bundle.mjs 依 d2r-translation-data/platforms.json 產生，勿手動編輯；
+    // 人工維護的原始字典在 d2r-translation-data/。
+    // 來源順序：GitHub Pages（正式的靜態檔案服務）→ raw.githubusercontent.com（未驗證請求有限流，可能 429）
+    //          → jsDelivr（CDN，分支快取較久、內容可能稍舊，但在前兩者連不上時最有機會成功）→ 本機快取
     const BUNDLE_PATH   = 'traderie.bundle.json';
     const BUNDLE_SCHEMA = 1;
     const CDN_BASES = [
+        'https://awdrrawd.github.io/D2R-storehouse/',
         'https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/refs/heads/main/d2r-traderie-translation/',
         'https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@main/d2r-traderie-translation/',
     ];
@@ -119,7 +123,7 @@ function __d2rShowError(e) {
     }
     async function fetchText(url) {
         const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-        const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;   // 避免單一來源卡住整個啟動流程
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), 6000) : null;   // 避免單一來源卡住整個啟動流程
         try {
             const res = await fetch(url, { cache: 'no-cache', signal: ctrl?.signal });
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -147,7 +151,8 @@ function __d2rShowError(e) {
     async function loadBundle() {
         for (const base of CDN_BASES) {
             try {
-                const text = await fetchText(base + BUNDLE_PATH + '?t=' + Date.now());
+                // 不加時間戳：fetch 使用 cache:'no-cache'，瀏覽器以 ETag 重新驗證（沒變就回 304），省頻寬也減輕來源壓力
+                const text = await fetchText(base + BUNDLE_PATH);
                 const b = JSON.parse(text);
                 if (!isValidBundle(b)) throw new Error('bundle 格式不符（schema ' + (b && b.schema) + '）');
                 if (gmGet('d2r_bundle_hash', '') !== b.hash) {      // 內容有變才寫入，避免每次載入都寫 ~250KB
