@@ -2,7 +2,7 @@
 // @name         D2R Traderie Chinese Translator
 // @name:zh-TW   D2R Traderie 中文翻譯
 // @namespace    https://github.com/awdrrawd/D2R-storehouse
-// @version      1.1.0
+// @version      1.1.1
 // @description  D2R Traderie 繁體中文翻譯 + 中文搜尋（自動更新載入器）
 // @author       瀧月瀨
 // @license      CC BY-ND 4.0
@@ -16,6 +16,7 @@
 // @grant        unsafeWindow
 // @grant        GM.xmlHttpRequest
 // @grant        GM_xmlhttpRequest
+// @connect      awdrrawd.github.io
 // @connect      raw.githubusercontent.com
 // @connect      cdn.jsdelivr.net
 // @connect      github.com
@@ -47,7 +48,7 @@
     }
     
     
-    const LOADER_VERSION = '1.1.0';   // 與上方 @version 同步
+    const LOADER_VERSION = '1.1.1';   // 與上方 @version 同步
     const PAGE = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
     __d2rDiag('[loader] 啟動 v' + LOADER_VERSION + ' unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
 
@@ -84,7 +85,7 @@
     }
     async function fetchText(url) {
         const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-        const timer = ctrl ? setTimeout(() => ctrl.abort(), 8000) : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), 6000) : null;
         try {
             const res = await fetch(url, { cache: 'no-cache', signal: ctrl?.signal });
             if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -107,11 +108,14 @@
     }
 
     // ── 主體腳本 URL ──
-    // REF 預設跟著 main 分支（commit 後即生效）。想「鎖定版本」避免未審核的變更直接推給所有人，
+    // REF 預設跟著 main 分支（推送後經 CI 部署即生效）。想「鎖定版本」避免未審核的變更直接推給所有人，
     // 可改成 release tag（例如 'v2.6.0'）或 commit SHA；branch / tag / SHA 這三種寫法 raw 與 jsDelivr 都吃。
     const REF = 'main';
+    const MAIN_FILE = 'D2r_traderie_translation_main.user.js';
     const SOURCES = [
-        `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/${REF}/d2r-traderie-translation/D2r_traderie_translation_main.user.js`,
+        // GitHub Pages 永遠是最新的 main，所以只有 REF 是 'main' 時才使用；鎖定版本時改走 raw / jsDelivr
+        ...(REF === 'main' ? [`https://awdrrawd.github.io/D2R-storehouse/${MAIN_FILE}`] : []),
+        `https://raw.githubusercontent.com/awdrrawd/D2R-storehouse/${REF}/d2r-traderie-translation/${MAIN_FILE}`,
         `https://cdn.jsdelivr.net/gh/awdrrawd/D2R-storehouse@${REF}/d2r-traderie-translation/D2r_traderie_translation_main.user.js`,
     ];
 
@@ -119,7 +123,7 @@
     let code = null;
     for (const url of SOURCES) {
         try {
-            code = await fetchText(`${url}?t=${Date.now()}`);
+            code = await fetchText(url);   // 不加時間戳：以 ETag 重新驗證即可
             console.log('[D2R Loader] ✅ 主體載入：', url);
             __d2rDiag('[loader] 主體下載成功 ' + Math.round(code.length/1024) + 'KB');
             break;

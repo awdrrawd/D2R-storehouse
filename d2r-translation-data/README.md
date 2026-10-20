@@ -6,15 +6,26 @@
 
 ## 檔案與用途
 
-| 檔案 | 層級 | 格式 | 說明 |
-|------|------|------|------|
-| `item/items.json` | 通用 | `{ "English": "中文" }` | 道具、符文、符文之語、套裝、獨特裝備、技能名稱 |
-| `Platform/tr_affixes.json` | 通用 | `{ "模板": "模板" }` | 屬性詞綴；含占位符，見下方。檔名帶 `tr_` 是歷史原因，**內容是遊戲通用文字，不是 Traderie 專屬** |
-| `Platform/tr_ui.json` | 平台（Traderie） | `{ "English": "中文" }` | 僅限 Traderie 網站的介面文字 |
-| `Platform/tr_changelog.json` | 平台（Traderie） | 物件 | 腳本內顯示的更新歷程 |
-| `platforms.json` | 設定 | 物件 | 打包設定：通用層來源、顯示格式、各平台的 UI 來源與輸出位置 |
+### 原始字典（保留）
 
-> ⚠️ 這些檔案的路徑已被已發布的腳本直接引用，**請勿搬動或改名**。
+| 檔案 | 格式 | 說明 |
+|------|------|------|
+| `item/items.js` | `window.D2R_ITEMS = { "English": "中文" }` | 原始道具字典（符文、符文之語、套裝、獨特裝備、技能名稱） |
+| `item/affixes.js` | `window.D2R_AFFIXES = [ [英文 regex, 中文模板], … ]` | 原始屬性詞綴字典，英文為正則、`$1 $2…` 對應捕獲群組 |
+
+這兩份是原始字典，**予以保留**，之後擴充或給其他專案使用都以它們為起點。**它們不參與打包，也不會自動與下方的 JSON 同步**。
+
+### TR 特化版（腳本與 bundle 實際使用）
+
+| 檔案 | 格式 | 說明 |
+|------|------|------|
+| `item/items.json` | `{ "English": "中文" }` | 道具字典的 Traderie 版（純 JSON，方便腳本與 CI 處理） |
+| `Platform/tr_affixes.json` | `{ "模板": "模板" }` | 詞綴字典的 Traderie 版：正則改寫成 `{{value}}` 等占位符，見下方 |
+| `Platform/tr_ui.json` | `{ "English": "中文" }` | Traderie 網站的介面文字 |
+| `Platform/tr_changelog.json` | 物件 | 腳本內顯示的更新歷程 |
+| `platforms.json` | 物件 | 打包設定：來源、顯示格式、各平台的 UI 來源與輸出位置 |
+
+> ⚠️ 上述 JSON 的路徑已被腳本直接引用，**請勿搬動或改名**。
 
 ---
 
@@ -28,7 +39,7 @@
 
 ### 詞綴占位符
 
-`tr_affixes.json` 的鍵與值可以含這四種占位符：`{{value}}` `{{level}}` `{{charges}}` `{{duration}}`
+`tr_affixes.json` 是原始 `affixes.js` 的 TR 特化版，鍵與值可以含這四種占位符：`{{value}}` `{{level}}` `{{charges}}` `{{duration}}`
 
 - 英文鍵中的每個占位符，用一個「數字或範圍」的捕獲群組比對，例如 `[\d.,+\-]+`，範圍如 `1-5`、`10 ~ 20` 也要吃得下。
 - **占位符依「出現順序」對應，名稱只是標籤**：譯文第 N 個占位符 = 英文第 N 個捕獲到的數字。因此譯文的順序必須與英文一致（`build-bundle.mjs` 會驗證）。
@@ -73,8 +84,12 @@
 ```
 
 - 三個區塊**分開存放、不攤平**：因為它們的比對方式與顯示格式都不同（道具是整詞比對、詞綴是帶占位符的規則、UI 是句子片段）。
-- Traderie 的 bundle：`../d2r-traderie-translation/traderie.bundle.json`
-- bundle 由 CI 自動產生，請勿手動編輯；來源有變動時會自動更新。
+- 取得位置（Traderie 的 bundle）：
+  - **GitHub Pages（建議）**：`https://awdrrawd.github.io/D2R-storehouse/traderie.bundle.json`
+  - 倉庫內：`../d2r-traderie-translation/traderie.bundle.json`（可用 raw.githubusercontent.com 或 jsDelivr 取得）
+- 建議的取得順序：Pages → raw → jsDelivr，並在本機保留上次成功的快取。raw.githubusercontent.com 對未驗證請求有限流，高頻率請求可能被回 429，不適合當唯一來源。
+- 請求時建議使用 `Cache-Control: no-cache` 讓瀏覽器以 ETag 重新驗證（沒變動時回 304），不需要附加時間戳。
+- bundle 由 CI 自動產生並部署，請勿手動編輯；來源有變動時會自動更新。
 
 ---
 
