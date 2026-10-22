@@ -3,7 +3,7 @@
 // @name:zh-tw         D2R Traderie 中文翻譯 + 自動編輯 (支援中文搜尋)
 // @name:zh-cn         D2R Traderie 中文翻译 + 自动编辑 (支援中文搜尋)
 // @namespace          https://github.com/awdrrawd/D2R-storehouse
-// @version            2.6.0
+// @version            2.6.1
 // @description        Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-tw  Traderie 的 D2R 中文化，支援中文搜尋，並新增快捷編輯
 // @description:zh-cn  Traderie 的 D2R 中文化，支援中文搜寻，并新增快捷编辑
@@ -66,7 +66,7 @@ function __d2rShowError(e) {
     // iOS Userscripts 沒有 unsafeWindow，直接存取會 ReferenceError 導致整支腳本靜默中止
     const PAGE = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
     // 版本號只在這裡與上方 @version 兩處維護（發版時一起改）
-    const VERSION = '2.6.0';
+    const VERSION = '2.6.1';
     __d2rDiag('[main] 啟動 v' + VERSION + ' unsafeWindow=' + typeof unsafeWindow + ' GM=' + typeof GM + ' rs=' + document.readyState);
     if (PAGE.D2R_Traderie_CNTranslator) { __d2rDiag('[main] 已執行過，略過（重複載入）'); return; }
     PAGE.D2R_Traderie_CNTranslator = true;

@@ -123,6 +123,7 @@ D2R-storehouse/
 
 3. 驗證會檢查：JSON 語法、**重複的鍵**（`JSON.parse` 會靜默覆蓋，所以另外掃描）、空白譯文、詞綴占位符的**順序是否與英文一致**、詞綴能否編譯成正則、更新日誌格式；並警告大小寫重複、前後空白、同名道具。
 4. 推送到 `main` 後，GitHub Actions 會自動驗證、在 bundle 有變動時 commit 更新，並把 bundle 與主體腳本**部署到 GitHub Pages**；Pull Request 則只做驗證與「bundle 是否最新」檢查。
+5. **發版與路徑約定**：腳本請求的檔案路徑（目前是 `d2r-traderie-translation/traderie.bundle.json`）是對外契約，已發布的版本會一直去抓它，**不要搬動或改名**。如果非改不可，必須同時**升腳本版號**並發布，否則管理器會認為已是最新而不更新，舊版玩家就會 404。同一個版號不要發布兩種不同的行為。
 
 > **維護者一次性設定**：Settings → Pages → Build and deployment → Source 選 **GitHub Actions**。
 > 部署內容：`https://awdrrawd.github.io/D2R-storehouse/` 下的 `traderie.bundle.json`、`D2r_traderie_translation_main.user.js` 與一個索引頁。
