@@ -2,15 +2,18 @@ name: Build & publish dictionary bundles
 
 # 原始字典（d2r-translation-data/ 底下的 JSON 與 platforms.json）有變動時：
 #   1. 驗證資料，依 platforms.json 為每個平台重新產生 *.bundle.json
-#   2. 有變動就由 github-actions 自動 commit 回 main（保留在倉庫中可檢視、可從 raw / jsDelivr 取得）
-#   3. 把 bundle 與主體腳本發布到 GitHub Pages（腳本的首選來源）：
-#        https://awdrrawd.github.io/D2R-storehouse/traderie.bundle.json
-#        https://awdrrawd.github.io/D2R-storehouse/D2r_traderie_translation_main.user.js
-# Pull Request 只驗證 + 確認 bundle 是最新的（fork 的 PR 沒有寫入權限，也不部署）。
+#   2. 有變動就由 github-actions 自動 commit 回 main
+#   3. 把 bundle 與主體腳本發布到 GitHub Pages
+# Pull Request 只跑 validate job（唯讀），不 commit、不部署。
+#
+# 權限設計（最小權限）：
+#   - 工作流程層級：contents: read（預設唯讀）
+#   - validate（PR）：contents: read
+#   - build（push / 手動，僅 main）：contents: write（只有這裡能 commit）
+#   - deploy（push / 手動，僅 main）：pages: write + id-token: write
 #
 # 前置設定（一次性）：Settings → Pages → Build and deployment → Source 選「GitHub Actions」。
 # 注意：push 的 paths 不含 *.bundle.json，bot 的 commit 不會再次觸發本流程（避免無限迴圈）。
-#       部署由本流程直接執行，不依賴 bot commit 去觸發 Pages 建置。
 
 on:
   push:
@@ -27,34 +30,52 @@ on:
       - '**/*.bundle.json'
   workflow_dispatch:
 
+# 預設唯讀：沒有自行宣告 permissions 的 job 一律只有 contents: read
 permissions:
-  contents: write      # 自動 commit bundle
-  pages: write         # 部署 Pages
-  id-token: write      # Pages 部署驗證
+  contents: read
 
 jobs:
-  build:
+  # ── PR：只驗證，唯讀，不保留 git 憑證 ─────────────────────────────
+  validate:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     concurrency:
-      group: build-bundle-${{ github.ref }}
+      group: validate-${{ github.ref }}
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false   # PR 內的程式碼（含 build-bundle.mjs）不應拿到可寫入的 token
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
 
       - name: Validate dictionaries (PR)
-        if: github.event_name == 'pull_request'
         run: node scripts/build-bundle.mjs --check
 
-      - name: Validate & build bundles (push)
-        if: github.event_name != 'pull_request'
+  # ── push / 手動：建置、commit、打包 Pages artifact（僅 main）──────
+  build:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 只有這個 job 能 commit bundle
+    concurrency:
+      group: build-bundle-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+
+      - name: Validate & build bundles
         run: node scripts/build-bundle.mjs
 
       - name: Commit updated bundles
-        if: github.event_name != 'pull_request'
         run: |
           if [ -n "$(git status --porcelain -- '*.bundle.json')" ]; then
             git config user.name  "github-actions[bot]"
@@ -67,7 +88,6 @@ jobs:
           fi
 
       - name: Assemble Pages site
-        if: github.event_name != 'pull_request'
         run: |
           mkdir -p _site
           # bundle 以檔名平鋪發布（build-bundle.mjs 已驗證檔名唯一）
@@ -85,15 +105,18 @@ jobs:
           ls -la _site
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
           path: _site
 
+  # ── 部署：只有這個 job 拿到 pages / id-token 寫入 ────────────────
   deploy:
     needs: build
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      pages: write         # 部署 Pages
+      id-token: write      # Pages 部署驗證（OIDC）
     concurrency:
       group: pages
       cancel-in-progress: false      # 不中斷進行中的部署
@@ -103,4 +126,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
